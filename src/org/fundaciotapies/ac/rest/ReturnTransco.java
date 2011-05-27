@@ -11,9 +11,9 @@ import com.google.gson.Gson;
 @Path("returnTransco")
 public class ReturnTransco {
 	
-	public String returnTransco(@Context HttpServletRequest httpRequest, String request) {
+	public TranscoEntity returnTransco(@Context HttpServletRequest httpRequest, String request) {
 		TranscoEntity ent = new Gson().fromJson(request, TranscoEntity.class);
 		
-		return null;
+		return ent;
 	}
 }

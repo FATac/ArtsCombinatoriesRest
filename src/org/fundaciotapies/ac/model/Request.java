@@ -76,7 +76,7 @@ public class Request {
 	public ObjectFile getObjectFile(String id) {
 		try {
 			String className = new Request().getObject(id).get("type");
-			boolean isMediaObject = new Request().listAllSubclasses("Media").contains(className);
+			boolean isMediaObject = new Request().listAllSubclasses("MEDIA").contains(className);
 			if (!isMediaObject) return null;
 			
 			Media media = new Media();
@@ -90,6 +90,10 @@ public class Request {
 				mime = "text/"+ext;
 			} else if ("txt".contains(ext)) {
 				mime = "text/plain";
+			} else if ("avi".equals(ext)) {
+				mime = "video/x-msvideo";
+			} else if ("mpeg,mpg".contains(ext)) {
+				mime = "video/mpeg";
 			}
 			
 			ObjectFile result = new ObjectFile();

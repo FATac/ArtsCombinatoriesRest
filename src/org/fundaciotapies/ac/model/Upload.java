@@ -14,6 +14,8 @@ import org.fundaciotapies.ac.Constants;
 import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.ObjectCounter;
 import org.fundaciotapies.ac.model.bo.Right;
+import org.fundaciotapies.ac.rest.client.Profile;
+import org.fundaciotapies.ac.rest.client.Transco;
 import org.fundaciotapies.ac.rest.client.TranscoEntity;
 
 import virtuoso.jena.driver.VirtGraph;
@@ -58,7 +60,13 @@ public class Upload {
 		try {
 			TranscoEntity transco = new TranscoEntity();
 			transco.setSrc_path("http://stress:8080/ArtsCombinatoriesRest/getObjectFile?id="+id);
+			transco.setProfiles(new ArrayList<Profile>());
+			Profile prof = new Profile();
+			prof.setType("0");
+			transco.getProfiles().add(prof);
 			
+			String res = new Transco().addTransco(transco);
+			log.debug(res);
 		} catch (Exception e) {
 			log.error("Error ", e);
 		}

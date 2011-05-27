@@ -31,7 +31,7 @@ public class GetInsertObjectForm {
 		List<String> fieldList = new Request().listClassProperties(className);
 		List<GenericInput> inputList = new ArrayList<GenericInput>();
 		
-		// TODO: Base class/es that should be considered as Media class/es should be taken from properties  
+		// TODO: Base class/es that should be considered as Media class/es should be taken from properties file  
 		boolean isMediaObject = new Request().listAllSubclasses("MEDIA").contains(className);
 		
 		for (String f: fieldList) {
@@ -50,7 +50,7 @@ public class GetInsertObjectForm {
 					inputList.add(new CheckInput(prop));
 				} else if ("float".equals(range) || "Integer".equals(range) || "nonNegativeInteger".equals(range)) {
 					inputList.add(new NumericInput(prop));
-				} else if ("date".equals(range)) {
+				} else if ("date".equals(range) || "dateTime".equals(range)) {
 					inputList.add(new DateInput(prop));
 				} else if ("time".equals(range)) {
 					inputList.add(new TimeInput(prop));
