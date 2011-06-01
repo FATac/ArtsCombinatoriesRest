@@ -59,14 +59,16 @@ public class Upload {
 		
 		try {
 			TranscoEntity transco = new TranscoEntity();
-			transco.setSrc_path("http://stress:8080/ArtsCombinatoriesRest/getObjectFile?id="+id);
+			//transco.setSrc_path("http://stress:8080/ArtsCombinatoriesRest/getObjectFile?id="+id);
+			transco.setSrc_path("/tmp/test.dv"); // TODO: delete line and uncomment above
 			transco.setProfiles(new ArrayList<Profile>());
 			Profile prof = new Profile();
 			prof.setType("0");
+			prof.setDst_path("/tmp/out"+Math.round(Math.random()*100000)+".mp4");
 			transco.getProfiles().add(prof);
 			
 			String res = new Transco().addTransco(transco);
-			log.debug(res);
+			System.out.println(res);
 		} catch (Exception e) {
 			log.error("Error ", e);
 		}

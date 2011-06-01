@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Constants;
 import org.fundaciotapies.ac.model.bo.Media;
+import org.fundaciotapies.ac.model.bo.Right;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
 import virtuoso.jena.driver.VirtGraph;
@@ -240,13 +241,21 @@ public class Request {
 			Map<String, String> currentObject = null;
 			
 			// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
+			Right right = null;
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
 				currentId = r.get("s").asResource().getLocalName();
 				if (!currentId.equals(lastId)) {
 					if (lastId != null) result.put(lastId, currentObject);
 					currentObject = new TreeMap<String, String>();
+					
+					right = new Right();
+					right.load(currentId);
 				}
+				
+				// TODO: Implement properly legal restrictions on search (assign userLegalLevel the right value depending on logged user role)
+				int userLegalLevel = 1;
+				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) continue;
 				
 				if (r.get("o").isResource()) {
 					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asResource().getLocalName());

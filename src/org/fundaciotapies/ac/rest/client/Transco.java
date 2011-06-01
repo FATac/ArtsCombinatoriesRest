@@ -3,13 +3,16 @@ package org.fundaciotapies.ac.rest.client;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.fundaciotapies.ac.rest.serializer.TranscoDeserializer;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class Transco {
 	private static Logger log = Logger.getLogger(Transco.class);
@@ -21,20 +24,29 @@ public class Transco {
 
 		    // Send data
 		    URL url = new URL("http://tapies.aur.i2cat.net:8080/TapiesWebServices/rest/add");
-		    URLConnection conn = url.openConnection();
+		    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+		    conn.setRequestProperty("Content-Type", "application/json");
+		    conn.setRequestMethod("POST");
+		    //conn.setRequestProperty("Accept", "application/json");
 		    conn.setDoOutput(true);
 		    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+		    log.debug(data);
 		    wr.write(data);
 		    wr.flush();
+		    wr.close();
 
 		    // Get the response
-		    char[] cbuf = null;
 		    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-		    rd.read(cbuf);
-		    wr.close();
+		    String str;
+		    StringBuffer sb = new StringBuffer();
+		    while ((str = rd.readLine()) != null) {
+		    	sb.append(str);
+		    	sb.append("\n");
+		    }
+
 		    rd.close();
 		    
-		    return new String(cbuf);
+		    return sb.toString();
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return null;
@@ -85,19 +97,27 @@ public class Transco {
 	
 	public TranscoEntity getTransco(String id) {
 		try {
-			// Send data
+		    // Send data
 		    URL url = new URL("http://tapies.aur.i2cat.net:8080/TapiesWebServices/rest/"+id);
-		    URLConnection conn = url.openConnection();
+		    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+		    conn.setRequestProperty("Content-Type", "application/json");
+		    conn.setRequestMethod("GET");
+		    //conn.setRequestProperty("Accept", "application/json");
 		    
 		    // Get the response
-		    char[] cbuf = null;
 		    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-		    rd.read(cbuf);
+		    String str;
+		    StringBuffer sb = new StringBuffer();
+		    while ((str = rd.readLine()) != null) {
+		    	sb.append(str);
+		    	sb.append("\n");
+		    }
+
 		    rd.close();
 		    
-		    String result = new String(cbuf);
-		    TranscoEntity ent = new Gson().fromJson(result, TranscoEntity.class);
-		    
+		    GsonBuilder gson = new GsonBuilder();
+			gson.registerTypeAdapter(TranscoEntity.class, new TranscoDeserializer());
+		    TranscoEntity ent = gson.create().fromJson(sb.toString(), TranscoEntity.class);
 		    return ent;
 		} catch (Exception e) {
 			log.error("Error ", e);

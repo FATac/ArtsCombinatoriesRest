@@ -7,7 +7,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.fundaciotapies.ac.logic.Legal;
+import org.fundaciotapies.ac.logic.LegalProcess;
 
 import com.google.gson.Gson;
 
@@ -18,7 +18,7 @@ public class StartLegal {
 	@Produces("application/json")
 	public String startLegal() {
 		Map<String, String> result = new HashMap<String, String>();
-		result.put("userId", new Legal().startLegal());
+		result.put("userId", new LegalProcess().startLegal());
 		return new Gson().toJson(result);
 	}
 	
