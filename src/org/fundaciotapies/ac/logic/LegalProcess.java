@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -14,21 +15,50 @@ import org.fundaciotapies.ac.logic.support.LegalBlock;
 import org.fundaciotapies.ac.logic.support.LegalBlockData;
 import org.fundaciotapies.ac.logic.support.LegalBlockRules;
 import org.fundaciotapies.ac.logic.support.LegalDefinition;
-
+import org.fundaciotapies.ac.model.bo.Right;
 
 import com.google.gson.Gson;
 
 public class LegalProcess {
 	private static Logger log = Logger.getLogger(LegalProcess.class);
 	
-	public String startLegal() {
+	public void setObjectsRight(List<String> objectIdList, String color) {
+		try {
+			Right r = new Right();
+			for (String id : objectIdList) {
+				if ("".equals(id.trim())) continue;
+				
+				r.setObjectId(id);
+				r.delete();
+				
+				if ("red".equals(color)) {
+					r.setRightLevel(4);
+				} else if ("orange".equals(color)) {
+					r.setRightLevel(3);
+				} else if ("yellow".equals(color)) {
+					r.setRightLevel(2);
+				} else {
+					r.setRightLevel(1);
+				}
+				
+				r.saveUpdate();
+			}
+		} catch (Exception e) {
+			log.error("Exception ", e);
+		}
+	}
+	
+	public String startLegal(List<String> objectIdList) {
 		String result = null;
 		
 		try {
 			result = "user_" + Math.round(Math.random()*100000000);
+			String idList = "";
+			for (String id: objectIdList) idList += id + ",";
 			
 			Properties prop = new Properties();
 			prop.setProperty("___lastBlock", "");
+			prop.setProperty("___objects", idList);
 			
 			prop.store(new FileOutputStream(result + ".properties"), null);
 		} catch (Exception e) {
@@ -38,24 +68,32 @@ public class LegalProcess {
 		return result;
 	}
 	
-	// TODO: evaluate full-featured boolean expressions (it's currently working only for 'identifier = value' expressions)
+	public String abortLegal(String user) {
+		new File(user + ".properties").delete();
+		return null;
+	}
+	
+	// TODO: evaluate full-featured boolean expressions (it's currently working only for 'identifier = value' typed expressions)
 	private Boolean evalExpression(String exp, Properties data) {
 		
-		String[] tokens = exp.split("[=<>!]");
-		
-		String operator = exp.replaceFirst(tokens[0], "").replaceFirst(tokens[1], "");
-		
-		tokens[0] = tokens[0].trim();
-		tokens[1] = tokens[1].trim();
-		
-		String lvalue = "";
-		
-		if (tokens[0].matches("[a-zA-Z][a-zA-Z0-9]+")) 
-			lvalue = data.getProperty(tokens[0]);
-		else lvalue = null;
-		
-		if ("=".equals(operator))
-			return lvalue.equals(tokens[1]);
+		if (exp!=null && !"".equals(exp)) {
+			String[] tokens = exp.split("[=<>!]");
+			
+			String operator = exp.replaceFirst(tokens[0], "").replaceFirst(tokens[1], "");
+			
+			tokens[0] = tokens[0].trim();
+			tokens[1] = tokens[1].trim();
+			
+			String lvalue = "";
+			
+			if (tokens[0].matches("[a-zA-Z][a-zA-Z0-9]+")) 
+				lvalue = data.getProperty(tokens[0]);
+				if (lvalue==null) lvalue = "";
+			else lvalue = "";
+			
+			if ("=".equals(operator))
+				return lvalue.equals(tokens[1]);
+		} else return true;
 		
 		return false;
 	}
@@ -89,14 +127,25 @@ public class LegalProcess {
 			LegalBlock b = def.getBlock(lastBlock);
 			for (LegalBlockRules r : b.getRules()) {
 				if (evalExpression(r.getExp(), prop)) {
-					LegalBlock b2 = def.getBlock(r.getResult());
-					prop.setProperty("___lastBlock", b2.getName());
-					prop.store(new FileOutputStream(user + ".properties"), null);
-					return b2.getData();
+					if (r.getResult().getBlock()!=null) {
+						LegalBlock b2 = def.getBlock(r.getResult().getBlock());
+						prop.setProperty("___lastBlock", b2.getName());
+						prop.store(new FileOutputStream(user + ".properties"), null);
+						return b2.getData();
+					} else {
+						//TODO: Save legal data into ontology
+						String color = r.getResult().getColor();
+						String objectIds = prop.getProperty("___objects");
+						setObjectsRight(Arrays.asList(objectIds.split(",")), color);
+						
+						new File(user + ".properties").delete();
+						return null;
+					}
 				}
 			}
 			
 		} catch (Exception e) {
+			abortLegal(user);
 			log.error("Exception ", e);
 		}
 		

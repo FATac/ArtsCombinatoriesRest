@@ -1,24 +1,32 @@
 package org.fundaciotapies.ac.rest;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.GET;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 
 import org.fundaciotapies.ac.logic.LegalProcess;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 @Path("startLegal")
 public class StartLegal {
 	
-	@GET
+	@POST
 	@Produces("application/json")
-	public String startLegal() {
+	public String startLegal(@Context HttpServletRequest httpRequest,  String request) {
+		Type listType = new TypeToken<List<String>>() {}.getType();
+		List<String> idList = new Gson().fromJson(request, listType);
+		
 		Map<String, String> result = new HashMap<String, String>();
-		result.put("userId", new LegalProcess().startLegal());
+		result.put("userId", new LegalProcess().startLegal(idList));
 		return new Gson().toJson(result);
 	}
 	

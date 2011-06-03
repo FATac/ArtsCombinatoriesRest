@@ -1,0 +1,72 @@
+/* 
+
+Basic expressions information:
+	Operators "=", ">", "<", "!=", "&&", "||"
+	Values must be either constant values (string, integer, boolean) or any data-name already introduced in the process.
+	An expression will always evaluate to boolean (true/false).
+	While process is running: when a block is filled up, the rules are used to know which block to continue to.
+
+*/
+
+{
+	"startBlock":"bGeneral",
+	
+	"blocks":
+    [
+	    {
+	        "description":"Requests general data which is required for any work or document",
+	        "name":"bGeneral",
+	        "data":
+            [
+	            {"name":"workFamilyReference", "type":"string"},
+	            {"name":"workType", "type":"string", "values":["photo","audio","video","text","artWork","building","book"]},
+	            {"name":"creationDate", "type":"date"},
+	            {"name":"showDate", "type":"date"},
+	            {"name":"format", "type":"string"},
+	            {"name":"resolution", "type":"string"},
+	            {"name":"qIsAuthorKnown", "type":"boolean"}
+	        ],
+	
+	        "rules":
+            [
+	            {"exp":"qIsAuthorKnown=true", "result":{"block":"bAuthor"}},
+	            {"result":{"color":"red"}}
+	        ]
+	    },
+	
+	    {
+	    	"description":"Required for works that have an author",
+	        "name":"bAuthor",
+	        "data": 
+            [
+	            {"name":"authorName", "type":"string"},
+	            {"name":"role", "type":"string", "values":["FATemployed", "contract", "subcontract", "other"]},
+	            {"name":"qRightsCession", "type":"boolean"},
+	            {"name":"qIsOriginalWork", "type":"boolean"},
+	            {"name":"qIsPublicDomain", "type":"boolean"}
+	        ],
+	
+	        "rules":
+            [
+	            {"exp":"qRightsCession=true", "result":{"block":"bRightsCession"}},
+	            {"result":{"color":"red"}}
+	        ]
+	    },
+	
+	    {
+	    	"description":"If there is a cession of rights, those must be specified by its license or terms of use",
+	        "name":"bRightsCession",
+	        "data":
+            [
+	            {"name":"right", "type":"checklist", "values":["reproduction","transformation","publication","distribution"]},
+	            {"name":"timespan", "type":"date"},
+	            {"name":"CClicense", "type":"string", "values":["not_CC","by","by_nc","by_sa","by_nc_sa","by_nd","by_nd_nc"]}
+	        ],
+	
+	        "rules":
+            [
+	            {"result":{"color":"orange"}}
+	        ]
+	    }
+    ]
+}

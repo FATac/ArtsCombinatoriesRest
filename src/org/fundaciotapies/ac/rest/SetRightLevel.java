@@ -14,7 +14,7 @@ import javax.ws.rs.core.Context;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fundaciotapies.ac.logic.Legal;
+import org.fundaciotapies.ac.logic.LegalProcess;
 
 @Path("setRightLevel")
 public class SetRightLevel {
@@ -36,7 +36,7 @@ public class SetRightLevel {
 				objectIdList.add(node.getTextValue());
 			}
 			
-			new Legal().setObjectsRight(objectIdList, color);
+			new LegalProcess().setObjectsRight(objectIdList, color);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";

@@ -32,19 +32,22 @@ public class LegalNext {
 			ObjectMapper m = new ObjectMapper();
 			JsonNode jsonRequest = m.readValue(request, JsonNode.class);
 			
-			String data = jsonRequest.path("data").getTextValue();
 			String userId = jsonRequest.path("userId").getTextValue();
 			
 			Type mapType = new TypeToken<Map<String, String>>() {}.getType();
 			
-			Map<String, String> dataMap = new Gson().fromJson(data, mapType);			
+			Map<String, String> dataMap = new Gson().fromJson(request, mapType);			
 			result = new LegalProcess().nextBlockData(dataMap, userId);
 		} catch (Exception e) {
 			log.error("Error ", e);
-			return "Error";
+			return "error";
 		}
 	
-		Type listType = new TypeToken<List<LegalBlockData>>() {}.getType();
-		return new Gson().toJson(result, listType);
+		if (result!=null) {
+			Type listType = new TypeToken<List<LegalBlockData>>() {}.getType();
+			return new Gson().toJson(result, listType);
+		} else {
+			return "success";
+		}
 	}
 }
