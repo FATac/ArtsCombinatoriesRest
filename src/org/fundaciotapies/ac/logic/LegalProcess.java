@@ -15,7 +15,9 @@ import org.fundaciotapies.ac.logic.support.LegalBlock;
 import org.fundaciotapies.ac.logic.support.LegalBlockData;
 import org.fundaciotapies.ac.logic.support.LegalBlockRules;
 import org.fundaciotapies.ac.logic.support.LegalDefinition;
+import org.fundaciotapies.ac.logic.support.LegalExpressionCompiler;
 import org.fundaciotapies.ac.model.bo.Right;
+
 
 import com.google.gson.Gson;
 
@@ -73,29 +75,12 @@ public class LegalProcess {
 		return null;
 	}
 	
-	// TODO: evaluate full-featured boolean expressions (it's currently working only for 'identifier = value' typed expressions)
-	private Boolean evalExpression(String exp, Properties data) {
-		
-		if (exp!=null && !"".equals(exp)) {
-			String[] tokens = exp.split("[=<>!]");
-			
-			String operator = exp.replaceFirst(tokens[0], "").replaceFirst(tokens[1], "");
-			
-			tokens[0] = tokens[0].trim();
-			tokens[1] = tokens[1].trim();
-			
-			String lvalue = "";
-			
-			if (tokens[0].matches("[a-zA-Z][a-zA-Z0-9]+")) 
-				lvalue = data.getProperty(tokens[0]);
-				if (lvalue==null) lvalue = "";
-			else lvalue = "";
-			
-			if ("=".equals(operator))
-				return lvalue.equals(tokens[1]);
-		} else return true;
-		
-		return false;
+	
+	// TODO: fix expression evaluation since it is not working at all
+	private Boolean evalExpression(String exp, Properties data) throws Exception {
+		LegalExpressionCompiler compiler = new LegalExpressionCompiler();
+		compiler.setData(data);
+		return (Boolean)compiler.eval(exp);		
 	}
 	
 	public List<LegalBlockData> nextBlockData(Map<String, String> data, String user) {

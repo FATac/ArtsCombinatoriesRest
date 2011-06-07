@@ -51,6 +51,12 @@ public class Request {
 		Map<String, String> result = null;
 
 		try {
+			// Checks whether user can view object or not
+			Right right = new Right();
+			right.load(id);
+			int userLegalLevel = 1;
+			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) throw new Exception("Access to object denied due to legal restrictions");
+			
 			// Connect to rdf server
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
 			String uniqueId = "http://ac.org/"; // TODO: get id prefix from global configuration 
@@ -76,6 +82,13 @@ public class Request {
 	
 	public ObjectFile getObjectFile(String id) {
 		try {
+			// Checks whether user can view object or not
+			Right right = new Right();
+			right.load(id);
+			int userLegalLevel = 1;
+			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) throw new Exception("Access to object denied due to legal restrictions");
+			
+			// Only media objects have associated files
 			String className = new Request().getObject(id).get("type");
 			boolean isMediaObject = new Request().listAllSubclasses("MEDIA").contains(className);
 			if (!isMediaObject) return null;
@@ -84,6 +97,7 @@ public class Request {
 			media.load(id);
 			String ext = media.getPath().substring(media.getPath().length()-3);
 			
+			// Assign media type
 			String mime = "application/"+ext;
 			if ("png,jpg,gif,svg".contains(ext)) {
 				mime = "image/"+ext;
@@ -202,7 +216,7 @@ public class Request {
 
 			OntClass ontClass = ont.getOntClass(classURI);
 			
-			// Use recursivity to navigate through the class tree starting form given root class
+			// Use recursive calls to navigate through the class tree starting form given root class
 			for (ExtendedIterator<OntClass> it = ontClass.listSubClasses();it.hasNext();) {
 				OntClass cls = it.next();
 				result.add(cls.getLocalName());
@@ -254,7 +268,7 @@ public class Request {
 				}
 				
 				// TODO: Implement properly legal restrictions on search (assign userLegalLevel the right value depending on logged user role)
-				int userLegalLevel = 1;
+				int userLegalLevel = 4;
 				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) continue;
 				
 				if (r.get("o").isResource()) {
