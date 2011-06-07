@@ -4,12 +4,12 @@ import java.util.Properties;
 
 public class LegalExpressionCompiler {
 	
-	String bool = "(?i)true|false";
-	String identifier = "[a-zA-Z_][a-zA-Z0-9_]*";
-	String number = "[0-9][0-9]*";
-	String[] operators = { "||", "&&", "=", "!=", "<", ">" }; // IMPORTANT!! Operators MUST BE ORDERED BY GROUPING PRIORITY	
-	
-	Properties data = new Properties();
+	private String bool = "(?i)true|false";
+	private String identifier = "[a-zA-Z_][a-zA-Z0-9_]*";
+	private String number = "[0-9][0-9]*";
+	private String[] operators = { "||", "&&", "=", "!=", "<", ">" }; // IMPORTANT!! Operators MUST BE ORDERED BY GROUPING PRIORITY	
+	 
+	private Properties data = new Properties();
 	
 	public String[] extractOperands(String exp) {
 		String[] result = { null, null, null, null };
