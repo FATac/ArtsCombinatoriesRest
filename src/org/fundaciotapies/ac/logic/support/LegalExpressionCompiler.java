@@ -3,15 +3,15 @@ package org.fundaciotapies.ac.logic.support;
 import java.util.Properties;
 
 public class LegalExpressionCompiler {
-	
 	private String bool = "(?i)true|false";
 	private String identifier = "[a-zA-Z_][a-zA-Z0-9_]*";
 	private String number = "[0-9][0-9]*";
-	private String[] operators = { "||", "&&", "=", "!=", "<", ">" }; // IMPORTANT!! Operators MUST BE ORDERED BY GROUPING PRIORITY	
+	private String[] operators = { "||", "&&", "=", "!=", "<", ">" }; // IMPORTANT!! Operators MUST BE ORDERED BY GROUP DELIMITER PRIORITY
+	private String string = "'.*'";
 	 
 	private Properties data = new Properties();
 	
-	public String[] extractOperands(String exp) {
+	public String[] extractOperands(String exp) throws LegalExpressionException {
 		String[] result = { null, null, null, null };
 		
 		exp = exp.trim();
@@ -24,9 +24,17 @@ public class LegalExpressionCompiler {
 		
 		if (exp.startsWith("(")) {
 			int lastIdx = 0;
-			int tmpIdx = 0;
-			while ((tmpIdx=exp.indexOf(")",lastIdx+1)) > 0) {
-				lastIdx = tmpIdx;
+			int par = 1;
+			while((par>0) && (lastIdx < exp.length()-1)) {
+				int tmpClose = exp.indexOf(")",lastIdx+1);
+				int tmpOpen = exp.indexOf("(",lastIdx+1);
+				if (tmpClose<tmpOpen && tmpClose!=-1 && tmpClose!=-1 || tmpClose!=-1 && tmpOpen==-1) {
+					lastIdx = tmpClose;
+					par--;
+				} else if (tmpOpen<tmpClose && tmpOpen!=-1 && tmpOpen!=-1 || tmpOpen!=-1 && tmpClose==-1) {
+					lastIdx = tmpOpen;
+					par++;
+				} else throw new LegalExpressionException("Syntax error");
 			}
 			
 			result[1] = exp.substring(1, lastIdx);
@@ -75,23 +83,25 @@ public class LegalExpressionCompiler {
 		
 		String[] tokens = extractOperands(exp);
 		
-		if (tokens[1].matches(bool)) {
-			resultL = Boolean.parseBoolean(tokens[1].toLowerCase());
-		} else if (tokens[1].matches(identifier)) {
+		if (tokens[1].matches(identifier)) {
 			String value = data.getProperty(tokens[1]);
-			if (value==null) throw new LegalExpressionException("Variable not defined " + tokens[1]);
-			if (value.matches(bool)) {
-				resultL = Boolean.parseBoolean(value);
-			} else if (value.matches(number)) {
-				resultL = Integer.parseInt(value);
-			} else { 
-				throw new LegalExpressionException("Expression error");
-			}
-		} else if (tokens[1].matches(number)) {
-			resultL = Integer.parseInt(tokens[1]);
-		} else resultL = eval(tokens[1]);
+			if (value!=null && !value.matches(bool) && !value.matches(number)) tokens[1] = "'"+value+"'";
+			else tokens[1] = value;
+		}
 		
-		if (tokens[0]!=null) {
+		if (tokens[1] != null) {
+			if (tokens[1].matches(bool)) {
+				resultL = Boolean.parseBoolean(tokens[1].toLowerCase());
+			} else if (tokens[1].matches(number)) {
+				resultL = Integer.parseInt(tokens[1]);
+			} else if (tokens[1].matches(string)) {
+				resultL = tokens[1].subSequence(1, tokens[1].length()-1);
+			} else resultL = eval(tokens[1]);
+		} else {
+			resultL = new Object(); // Empty object
+		}
+		
+		if (tokens[0] != null) {
 			if (resultL instanceof Boolean) { 
 				if (tokens[0].length() % 2 != 0) resultL = !(Boolean)resultL;
 			} 

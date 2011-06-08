@@ -89,7 +89,7 @@ public class LegalProcess {
 			Properties prop = new Properties();
 			prop.load(new FileInputStream(user + ".properties"));
 			
-			FileReader f = new FileReader(new File("legal.json"));
+			FileReader f = new FileReader(new File("/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/prova.json"));
 			LegalDefinition def = new Gson().fromJson(f, LegalDefinition.class);
 			f.close();
 			
