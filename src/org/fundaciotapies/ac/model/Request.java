@@ -230,7 +230,7 @@ public class Request {
 		return result; 
 	}
 	
-	public Map<String, Map<String, String>> search(String word, String className) {
+	public Map<String, Map<String, String>> search(String word, String className, String role) {
 		Map<String, Map<String, String>> result = new TreeMap<String, Map<String,String>>();
 		
 		try {
@@ -268,7 +268,12 @@ public class Request {
 				}
 				
 				// TODO: Implement properly legal restrictions on search (assign userLegalLevel the right value depending on logged user role)
-				int userLegalLevel = 4;
+				int userLegalLevel = 1;
+				if (role!=null) {
+					try {
+						userLegalLevel = Integer.parseInt(role);
+					} catch (NumberFormatException e) {	log.warn(e.toString()); }
+				}
 				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) continue;
 				
 				if (r.get("o").isResource()) {

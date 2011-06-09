@@ -64,7 +64,8 @@ public class Upload {
 			transco.setProfiles(new ArrayList<Profile>());
 			Profile prof = new Profile();
 			prof.setType("0");
-			prof.setDst_path("/tmp/out"+Math.round(Math.random()*100000)+".mp4");
+			prof.setDst_path("/tmp/"+id+"___file.mp4");
+			//prof.setDst_path("/"+id+"___file.mp4"); TODO: uncomment
 			transco.getProfiles().add(prof);
 			
 			String res = new Transco().addTransco(transco);
