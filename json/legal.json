@@ -30,7 +30,7 @@ Basic expressions information:
 	        "rules":
             [
 	            {"exp":"qIsAuthorKnown=true", "result":{"block":"bAuthor"}},
-	            {"result":{"color":"red"}}
+	            {"exp":"true", "result":{"color":"red"}}
 	        ]
 	    },
 	
@@ -49,7 +49,7 @@ Basic expressions information:
 	        "rules":
             [
 	            {"exp":"qRightsCession=true", "result":{"block":"bRightsCession"}},
-	            {"result":{"color":"red"}}
+	            {"exp":"true", "result":{"color":"red"}}
 	        ]
 	    },
 	
@@ -65,7 +65,7 @@ Basic expressions information:
 	
 	        "rules":
             [
-	            {"result":{"color":"orange"}}
+	            {"exp":"true", "result":{"color":"orange"}}
 	        ]
 	    }
     ]
