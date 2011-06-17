@@ -83,7 +83,7 @@ public class LegalExpressionCompiler {
 		
 		String[] tokens = extractOperands(exp);
 		
-		if (tokens[1].matches(identifier)) {
+		if (tokens[1].matches(identifier) && !tokens[1].matches(bool)) {
 			String value = data.getProperty(tokens[1]);
 			if (value!=null && !value.matches(bool) && !value.matches(number)) tokens[1] = "'"+value+"'";
 			else tokens[1] = value;
