@@ -76,7 +76,7 @@ public class LegalProcess {
 	}
 	
 	
-	// TODO: fix expression evaluation since it is not working at all
+	// TODO: extensively test expression evaluator
 	private Boolean evalExpression(String exp, Properties data) throws Exception {
 		LegalExpressionCompiler compiler = new LegalExpressionCompiler();
 		compiler.setData(data);
