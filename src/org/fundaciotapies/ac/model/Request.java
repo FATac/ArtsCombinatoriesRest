@@ -54,8 +54,9 @@ public class Request {
 			// Checks whether user can view object or not
 			Right right = new Right();
 			right.load(id);
-			int userLegalLevel = 1;
-			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) throw new Exception("Access to object denied due to legal restrictions");
+			// TODO: obey legal restrictions
+			//int userLegalLevel = 1;
+			//if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) throw new Exception("Access to object denied due to legal restrictions");
 			
 			// Connect to rdf server
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
