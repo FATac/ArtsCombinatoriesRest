@@ -91,7 +91,7 @@ public class Request {
 			
 			// Only media objects have associated files
 			String className = new Request().getObject(id).get("type");
-			boolean isMediaObject = new Request().listAllSubclasses("MEDIA").contains(className);
+			boolean isMediaObject = new Request().listAllSubclasses("Media").contains(className);
 			if (!isMediaObject) return null;
 			
 			Media media = new Media();
@@ -163,9 +163,11 @@ public class Request {
 			result = new ArrayList<String>();
 			while (it.hasNext()) {
 				OntProperty prop = it.next();
-				OntResource range = prop.getRange();
+				ExtendedIterator<? extends OntResource> l = prop.listRange();
+				String range = "";
+				if (l!=null) while (l.hasNext()) range += l.next().getLocalName()+",";
 				// Creates string with property info: whether it's data or object property, functional, symmetric, etc.
-				result.add(prop.getLocalName() + " " + ((range!=null)?range.getLocalName():"_") + " " +
+				result.add(prop.getLocalName() + " " + ((!"".equals(range))?range:"_") + " " +
 						(prop.isDatatypeProperty()?"D":"O") +
 						(prop.isFunctionalProperty()?"F":"_") +
 						(prop.isSymmetricProperty()?"S":"_") +
@@ -238,14 +240,28 @@ public class Request {
 			// Connect to rdf server
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
 			
-			String qc = "";
+			String qc = null;
+			
 			// If specified, filter results for given class name and all its subclasses 
-			if (className!=null && !"".equals(className)) {
-				qc = " . { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+className+"> } ";
-				List<String> subClassesList = listAllSubclasses(className);
-				for (String sc : subClassesList)
-					qc += " UNION { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+sc+"> } ";
+			if (className!=null && !"".equals(className) && !"_".equals(className)) {
+				String[] clsl = className.split(",");
+				
+				for(String cls : clsl) {
+					if (cls!=null && !"".equals(cls)) {
+						if (qc==null) {
+							qc = " . { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+cls+"> } "; 
+						} else {
+							qc += " UNION { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+cls+"> } ";
+						}
+						
+						List<String> subClassesList = listAllSubclasses(cls);
+						for (String sc : subClassesList)
+							qc += " UNION { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+sc+"> } ";
+					}
+				}
 			}
+			
+			if (qc==null) qc = "";
 
 			// Create search query
 			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + "FILTER regex(?o,\""+word+"\",\"i\") } ORDER BY ?s "),(VirtGraph) data.getBaseModel().getGraph());

@@ -32,7 +32,7 @@ public class GetInsertObjectForm {
 		List<GenericInput> inputList = new ArrayList<GenericInput>();
 		
 		// TODO: Base class/es that should be considered as Media class/es should be taken from properties file  
-		boolean isMediaObject = new Request().listAllSubclasses("MEDIA").contains(className);
+		boolean isMediaObject = new Request().listAllSubclasses("Media").contains(className);
 		
 		for (String f: fieldList) {
 			String[] s = f.split(" ");
