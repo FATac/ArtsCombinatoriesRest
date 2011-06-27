@@ -6,7 +6,7 @@ public class LegalExpressionCompiler {
 	private String bool = "(?i)true|false";
 	private String identifier = "[a-zA-Z_][a-zA-Z0-9_]*";
 	private String number = "[0-9][0-9]*";
-	private String[] operators = { "||", "&&", "=", "!=", "<", ">" }; // IMPORTANT!! Operators MUST BE ORDERED BY GROUP DELIMITER PRIORITY
+	private String[] operators = { "||", "&&", "!=", "=", "<", ">" }; // IMPORTANT!! Operators MUST BE ORDERED BY GROUP DELIMITING PRIORITY
 	private String string = "'.*'";
 	 
 	private Properties data = new Properties();
@@ -111,9 +111,9 @@ public class LegalExpressionCompiler {
 		if (tokens[3] != null && tokens[2] !=null) {
 			Object resultR = eval(tokens[3]);
 			String operator = tokens[2]; 
-			if (operator.equals(operators[2])) { // EQUALS
+			if (operator.equals(operators[3])) { // EQUALS
 				return resultL.equals(resultR);
-			} else if (operator.equals(operators[3])) { // NOT-EQUALS
+			} else if (operator.equals(operators[2])) { // NOT-EQUALS
 				return !resultL.equals(resultR);
 			} else if (operator.equals(operators[4])) { // LESS THAN (int only)
 				if (resultL instanceof Integer && resultR instanceof Integer) {
