@@ -1,0 +1,33 @@
+/* 
+
+Basic expressions information:
+	Operators "=", ">", "<", "!=", "&&", "||"
+	Values must be either constant values (string, integer, boolean) or any data-name already introduced in the process.
+	An expression will always evaluate to boolean (true/false).
+	While process is running: when a block is filled up, the rules are used to know which block to continue to.
+
+*/
+
+{
+	"startBlock":"bGeneral",
+	
+	"blocks":
+    [
+	    {
+	        "description":"Requests general data which is required for any work or document",
+	        "name":"bGeneral",
+	        "data":
+            [
+	            {"name":"COLOR", "type":"string", "values":["VERD","GROC","TARONJA","VERMELL"]}
+	        ],
+	
+	        "rules":
+            [
+	            {"exp":"COLOR='VERD'", "result":{"color":"green"}},
+	            {"exp":"COLOR='GROC'", "result":{"color":"yellow"}},
+	            {"exp":"COLOR='TARONJA'", "result":{"color":"orange"}},
+	            {"exp":"COLOR='VERMELL'", "result":{"color":"red"}}
+	        ]
+	    }
+    ]
+}

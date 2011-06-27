@@ -30,7 +30,7 @@ Basic expressions information:
 	        "rules":
             [
 	            {"exp":"qIsAuthorKnown=true", "result":{"block":"bAuthor"}},
-	            {"exp":"true", "result":{"color":"green"}}
+	            {"exp":"true", "result":{"color":"red"}}
 	        ]
 	    },
 	
@@ -48,7 +48,6 @@ Basic expressions information:
 	
 	        "rules":
             [
-            	{"exp":"qIsOriginalWork=false || qIsPublicDomain=true", "result":{"color":"green"}},
 	            {"exp":"qRightsCession=true", "result":{"block":"bRightsCession"}},
 	            {"exp":"true", "result":{"color":"red"}}
 	        ]
@@ -59,18 +58,13 @@ Basic expressions information:
 	        "name":"bRightsCession",
 	        "data":
             [
-	            {"name":"color", "type":"checklist", "values":["green","yellow","orange","red"]},
+	            {"name":"right", "type":"checklist", "values":["reproduction","transformation","publication","distribution"]},
 	            {"name":"timespan", "type":"date"},
 	            {"name":"CClicense", "type":"string", "values":["not_CC","by","by_nc","by_sa","by_nc_sa","by_nd","by_nd_nc"]}
 	        ],
 	
 	        "rules":
             [
-            	{"exp":"CClicense!='not_CC'", "result":{"color":"green"}},
-            	{"exp":"color='green'", "result":{"color":"green"}},
-            	{"exp":"color='yellow'", "result":{"color":"yellow"}},
-            	{"exp":"color='orange'", "result":{"color":"orange"}},
-            	{"exp":"color='red'", "result":{"color":"red"}},
 	            {"exp":"true", "result":{"color":"orange"}}
 	        ]
 	    }
