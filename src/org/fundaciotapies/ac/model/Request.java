@@ -86,12 +86,13 @@ public class Request {
 			// Checks whether user can view object or not
 			Right right = new Right();
 			right.load(id);
-			int userLegalLevel = 1;
+			// TODO: get user level by parameter
+			int userLegalLevel = 4;
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) throw new Exception("Access to object denied due to legal restrictions");
 			
 			// Only media objects have associated files
 			String className = new Request().getObject(id).get("type");
-			boolean isMediaObject = new Request().listAllSubclasses("Media").contains(className);
+			boolean isMediaObject = new Request().listSubclasses("Media", false).contains(className);
 			if (!isMediaObject) return null;
 			
 			Media media = new Media();
@@ -102,8 +103,8 @@ public class Request {
 			String mime = "application/"+ext;
 			if ("png,jpg,gif,svg".contains(ext)) {
 				mime = "image/"+ext;
-			} else if ("html".contains(ext)) {
-				mime = "text/"+ext;
+			} else if ("tml".equals(ext)) {
+				mime = "text/html";
 			} else if ("txt".contains(ext)) {
 				mime = "text/plain";
 			} else if ("avi".equals(ext)) {
@@ -137,7 +138,8 @@ public class Request {
 			while ( classesIt.hasNext() )
 	        {
 	            OntClass actual = classesIt.next();
-	            result.add(actual.getLocalName());
+	            String name = actual.getLocalName();
+	            if (name!=null) result.add(name);
 	        }
 		} catch (Throwable e) {
 			log.error("Error ", e);
@@ -145,7 +147,7 @@ public class Request {
 
 		return result;
 	}
-
+	
 	public List<String> listClassProperties(String className) {
 		List<String> result = null;
 
@@ -207,7 +209,7 @@ public class Request {
 		return result;
 	}
 	
-	public List<String> listAllSubclasses(String className) {
+	public List<String> listSubclasses(String className, Boolean direct) {
 		List<String> result = new ArrayList<String>();
 
 		try {
@@ -220,10 +222,9 @@ public class Request {
 			OntClass ontClass = ont.getOntClass(classURI);
 			
 			// Use recursive calls to navigate through the class tree starting form given root class
-			for (ExtendedIterator<OntClass> it = ontClass.listSubClasses();it.hasNext();) {
+			for (ExtendedIterator<OntClass> it = ontClass.listSubClasses(direct);it.hasNext();) {
 				OntClass cls = it.next();
 				result.add(cls.getLocalName());
-				result.addAll(listAllSubclasses(cls.getLocalName()));
 			}	
 			
 		} catch (Throwable e) {
@@ -254,7 +255,7 @@ public class Request {
 							qc += " UNION { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+cls+"> } ";
 						}
 						
-						List<String> subClassesList = listAllSubclasses(cls);
+						List<String> subClassesList = listSubclasses(cls, false);
 						for (String sc : subClassesList)
 							qc += " UNION { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+sc+"> } ";
 					}
@@ -271,26 +272,31 @@ public class Request {
 			String lastId = null;
 			Map<String, String> currentObject = null;
 			
+			// Get user role level
+			int userLegalLevel = 1;
+			if (role!=null) {
+				try {
+					userLegalLevel = Integer.parseInt(role);
+				} catch (NumberFormatException e) {	log.warn(e.toString()); }
+			}
+			
 			// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
 			Right right = null;
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
 				currentId = r.get("s").asResource().getLocalName();
 				if (!currentId.equals(lastId)) {
-					if (lastId != null) result.put(lastId, currentObject);
+					if (lastId != null && (right.getRightLevel()==null || right.getRightLevel() <= userLegalLevel)) 
+						result.put(lastId, currentObject);
+					
 					currentObject = new TreeMap<String, String>();
 					
 					right = new Right();
 					right.load(currentId);
 				}
 				
-				// TODO: Implement properly legal restrictions on search (assign userLegalLevel the right value depending on logged user role)
-				int userLegalLevel = 1;
-				if (role!=null) {
-					try {
-						userLegalLevel = Integer.parseInt(role);
-					} catch (NumberFormatException e) {	log.warn(e.toString()); }
-				}
+				lastId = currentId;
+				
 				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) continue;
 				
 				if (r.get("o").isResource()) {
@@ -298,12 +304,10 @@ public class Request {
 				} else {
 					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asLiteral().getString());
 				}
-				
-				lastId = currentId;
 			}
 			
 			// Solved bug: we need to put the last found object!
-			if (lastId != null) result.put(lastId, currentObject);
+			if (lastId != null && (right.getRightLevel()==null || right.getRightLevel() <= userLegalLevel)) result.put(lastId, currentObject);
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
