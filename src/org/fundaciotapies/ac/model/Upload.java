@@ -166,7 +166,7 @@ public class Upload {
 			vth.executeInTransaction(c);
 			vth.commit();
 			
-			result = id;
+			result = "success";
 		} catch (Exception e) {
 			log.error("Error ", e);
 			if (vth!=null) vth.abort();
