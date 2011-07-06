@@ -98,7 +98,7 @@ public class LegalExpressionCompiler {
 				resultL = tokens[1].subSequence(1, tokens[1].length()-1);
 			} else resultL = eval(tokens[1]);
 		} else {
-			resultL = new Object(); // Empty object
+			resultL = Boolean.FALSE; // Empty object
 		}
 		
 		if (tokens[0] != null) {

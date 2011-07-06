@@ -46,6 +46,7 @@ public class GetInsertObjectForm {
 			} else if ("O".equals(dType)){
 				inputList.add(new ObjectInput(prop, range));
 			} else if ("D".equals(dType)) {
+				range = range.substring(0, range.length()-1);
 				if ("boolean".equals(range)) {
 					inputList.add(new CheckInput(prop));
 				} else if ("float".equals(range) || "Integer".equals(range) || "nonNegativeInteger".equals(range)) {

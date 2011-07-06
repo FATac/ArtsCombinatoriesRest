@@ -7,6 +7,7 @@ public class LegalBlock {
 	private String description;
 	private List<LegalBlockData> data;
 	private List<LegalBlockRules> rules;
+	private LegalAutodata autodata;
 	
 	public void setName(String name) {
 		this.name = name;
@@ -39,5 +40,12 @@ public class LegalBlock {
 			if (name == null) return false;
 			return name.equals(((LegalBlock)obj).getName());
 		} else return false;
+	}
+	
+	public void setAutodata(LegalAutodata autodata) {
+		this.autodata = autodata;
+	}
+	public LegalAutodata getAutodata() {
+		return autodata;
 	}
 }

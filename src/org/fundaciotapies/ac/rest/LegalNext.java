@@ -1,10 +1,13 @@
 package org.fundaciotapies.ac.rest;
 
 import java.lang.reflect.Type;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 
+import javax.naming.InitialContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -36,8 +39,15 @@ public class LegalNext {
 			
 			Type mapType = new TypeToken<Map<String, String>>() {}.getType();
 			
-			Map<String, String> dataMap = new Gson().fromJson(request, mapType);			
-			result = new LegalProcess().nextBlockData(dataMap, userId);
+			Map<String, String> dataMap = new Gson().fromJson(request, mapType);
+			LegalProcess process = new LegalProcess();
+			
+			javax.naming.Context ctx = new InitialContext();
+		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
+		    Connection conn = ds.getConnection();
+			
+			process.setSqlConnector(conn);
+			result = process.nextBlockData(dataMap, userId);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";

@@ -1,5 +1,4 @@
-/* 
-
+/*
 Basic expressions information:
 	Operators "=", ">", "<", "!=", "&&", "||"
 	Values must be either constant values (string, integer, boolean) or any data-name already introduced in the process.
@@ -16,10 +15,11 @@ Basic expressions information:
 		{
 		    "description":"Requests general data which is required for any work or document",
 		    "name":"bGeneral",
+		    "autodata":{"key":"work_reference", "table":"autodata_table"},
 		    "data":
 		    [
-		        {"name":"work_family", "type":"string"},
 		        {"name":"work_reference", "type":"string"},
+		        {"name":"work_family", "type":"string"},
 		        {"name":"work_type", "type":"string", "values":["digital_reproduction", "event_person_expo_photo", "audio", "video", "original_text", "plastic_work", "photo_work", "building", "expo_installation", "edited_book"]},
 		        {"name":"is_part_of_edited_work", "type":"boolean"},
 		        {"name":"edited_work_reference", "type":"string"},
@@ -27,15 +27,15 @@ Basic expressions information:
 		        {"name":"contains_people_brand_info", "type":"boolean"},
 		        {"name":"is_author_known", "type":"boolean"},
 		        {"name":"comment_general", "type":"string"},
-		        {"name":"entity", "type":"hidden", "value":"FAT"}
+		        {"name":"entity", "type":"hidden", "defaultValue":"FAT"}
 		    ],
 		    
 		    "rules":
             [
-                {"exp":"contains_people_brand_info=true", "result":{"block":"bContent"}},
-	            {"exp":"is_part_of_edited_work=true", "result":{"block":"bEditedWorkData"}},
-	            {"exp":"is_author_known=true", "result":{"block":"bAuthor"}},
+                {"exp":"is_author_known=true", "result":{"block":"bAuthor"}},
 	            {"exp":"is_author_known=false", "result":{"block":"bOrphan"}},
+                {"exp":"contains_people_brand_info=true", "result":{"block":"bContent"}},
+	            {"exp":"is_part_of_edited_work=true", "result":{"block":"bEditedWorkData"}}
 	        ]
 		},
 		
@@ -48,14 +48,15 @@ Basic expressions information:
 			    {"name":"work_creation_date", "type":"date"},
 			    {"name":"work_spread_date", "type":"date"},
 			    {"name":"author_role", "type":"string", "values":["employed", "contract", "independent", "curator", "other"]},
-			    {"name":"comment_author", "type":"string"},
+			    {"name":"comment_author", "type":"string"}
 			],
 			
 			"rules":
 			[
-				{"exp":"author_role='employed'", "result":{"color":"green"}},
+				{"exp":"author_role='employed' && contains_people_brand_info=false", "result":{"color":"green"}},
+				{"exp":"author_role='employed' && contains_people_brand_info=true", "result":{"block":"bContent"}},
 				{"exp":"author_role='contract' || author_role='independent'", "result":{"block":"bContract"}},
-				{"exp":"author_role='curator'", "result":{"block":"bCession"}},
+				{"exp":"author_role='curator'", "result":{"block":"bCession"}}
 			]
 		},
 		
@@ -70,7 +71,7 @@ Basic expressions information:
 			
 			"rules":
 			[
-				{"exp":"true", "result":{"block":"bCession"}},
+				{"exp":"true", "result":{"block":"bCession"}}
 			]
 		},
 		
@@ -95,7 +96,7 @@ Basic expressions information:
 			"name":"bCessionContract",
 			"data":
 			[
-			    {"name":"contract_reference", "type":"boolean"},
+			    {"name":"contract_reference", "type":"string"},
 			    {"name":"right_reproduction", "type":"boolean"},
 			    {"name":"right_transformation", "type":"boolean"},
 			    {"name":"right_publication", "type":"boolean"},
@@ -134,8 +135,6 @@ Basic expressions information:
 				{"exp":"risk='low'", "result":{"color":"yellow"}},
 				{"exp":"risk='unexisting'", "result":{"color":"green"}}
 			]
-		}	
+		}
 	]
 }
-
-

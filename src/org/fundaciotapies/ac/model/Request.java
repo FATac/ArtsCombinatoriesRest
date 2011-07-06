@@ -36,6 +36,27 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 public class Request {
 	private static Logger log = Logger.getLogger(Request.class);
 	
+	public String getObjectLegalColor(String id) {
+		
+		try {
+			Right right = new Right();
+			right.load(id);
+			Integer level = right.getRightLevel();
+			
+			if (level==null) return "#00ff00";
+			switch (level) {
+			case 1: return "#00ff00"; // green
+			case 2: return "#ffff00"; // yellow
+			case 3: return "#ffa500"; // orange
+			case 4: return "#ff0000"; // red
+			default: return "#00ff00";
+			}
+		} catch (Exception e) {
+			log.error("Error ", e);
+			return null;
+		}
+	}
+	
 	public String getRdf() {
 		// Connect to rdf server
 		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
