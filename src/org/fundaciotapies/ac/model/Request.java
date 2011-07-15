@@ -57,6 +57,10 @@ public class Request {
 		}
 	}
 	
+	private String extractUriId(String URI) {
+		return URI.replace(Constants.baseURI, "");
+	}
+	
 	public String getRdf() {
 		// Connect to rdf server
 		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
@@ -81,10 +85,9 @@ public class Request {
 			
 			// Connect to rdf server
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
-			String uniqueId = "http://ac.org/"; // TODO: get id prefix from global configuration 
 			
 			// Get object by Id
-			Individual ind = data.getIndividual(uniqueId+id);
+			Individual ind = data.getIndividual(Constants.baseURI+id);
 			StmtIterator it = ind.listProperties();
 			result = new TreeMap<String, String>();
 			while(it.hasNext()) {
@@ -264,7 +267,7 @@ public class Request {
 			
 			String qc = null;
 			
-			// If specified, filter results for given class name and all its subclasses 
+			// If specified, filter results for given class name and for all its subclasses 
 			if (className!=null && !"".equals(className) && !"_".equals(className)) {
 				String[] clsl = className.split(",");
 				
@@ -305,7 +308,8 @@ public class Request {
 			Right right = null;
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
-				currentId = r.get("s").asResource().getLocalName();
+				//currentId = r.get("s").asResource().getLocalName();
+				currentId = extractUriId(r.get("s").toString());
 				if (!currentId.equals(lastId)) {
 					if (lastId != null && (right.getRightLevel()==null || right.getRightLevel() <= userLegalLevel)) 
 						result.put(lastId, currentObject);

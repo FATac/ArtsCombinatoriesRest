@@ -49,7 +49,7 @@ public class Upload {
 		
 		if (oc.getCounter()<1000000000) {
 			NumberFormat nf = new DecimalFormat("000000000");
-			return className + "_" + nf.format(oc.getCounter());
+			return className.toLowerCase() + "/" + nf.format(oc.getCounter());
 		} else {
 			throw new Exception("Id counter limit reached!");
 		}
@@ -122,7 +122,7 @@ public class Upload {
 			ont.read("file:OntologiaArtsCombinatories.owl");
 			
 			String id = generateObjectId(className);
-			String fullId = "http://ac.org/" + id;
+			String fullId = Constants.baseURI + id;
 			
 			int i = 0;
 			
@@ -144,9 +144,20 @@ public class Upload {
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) 
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.OWL_URI_NS+properties[i].trim()+"> <http://ac.org/"+propertyValues[i]+"> }");
-					else
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.OWL_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\" }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.OWL_URI_NS+properties[i].trim()+"> <"+Constants.baseURI+propertyValues[i]+"> }");
+					else {
+						String lang = null;
+						
+						if (propertyValues[i].endsWith("@ca")) {
+							lang = "@ca";
+						} else if (propertyValues[i].endsWith("@es")) {
+							lang = "@es";
+						} else if (propertyValues[i].endsWith("@en")) {
+							lang = "@en";
+						} 
+						
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.OWL_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?"@"+lang:"")+" }");
+					}
 				}
 				
 				i++;
@@ -191,7 +202,7 @@ public class Upload {
 			data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData", Constants.RDFDB_URL, "dba", "dba"));
 			
 			script = new ArrayList<String>();
-			script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <http://ac.org/"+objectId+"> or ?c = <http://ac.org/"+objectId+">) . ?a ?b ?c }");
+			script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Constants.baseURI+objectId+"> or ?c = <"+Constants.baseURI+objectId+">) . ?a ?b ?c }");
 			
 			Command c = new Command() {
 				@Override
@@ -245,13 +256,13 @@ public class Upload {
 				}
 				
 				if (!"filePath".equals(properties[i]) || "filePath".equals(properties[i]) && !"".equals(propertyValues[i]))
-					script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a <"+Constants.OWL_URI_NS+properties[i]+"> ?c FILTER (?a = <http://ac.org/"+uniqueId+">) . ?a ?b ?c }");
+					script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a <"+Constants.OWL_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.baseURI+uniqueId+">) . ?a ?b ?c }");
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <http://ac.org/"+uniqueId+"> <"+Constants.OWL_URI_NS+properties[i]+"> <http://ac.org/"+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.baseURI+uniqueId+"> <"+Constants.OWL_URI_NS+properties[i]+"> <"+Constants.baseURI+propertyValues[i]+"> }");
 					} else {
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <http://ac.org/"+uniqueId+"> <"+Constants.OWL_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.baseURI+uniqueId+"> <"+Constants.OWL_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
 					}
 				}
 				i++;
