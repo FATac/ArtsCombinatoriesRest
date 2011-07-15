@@ -35,8 +35,89 @@ Basic expressions information:
                 {"exp":"is_author_known=true", "result":{"block":"bAuthor"}},
 	            {"exp":"is_author_known=false", "result":{"block":"bOrphan"}},
                 {"exp":"contains_people_brand_info=true", "result":{"block":"bContent"}},
-	            {"exp":"is_part_of_edited_work=true", "result":{"block":"bEditedWorkData"}}
+                {"exp":"is_part_of_edited_work=true", "result":{"block":"bEditedWorkData"}}
 	        ]
+		},
+		
+		{
+		    "description":"Content information",
+		    "name":"bContent",
+		    "data":
+		    [
+		        {"name":"has_identifiable_people", "type":"boolean"},
+		        {"name":"has_personal_data", "type":"boolean"},
+		        {"name":"has_brands", "type":"boolean"},
+		        {"name":"has_confidential_info", "type":"boolean"}
+		    ],
+		    
+		    "rules":
+		    [
+		       	{"exp":"has_people=true", "result":{"block":"bPeople"}},
+		       	{"exp":"has_personal_data=true", "result":{"block":"bPersonal"}},
+		       	{"exp":"has_brands=true", "result":{"block":"bBrands"}},
+		       	{"exp":"has_confidential_info=true", "result":{"block":"bConfidential"}},
+		    ]
+		},
+		
+		{
+		    "description":"People",
+		    "name":"bPeople",
+		    "autodata":{"key":"person_name", "type":"autodata_table"},
+		    "data":
+		    [
+				{"name":"person_name", "type":"string"},
+				{"name":"is_person_event_place_public", "type":"boolean"},
+				{"name":"is_private_in_public_place", "type":"boolean"},
+				{"name":"is_person_awared", "type":"string", "values":["yes", "no", "unknown"]},
+				{"name":"impacts_honor_intimacy", "type":"string", "values":["yes", "no", "unknown"]},
+				{"name":"people_constentment", "type":"string", "values":["yes", "no", "unknown"]},
+				{"name":"people_constentment_reference", "type":"string"},
+				{"name":"geographic_scope", "type":"string"},
+				{"name":"use_scope", "type":"string"},
+				{"name":"people_comments", "type":"string"}
+		    ],
+		    
+		    "rules":
+		    [
+		    	{"exp":"has_personal_data=true", "result":{"block":"bPersonal"}},
+		       	{"exp":"has_brands=true", "result":{"block":"bBrands"}},
+		       	{"exp":"has_confidential_info=true", "result":{"block":"bConfidential"}},
+		       	{"exp":"is_person_event_place_public=true", "result":{"color":"green"}},
+		       	{"exp":"is_private_in_public_place=true", "result":{"color":"green"}},
+		       	{"exp":"is_person_awared='yes' && people_constentment='yes'", "result":{"color":"green"}},
+		       	{"exp":"is_person_awared='unknown'", "result":{"color":"orange"}},
+		       	{"exp":"is_person_awared='yes' && impacts_honor_intimacy='no'", "result":{"color":"green"}},
+		       	{"exp":"impacts_honor_intimacy='unknown'", "result":{"color":"orange"}},
+		       	{"exp":"true", "result":{"color":"red"}}
+		    ]
+		},
+		
+		{
+		    "description":"Personal",
+		    "name":"bPersonal",
+		    "data":
+		    [
+		       	{"name":"personal_data_types", "type":"string"},
+		       	{"name":"personal_consentment", "type":"string", "values":["yes", "no", "unknown"]},
+		       	{"name":"personal_consentment_reference", "type":"string"},
+		       	{"name":"personal_data_aim", "type":"string", "values":["internal_use", "publication", "third_party", "other"]},
+		       	{"name":"geographic_scope", "type":"string"},
+		       	{"name":"personal_data_risk", "type":"string", "values":["high","medium","low","unexisting"]},
+		       	{"name":"personal_data_comment", "type":"string"}
+		    ],
+		    
+		    "rules":
+		    [
+		    	{"exp":"has_brands=true", "result":{"block":"bBrands"}},
+		       	{"exp":"has_confidential_info=true", "result":{"block":"bConfidential"}},
+		       	{"exp":"personal_consentment='no' && personal_data_risk!='unexisting'", "result":{"color":"red"}},
+		       	{"exp":"personal_consentment='unknown' && personal_data_risk!='unexisting'", "result":{"color":"red"}},
+		       	{"exp":"personal_data_aim='publication' && geographic_scope!=''", "result":{"color":"yellow"}},
+		       	{"exp":"personal_data_aim='publication'", "result":{"color":"green"}},
+		       	{"exp":"personal_data_aim='internal_use'", "result":{"color":"red"}},
+		       	{"exp":"personal_data_aim='third_party'", "result":{"color":"yellow"}},
+		       	{"exp":"true", "result":{"color":"red"}},
+		    ]
 		},
 		
 		{
