@@ -121,7 +121,8 @@ public class LegalProcess {
 			storeData(b, data);
 			
 			for (LegalBlockRules r : b.getRules()) {
-				if (evalExpression(r.getExp(), prop)) {
+				Boolean res = evalExpression(r.getExp(), prop);
+				if (res!=null && res) {
 					if (r.getResult().getBlock()!=null) {
 						LegalBlock b2 = def.getBlock(r.getResult().getBlock());
 						prop.setProperty("___lastBlock", b2.getName());
@@ -216,12 +217,12 @@ public class LegalProcess {
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		
-		try {
+		/*try {
 			Properties prop = new Properties();
 			prop.load(new FileInputStream(user + ".properties"));
 		} catch (FileNotFoundException e) {
 			return null;
-		}
+		}*/
 		
 		try {
 			pstmt = sqlConnector.prepareStatement("SELECT name, defaultValue FROM autodata_table WHERE keyName = ? AND keyValue = ? ");

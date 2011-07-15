@@ -77,6 +77,9 @@ public class LegalExpressionCompiler {
 		return result;
 	}
 	
+	/*
+	 * Returns null if there is any undefined variable in the expression
+	 */
 	public Object eval(String exp) throws LegalExpressionException {
 		if (exp==null) return null;
 		Object resultL = null;
@@ -96,9 +99,12 @@ public class LegalExpressionCompiler {
 				resultL = Integer.parseInt(tokens[1]);
 			} else if (tokens[1].matches(string)) {
 				resultL = tokens[1].subSequence(1, tokens[1].length()-1);
-			} else resultL = eval(tokens[1]);
+			} else {
+				resultL = eval(tokens[1]);
+				if (resultL == null) return null;
+			}
 		} else {
-			resultL = Boolean.FALSE; // Empty object
+			return null; // An undefined variable always leads to 'null' (not evaluable expression)
 		}
 		
 		if (tokens[0] != null) {
@@ -110,6 +116,7 @@ public class LegalExpressionCompiler {
 		
 		if (tokens[3] != null && tokens[2] !=null) {
 			Object resultR = eval(tokens[3]);
+			if (resultR==null) return null;
 			String operator = tokens[2]; 
 			if (operator.equals(operators[3])) { // EQUALS
 				return resultL.equals(resultR);
