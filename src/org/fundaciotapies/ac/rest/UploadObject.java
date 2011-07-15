@@ -17,7 +17,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.fundaciotapies.ac.model.Upload;
 
 
-@Path("uploadObject")
+@Path("/objects/upload")
 public class UploadObject {
 	
 	private static Logger log = Logger.getLogger(UploadObject.class);

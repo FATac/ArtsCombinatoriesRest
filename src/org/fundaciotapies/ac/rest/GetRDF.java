@@ -7,7 +7,7 @@ import javax.ws.rs.Produces;
 import org.fundaciotapies.ac.model.Request;
 
 
-@Path("getRdf")
+@Path("/rdf")
 public class GetRDF {
 	
 	@GET

@@ -6,24 +6,24 @@ import java.io.OutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
-@Path("getObjectFile")
+@Path("/objects/{class}/{id}/file")
 public class GetObjectFile {
 	private static Logger log = Logger.getLogger(GetObjectFile.class);
 	
 	@GET
-	public String getObjectFile(@Context HttpServletResponse response, @QueryParam("id") String id) {
+	public String getObjectFile(@Context HttpServletResponse response, @PathParam("class") String c, @PathParam("id") String id) {
 		
 		byte[] content = null;
 		
 		try {
-			ObjectFile objectFile = new Request().getObjectFile(id);
+			ObjectFile objectFile = new Request().getObjectFile(c+"/"+id);
 			if (objectFile==null) throw new Exception("Object has no media file");
 			response.setContentType(objectFile.getContentType());
 			

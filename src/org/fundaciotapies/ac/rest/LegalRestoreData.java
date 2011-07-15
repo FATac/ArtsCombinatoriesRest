@@ -16,7 +16,7 @@ import org.fundaciotapies.ac.logic.support.LegalBlockData;
 
 import com.google.gson.Gson;
 
-@Path("legalRestoreData")
+@Path("/legal/restore")
 public class LegalRestoreData {
 	private static Logger log = Logger.getLogger(LegalRestoreData.class);
 	

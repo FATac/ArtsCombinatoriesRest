@@ -18,7 +18,7 @@ import org.fundaciotapies.ac.model.Upload;
 
 import com.google.gson.Gson;
 
-@Path("updateObject")
+@Path("/objects/update")
 public class UpdateObject {
 	private static Logger log = Logger.getLogger(UpdateObject.class);
 	

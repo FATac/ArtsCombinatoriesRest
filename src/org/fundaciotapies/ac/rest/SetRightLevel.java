@@ -16,7 +16,7 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fundaciotapies.ac.logic.LegalProcess;
 
-@Path("setRightLevel")
+@Path("blah")
 public class SetRightLevel {
 	private static Logger log = Logger.getLogger(SetRightLevel.class);	
 	

@@ -11,7 +11,7 @@ import org.fundaciotapies.ac.model.Request;
 
 import com.google.gson.Gson;
 
-@Path("search")
+@Path("/search")
 public class Search {
 
 	@GET

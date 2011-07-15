@@ -6,7 +6,7 @@ import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.PathParam;
 
 import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.rest.serializer.GenericInputSerializer;
@@ -22,12 +22,12 @@ import org.fundaciotapies.ac.view.fields.TimeInput;
 
 import com.google.gson.GsonBuilder;
 
-@Path("getInsertObjectForm")
+@Path("/classes/{class}/form")
 public class GetInsertObjectForm {
 
 	@GET
 	@Produces("application/json")
-	public String getInsertObjectForm(@QueryParam("className") String className) {
+	public String getInsertObjectForm(@PathParam("class") String className) {
 		List<String> fieldList = new Request().listClassProperties(className);
 		List<GenericInput> inputList = new ArrayList<GenericInput>();
 		

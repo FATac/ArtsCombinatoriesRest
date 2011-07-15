@@ -9,7 +9,7 @@ import javax.ws.rs.QueryParam;
 
 import org.fundaciotapies.ac.model.Request;
 
-@Path("getClassesTree")
+@Path("/classes/tree")
 public class GetClassesTree {
 	
 	@GET

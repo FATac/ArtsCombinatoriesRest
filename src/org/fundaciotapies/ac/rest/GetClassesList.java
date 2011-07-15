@@ -11,7 +11,7 @@ import org.fundaciotapies.ac.model.Request;
 
 import com.google.gson.Gson;
 
-@Path("getClassesList")
+@Path("/classes/list")
 public class GetClassesList {
 	
 	@GET

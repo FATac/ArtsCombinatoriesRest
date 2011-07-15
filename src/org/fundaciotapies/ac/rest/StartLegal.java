@@ -16,7 +16,7 @@ import org.fundaciotapies.ac.logic.LegalProcess;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-@Path("startLegal")
+@Path("/legal/start")
 public class StartLegal {
 	
 	@POST

@@ -22,7 +22,7 @@ import org.fundaciotapies.ac.logic.support.LegalBlockData;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-@Path("legalNext")
+@Path("/legal/next")
 public class LegalNext {
 	private static Logger log = Logger.getLogger(LegalNext.class);
 	
