@@ -2,7 +2,6 @@ package org.fundaciotapies.ac.logic;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.sql.Connection;
@@ -10,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -97,28 +95,42 @@ public class LegalProcess {
 			Properties prop = new Properties();
 			prop.load(new FileInputStream(user + ".properties"));
 			
-			FileReader f = new FileReader(new File("/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/legal3.json"));
+			FileReader f = new FileReader(new File("/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/legal4.json"));
 			LegalDefinition def = new Gson().fromJson(f, LegalDefinition.class);
 			f.close();
 			
-			for(Iterator<Map.Entry<String, String>> it = data.entrySet().iterator();it.hasNext();) {
+			String lastBlock = prop.getProperty("___lastBlock");
+			
+			/*for(Iterator<Map.Entry<String, String>> it = data.entrySet().iterator();it.hasNext();) {
 				Map.Entry<String, String> d = it.next();
 				
 				if (d.getValue()!=null)
 					prop.setProperty(d.getKey(), d.getValue());
-			}
-			
-			String lastBlock = prop.getProperty("___lastBlock");
+			}*/
 			
 			if ("".equals(lastBlock) || lastBlock == null) {
 				LegalBlock b = def.getBlock(def.getStartBlock());
 				prop.setProperty("___lastBlock", b.getName());
 				prop.store(new FileOutputStream(user + ".properties"), null);
-				return restoreData(b, data);
+				return restoreData(b, prop);
 			}
 			
+			
 			LegalBlock b = def.getBlock(lastBlock);
-			storeData(b, data);
+			
+			for (LegalBlockData d : b.getData()) {
+				if (d==null) break;
+				String value = data.get(d.getName());
+				if (value!=null) {
+					prop.setProperty(d.getName(), value);
+				} else if (d.getType().equals("boolean")) {
+					prop.setProperty(d.getName(), "false");
+				} else {
+					prop.setProperty(d.getName(), "");
+				}
+			}
+			
+			storeData(b, data, prop);
 			
 			for (LegalBlockRules r : b.getRules()) {
 				Boolean res = evalExpression(r.getExp(), prop);
@@ -127,7 +139,7 @@ public class LegalProcess {
 						LegalBlock b2 = def.getBlock(r.getResult().getBlock());
 						prop.setProperty("___lastBlock", b2.getName());
 						prop.store(new FileOutputStream(user + ".properties"), null);
-						return restoreData(b2, data);
+						return restoreData(b2, prop);
 					} else {
 						//TODO: Save legal data into ontology
 						String color = r.getResult().getColor();
@@ -144,27 +156,31 @@ public class LegalProcess {
 		} catch (Exception e) {
 			abortLegal(user);
 			log.error("Exception ", e);
+		} finally {
+			try { if (!sqlConnector.isClosed()) sqlConnector.close(); } catch (Exception e) {}
 		}
 		
 		return null;
 	}
 	
-	private void storeData(LegalBlock b, Map<String, String> data) throws Exception {
+	private void storeData(LegalBlock b, Map<String, String> data, Properties prop) throws Exception {
 		if (b.getAutodata()==null) return;
 		if (sqlConnector==null) throw new Exception("Sql connector must be provided when autodata feature is used!");
 		
 		LegalAutodata lad = b.getAutodata();
-		String keyVal = data.get(lad.getKey());
+		String keyVal = prop.getProperty(lad.getKey());
 		
 		PreparedStatement pstmt = null;
-		pstmt = sqlConnector.prepareStatement("DELETE FROM autodata_table WHERE keyName = ? AND keyValue = ? ");
-		pstmt.setString(1, lad.getKey());
-		pstmt.setString(2, keyVal);
-		pstmt.executeUpdate();
-		pstmt.close();
 		
 		try {
 			for (LegalBlockData d : b.getData()) {
+				if (d==null) break;
+				pstmt = sqlConnector.prepareStatement("DELETE FROM autodata_table WHERE keyName = ? AND keyValue = ? AND name = ? ");
+				pstmt.setString(1, lad.getKey());
+				pstmt.setString(2, keyVal);
+				pstmt.setString(3, d.getName());
+				pstmt.executeUpdate();
+				pstmt.close();
 				
 				pstmt = sqlConnector.prepareStatement("INSERT INTO autodata_table (keyName,keyValue,name,defaultValue) VALUES (?,?,?,?) ");
 				pstmt.setString(1, lad.getKey());
@@ -180,7 +196,7 @@ public class LegalProcess {
 		}
 	}
 	
-	private List<LegalBlockData> restoreData(LegalBlock b, Map<String, String> data) throws Exception {
+	private List<LegalBlockData> restoreData(LegalBlock b, Properties prop) throws Exception {
 		if (b.getAutodata()==null) return b.getData();
 		if (sqlConnector==null) throw new Exception("Sql connector must be provided when autodata feature is used!");
 		
@@ -190,9 +206,10 @@ public class LegalProcess {
 		try {
 			pstmt = sqlConnector.prepareStatement("SELECT defaultValue FROM autodata_table WHERE keyName = ? AND keyValue = ? AND name = ? ");
 			for (LegalBlockData d : b.getData()) {
+				if (d==null) break;
 				
 				pstmt.setString(1, lad.getKey());
-				pstmt.setString(2, data.get(lad.getKey()));
+				pstmt.setString(2, prop.getProperty(lad.getKey()));
 				pstmt.setString(3, d.getName());
 				
 				rs = pstmt.executeQuery();

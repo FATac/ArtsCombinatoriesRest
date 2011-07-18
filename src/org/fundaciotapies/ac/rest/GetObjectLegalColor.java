@@ -13,7 +13,7 @@ import org.fundaciotapies.ac.model.Request;
 public class GetObjectLegalColor {
 	
 	@GET
-	public String getObjectLegalColor(@Context HttpServletResponse response, @PathParam("class") String c, @QueryParam("id") String id) {
+	public String getObjectLegalColor(@Context HttpServletResponse response, @PathParam("class") String c, @PathParam("id") String id) {
 		return new Request().getObjectLegalColor(c+"/"+id);
 	}
 

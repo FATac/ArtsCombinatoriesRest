@@ -6,7 +6,7 @@ public class LegalExpressionCompiler {
 	private String bool = "(?i)true|false";
 	private String identifier = "[a-zA-Z_][a-zA-Z0-9_]*";
 	private String number = "[0-9][0-9]*";
-	private String[] operators = { "||", "&&", "!=", "=", "<", ">" }; // IMPORTANT!! Operators MUST BE ORDERED BY GROUP DELIMITING PRIORITY
+	private String[] operators = { "||", "&&", "=", "!=", "<", ">" }; // IMPORTANT!! Operators MUST BE ORDERED BY GROUP DELIMITING PRIORITY
 	private String string = "'.*'";
 	 
 	private Properties data = new Properties();
@@ -34,7 +34,7 @@ public class LegalExpressionCompiler {
 				} else if (tmpOpen<tmpClose && tmpOpen!=-1 && tmpOpen!=-1 || tmpOpen!=-1 && tmpClose==-1) {
 					lastIdx = tmpOpen;
 					par++;
-				} else throw new LegalExpressionException("Syntax error");
+				} else throw new LegalExpressionException("Syntax error in expression: " + exp);
 			}
 			
 			result[1] = exp.substring(1, lastIdx);
@@ -54,6 +54,8 @@ public class LegalExpressionCompiler {
 			for (String o : operators) {
 				int idx = exp.indexOf(o);
 				if (idx != -1) {
+					int idx2 = exp.indexOf("(");
+					if (idx > idx2 && idx2 != -1) continue;
 					closestIdx = idx;
 					closestOp = o;
 					break;
@@ -118,9 +120,9 @@ public class LegalExpressionCompiler {
 			Object resultR = eval(tokens[3]);
 			if (resultR==null) return null;
 			String operator = tokens[2]; 
-			if (operator.equals(operators[3])) { // EQUALS
+			if (operator.equals(operators[2])) { // EQUALS
 				return resultL.equals(resultR);
-			} else if (operator.equals(operators[2])) { // NOT-EQUALS
+			} else if (operator.equals(operators[3])) { // NOT-EQUALS
 				return !resultL.equals(resultR);
 			} else if (operator.equals(operators[4])) { // LESS THAN (int only)
 				if (resultL instanceof Integer && resultR instanceof Integer) {

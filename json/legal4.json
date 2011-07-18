@@ -1,5 +1,5 @@
 /*
-	WARNING: THIS IS A LEGAL FLOW SPECIFICATION FOR >>>> PRODUCTION USE <<<< VERSION 0.02 15/07/11
+	WARNING: THIS IS A LEGAL FLOW SPECIFICATION FOR >>>> PRODUCTION USE <<<< VERSION 0.05 18/07/11
 	''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 	
 	PLEASE READ THE FOLLOWING INFORMATION BEFORE ANY FURTHER MODIFICATION
@@ -41,6 +41,7 @@
 	
 	    {
 	        "name":"bGeneral",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"General data which is required for any work or document",
 	        "data":
 	        [
@@ -56,11 +57,12 @@
 	        [   
 	            {"exp":"is_author_known=true", "result":{"block":"bAuthor"}},
 	            {"exp":"is_author_known=false", "result":{"block":"bOrphan"}}
-	        ],
+	        ]
 	    },
 	    
 	    {
 	        "name":"bAuthor",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"Author",
 	        "data":
 	        [
@@ -74,11 +76,12 @@
 	            {"exp":"author_role='contractor'", "result":{"block":"bOrder"}},
 	            {"exp":"author_role='independent' || author_role='curator' ", "result":{"block":"bAssignment"}},
 	            {"exp":"author_role='employed' || author_role='other' ", "result":{"block":"bWorkType"}}
-	        ],
+	        ]
 	    },
 	    
 	    {
 	        "name":"bOrder",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"Order data",
 	        "data":
 	        [
@@ -95,6 +98,7 @@
 	    
 	    {
 	        "name":"bAssignment",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"Transfer of rights",
 	        "data":
 	        [
@@ -112,6 +116,7 @@
 	    
 	    {
 	    	"name":"bAuthorRights",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	    	"description":"Author rights cession",
 	    	"data":
 	    	[
@@ -133,6 +138,7 @@
 	    
 	    {
 	        "name":"bOrphan",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"Orphan works info",
 	        "data":
 	        [
@@ -155,10 +161,11 @@
 	    
 	    {
 	        "name":"bWorkType",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
-	            {"name":"work_type", "type":"string", "values":["digital_reproduction","photo","audio","audovisual","original_text","plastic_work","photo_work","building","expo_installation","edited_book"]},
+	            {"name":"work_type", "type":"string", "values":["digital_reproduction","photo","audio","audiovisual","original_text","plastic_work","photo_work","building","expo_installation","edited_book"]}
 	        ],
 	        
 	        "rules":
@@ -166,7 +173,7 @@
 	    	    {"exp":"work_type='digital_reproduction'", "result":{"block":"bDigitalReproduction"}},
 	    	    {"exp":"work_type='photo'", "result":{"block":"bPhoto"}},
 	    	    {"exp":"work_type='audio'", "result":{"block":"bAudio"}},
-	    	    {"exp":"work_type='audovisual'", "result":{"block":"bAudiovisual"}},
+	    	    {"exp":"work_type='audiovisual'", "result":{"block":"bAudiovisual"}},
 	    	    {"exp":"work_type='original_text'", "result":{"block":"bOriginalText"}},
 	    	    {"exp":"work_type='plastic_work'", "result":{"block":"bPlasticWork"}},
 	    	    {"exp":"work_type='photo_work'", "result":{"block":"bPhotoWork"}},
@@ -178,6 +185,7 @@
 	    
 	    {
 	        "name":"bPhoto",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"Resolution",
 	        "data":
 	        [
@@ -192,6 +200,7 @@
 	    
 	    {
 	        "name":"bAudio",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"Audio",
 	        "data":
 	        [
@@ -211,6 +220,7 @@
 	    
 	    {
 	        "name":"bAudioSpeech",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"Audio Speech",
 	        "data":
 	        [
@@ -229,6 +239,7 @@
 	    
 	    {
 	        "name":"bAudioSpeakerContract",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "descrption":"Audio speaker contract",
 	        "data":
 	        [
@@ -252,6 +263,7 @@
 	    
 	    {
 	        "name":"bAudioMusic",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -269,6 +281,7 @@
 	    
 	    {
 	        "name":"bAudioInterview",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -284,6 +297,7 @@
 	    
 	    {
 	        "name":"bAudiovisual",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -299,6 +313,7 @@
 	    
 	    {
 	        "name":"bAudiovisualActors",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -316,6 +331,7 @@
 	    
 	    {
 	        "name":"bAudiovisualActorsContract",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "descrption":"Audiovisual actors contract",
 	        "data":
 	        [
@@ -337,6 +353,7 @@
 	    
 	    {
 	        "name":"bPhotoBuilding",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -354,6 +371,7 @@
 
 	    {
 	        "name":"bPersonBrandInfo",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -375,6 +393,7 @@
 
 	    {
 	        "name":"bPrivacy",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -383,7 +402,7 @@
 	            {"name":"public_person", "type":"boolean"},
 	            {"name":"person_in_public_place", "type":"boolean"},
 	            {"name":"person_for_information_purposes", "type":"boolean"},
-	            {"name":"privacy_comments", "type":"string"},
+	            {"name":"privacy_comments", "type":"string"}
 	        ],
 	        
 	        "rules":
@@ -398,6 +417,7 @@
 	    
 	    {
 	        "name":"bPrivacyPerson",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -423,6 +443,7 @@
 	    
 	    {
 	        "name":"bBrand",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -446,6 +467,7 @@
 	    
 	    {
 	        "name":"bPersonalData",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -470,6 +492,7 @@
 	    
 	    {
 	        "name":"bConfidentiality",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -483,7 +506,7 @@
 	            {"name":"confidentiality_obligations_reference", "type":"string"},
 	            {"name":"confidential_info_use_limit", "type":"boolean"},
 	            {"name":"confidential_info_publication_risk", "type":"string", "values":["high", "medium", "low", "unexisting"]},
-	            {"name":"confidentiality_comments", "type":"string"},
+	            {"name":"confidentiality_comments", "type":"string"}
 	        ],
 	        
 	        "rules":
@@ -496,6 +519,7 @@
 	    
 	    {
 	        "name":"bRelatedWorks",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -518,6 +542,7 @@
 	    
 	    {
 	        "name":"bFinal",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
 	        "description":"",
 	        "data":
 	        [
@@ -549,13 +574,27 @@
 	            {"exp":"is_public_building_photo='unknown'", "result":{"color":"orange"}},
 	            {"exp":"is_public_place_photo='unknown'", "result":{"color":"orange"}},
 	            {"exp":"is_person_identifiable='unknown'", "result":{"color":"orange"}},
-	            {"exp":"", "result":{"color":"orange"}},
-	            {"exp":"", "result":{"color":"orange"}},
-	            {"exp":"", "result":{"color":"orange"}},
-	            {"exp":"", "result":{"color":"orange"}}
+	            {"exp":"person_for_information_purposes=false || person_in_public_place=false", "result":{"color":"orange"}},
+	            {"exp":"privacy_person_publication_risk='medium' || person_has_authorised_publication=false", "result":{"color":"orange"}},
+	            {"exp":"brand_publication_risk='medium' || brand_authorization_use_limit!=''", "result":{"color":"orange"}},
+	            {"exp":"personal_data_web_publication=false || personal_data_purposes='other' || personal_data_publication_risk='medium'", "result":{"color":"orange"}},
+	            {"exp":"confidentiality_obligations='implicit' && confidential_info_publication_risk='medium' ", "result":{"color":"orange"}},
+	            
+	            {"exp":"orphan_risk='low'", "result":{"color":"yellow"}},
+	            {"exp":"music_publication_risk='low'", "result":{"color":"yellow"}},
+	            {"exp":"interview_publication_risk='low'", "result":{"color":"yellow"}},
+	            {"exp":"audiovisual_actors_publication_risk='low'", "result":{"color":"yellow"}},
+	            {"exp":"(reproduction=true || transformation=true) && publication=false", "result":{"color":"yellow"}},
+	            {"exp":"(speaker_contract_reproduction=true || speaker_contract_transformation=true) && speaker_contract_publication=false", "result":{"color":"yellow"}},
+	            {"exp":"(actors_contract_reproduction=true || actors_contract_transformation=true) && actors_contract_publication=false", "result":{"color":"yellow"}},
+	            {"exp":"privacy_geo_limit='Spain' || privacy_person_publication_risk='low'", "result":{"color":"yellow"}},
+	            {"exp":"privacy_use_limit='internal' || privacy_use_limit='laboratory'", "result":{"color":"yellow"}},
+	            {"exp":"brand_publication_risk='low'", "result":{"color":"yellow"}},
+	            {"exp":"personal_data_purposes='internal_use' || personal_data_publication_risk='low'", "result":{"color":"yellow"}},
+	            {"exp":"confidential_info_publication_risk='low'", "result":{"color":"yellow"}},
+	            
+	            {"exp":"true", "result":{"color":"green"}}
 	        ]
-	    },
-	    
-	    
+	    }
 	]
 }
