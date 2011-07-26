@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Constants;
 import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.Right;
+import org.fundaciotapies.ac.model.bo.User;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
 import virtuoso.jena.driver.VirtGraph;
@@ -35,6 +36,17 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 public class Request {
 	private static Logger log = Logger.getLogger(Request.class);
+	
+	public Integer getRoleLevel(String roleName) {
+		if (roleName==null) return 1;
+		int roleLevel = 1;
+		for (String r : Constants.userRoles) {
+			if (roleName.equals(r)) return roleLevel;
+			roleLevel++;
+		}
+		
+		return 0;
+	}
 	
 	public String getObjectLegalColor(String id) {
 		
@@ -72,16 +84,26 @@ public class Request {
 	}
 
 
-	public Map<String, String> getObject(String id) {
+	public Map<String, String> getObject(String id, String userId) {
 		Map<String, String> result = null;
 
 		try {
 			// Checks whether user can view object or not
 			Right right = new Right();
 			right.load(id);
-			// TODO: obey legal restrictions
-			//int userLegalLevel = 1;
-			//if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) throw new Exception("Access to object denied due to legal restrictions");
+			
+			int userLegalLevel = 0;
+			
+			// userId = "" is internal code to allow full access, can only be used by internal calls!
+			if (userId != null && !"".equals(userId)) {
+				User user = new User();
+				user.load(userId);
+				userLegalLevel = getRoleLevel(user.getUserRole());
+			}
+			
+			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) {
+				throw new Exception("Access to object denied due to legal restrictions");
+			}
 			
 			// Connect to rdf server
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
@@ -94,8 +116,11 @@ public class Request {
 				Statement stmt = it.next();
 				if (stmt.getObject().isLiteral())
 					result.put(stmt.getPredicate().getLocalName(), stmt.getObject().asLiteral().getString());
-				else
-					result.put(stmt.getPredicate().getLocalName(), stmt.getObject().asResource().getLocalName());
+				else {
+					String ns = stmt.getObject().asResource().getNameSpace();
+					ns = ns.substring(ns.indexOf("#")+1);
+					result.put(stmt.getPredicate().getLocalName(),  ns + stmt.getObject().asResource().getLocalName());
+				}
 			}
 			
 		} catch (Throwable e) {
@@ -105,22 +130,57 @@ public class Request {
 		return result;
 	}
 	
-	public ObjectFile getObjectFile(String id) {
+	public String getRealId(String className, String id) {
+		String result = null;
+
 		try {
 			// Checks whether user can view object or not
 			Right right = new Right();
 			right.load(id);
-			// TODO: get user level by parameter
-			int userLegalLevel = 4;
-			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) throw new Exception("Access to object denied due to legal restrictions");
+			
+			// Connect to rdf server
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <http://www.semanticweb.org/ontologies/2011/4/Ontology1304926436539.owl#FatacId> \""+id+"\" } "),(VirtGraph) data.getBaseModel().getGraph());
+			ResultSet rs = vqe.execSelect();
+			
+			if (rs.hasNext()) {
+				QuerySolution qs = rs.next();
+				result = extractUriId(qs.get("s").toString());
+			}
+			
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+
+		return result;
+	}
+	
+	public ObjectFile getObjectFile(String id, String userId) {
+		try {
+			// Checks whether user can view object or not
+			Right right = new Right();
+			right.load(id);
+
+			int userLegalLevel = 0;
+			if (userId != null && !"".equals(userId)) {
+				User user = new User();
+				user.load(userId);
+				userLegalLevel = getRoleLevel(user.getUserRole());
+			}
+			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) {
+				throw new Exception("Access to object denied due to legal restrictions");
+			}
 			
 			// Only media objects have associated files
-			String className = new Request().getObject(id).get("type");
+			String className = new Request().getObject(id.replace("_", "/"), "").get("type");
 			boolean isMediaObject = new Request().listSubclasses("Media", false).contains(className);
 			if (!isMediaObject) return null;
 			
 			Media media = new Media();
 			media.load(id);
+			if (media.getPath()==null) return null;
+			
 			String ext = media.getPath().substring(media.getPath().length()-3);
 			
 			// Assign media type
@@ -248,7 +308,7 @@ public class Request {
 			// Use recursive calls to navigate through the class tree starting form given root class
 			for (ExtendedIterator<OntClass> it = ontClass.listSubClasses(direct);it.hasNext();) {
 				OntClass cls = it.next();
-				result.add(cls.getLocalName());
+				result.add(cls.getNameSpace().substring(cls.getNameSpace().indexOf("#")+1)+cls.getLocalName());
 			}	
 			
 		} catch (Throwable e) {
@@ -258,7 +318,7 @@ public class Request {
 		return result; 
 	}
 	
-	public Map<String, Map<String, String>> search(String word, String className, String role) {
+	public Map<String, Map<String, String>> search(String word, String className, String userId) {
 		Map<String, Map<String, String>> result = new TreeMap<String, Map<String,String>>();
 		
 		try {
@@ -285,7 +345,7 @@ public class Request {
 					}
 				}
 			}
-			
+
 			if (qc==null) qc = "";
 
 			// Create search query
@@ -297,11 +357,11 @@ public class Request {
 			Map<String, String> currentObject = null;
 			
 			// Get user role level
-			int userLegalLevel = 1;
-			if (role!=null) {
-				try {
-					userLegalLevel = Integer.parseInt(role);
-				} catch (NumberFormatException e) {	log.warn(e.toString()); }
+			int userLegalLevel = 0;
+			if (userId != null && !"".equals(userId)) {
+				User user = new User();
+				user.load(userId);
+				userLegalLevel = getRoleLevel(user.getUserRole());
 			}
 			
 			// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
@@ -322,7 +382,7 @@ public class Request {
 				
 				lastId = currentId;
 				
-				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel) continue;
+				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) continue;
 				
 				if (r.get("o").isResource()) {
 					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asResource().getLocalName());

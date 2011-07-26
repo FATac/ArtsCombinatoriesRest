@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -13,9 +14,8 @@ public class User implements Serializable {
 	private static final long serialVersionUID = 1609363309553899275L;
 	
 	private Long sid = null;
-	private String userName;
-	private String pwd;
-	private String userType;
+	private String userName = null;
+	private String userRole = null;
 	
 	public Long getSid() {
 		return sid;
@@ -26,20 +26,8 @@ public class User implements Serializable {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
-	public String getPwd() {
-		return pwd;
-	}
-	public void setPwd(String pwd) {
-		this.pwd = pwd;
-	}
-	public String getUserType() {
-		return userType;
-	}
-	public void setUserType(String userType) {
-		this.userType = userType;
-	}
 	
-	public void load(Long sid) throws Exception {
+	public void load(String login) throws Exception {
 		
 		Connection conn = null;
 		PreparedStatement stmt = null;
@@ -47,18 +35,16 @@ public class User implements Serializable {
 		
 		try {
 			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
+		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/mysqlDB");
 		    conn = ds.getConnection();
 		      
-		    stmt = conn.prepareStatement("SELECT * FROM _user WHERE sid = ? ");
-		    stmt.setLong(1, sid);
+		    stmt = conn.prepareStatement("SELECT id, login FROM users WHERE login = ? ");
+		    stmt.setString(1, login);
 		      
 		    rs = stmt.executeQuery();
 		    if (rs.next()) {
-		    	this.sid = sid;
-		    	this.userName = rs.getString("userName");
-		    	this.pwd = rs.getString("pwd");
-		    	this.userType = rs.getString("userType");
+		    	this.sid = rs.getLong("id");
+		    	this.userName = rs.getString("login");
 		    } else {
 		    	this.sid = null;
 		    }
@@ -69,38 +55,43 @@ public class User implements Serializable {
 				if (stmt!=null) stmt.close();
 				if (conn!=null) conn.close();
 				if (rs!=null) rs.close();
-			} catch (Exception e) { throw e; }
-		} 
-	}
-	
-	public void saveUpdate() throws Exception {
-
-		Connection conn = null;
-		PreparedStatement stmt = null;
+			} catch (SQLException e) { throw e; }
+		}
+		
+		if (this.sid==null) return;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
+			Context ctx = new InitialContext();
+		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/mysqlDB");
 		    conn = ds.getConnection();
 		      
-		    String sql = "UPDATE _user SET userName = ?, pwd = ?, userType = ? WHERE sid = ? ";
-		    if (sid ==null) sql = "INSERT INTO _user (userName, pwd, userType) VALUES (?,?,?)";
-		    stmt = conn.prepareStatement(sql);
-		    	  
-		    stmt.setString(1, userName);
-		    stmt.setString(2, pwd);
-		    stmt.setString(3, userType);
-		    if (sid != null) stmt.setLong(3, sid);
+		    stmt = conn.prepareStatement("SELECT name FROM role_assignments WHERE principal_id = ? ");
+		    stmt.setLong(1, sid);
 		      
-		    stmt.executeUpdate();
+		    rs = stmt.executeQuery();
+		    if (rs.next()) {
+		    	this.userRole = rs.getString("name");
+		    } else {
+		    	this.userRole = null;
+		    }
 		} catch (Exception e) {
 			throw e;
 		} finally {
 			try {
 				if (stmt!=null) stmt.close();
 				if (conn!=null) conn.close();
-			} catch (Exception e) { throw e; }
-		}   
+				if (rs!=null) rs.close();
+			} catch (SQLException e) { throw e; }
+		}
+		
 	}
+	
+	public void setUserRole(String userRole) {
+		this.userRole = userRole;
+	}
+	public String getUserRole() {
+		return userRole;
+	}
+	
 	
 }
