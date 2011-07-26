@@ -137,6 +137,7 @@ public class LegalProcess {
 				if (res!=null && res) {
 					if (r.getResult().getBlock()!=null) {
 						LegalBlock b2 = def.getBlock(r.getResult().getBlock());
+						if (b2==null) throw new Exception("Cannot fin block " + r.getResult().getBlock());
 						prop.setProperty("___lastBlock", b2.getName());
 						prop.store(new FileOutputStream(user + ".properties"), null);
 						return restoreData(b2, prop);
