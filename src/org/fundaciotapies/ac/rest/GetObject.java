@@ -6,6 +6,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 import org.fundaciotapies.ac.model.Request;
 
@@ -16,9 +17,9 @@ public class GetObject {
 	
 	@GET
 	@Produces("application/json")
-	public String getObject(@PathParam("class") String c, @PathParam("id") String id) {
-		Map<String, String> result = new Request().getObject(c+"/"+id);
-		if (result.isEmpty()) new Gson().toJson("Error: Object does not exists");
+	public String getObject(@PathParam("class") String c, @PathParam("id") String id, @QueryParam("u") String uid) {
+		Map<String, String> result = new Request().getObject(c+"/"+id, uid);
+		if (result==null) return new Gson().toJson("Error: Object could not be found");
 		return new Gson().toJson(result);
 	}
 

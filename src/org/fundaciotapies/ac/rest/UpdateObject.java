@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
@@ -18,21 +19,20 @@ import org.fundaciotapies.ac.model.Upload;
 
 import com.google.gson.Gson;
 
-@Path("/objects/update")
+@Path("/objects/{class}/{id}/update")
 public class UpdateObject {
 	private static Logger log = Logger.getLogger(UpdateObject.class);
 	
 	@POST
 	@Produces("application/json")
 	@Consumes("application/json")
-	public String updateObject(@Context HttpServletRequest httpRequest,  String request) {
+	public String updateObject(@Context HttpServletRequest httpRequest,  String request, @PathParam("class") String c, @PathParam("id") String id) {
 		String result = "error";
 		
 		try {
 			ObjectMapper m = new ObjectMapper();
 			JsonNode jsonRequest = m.readValue(request, JsonNode.class);
 			
-			String id = jsonRequest.path("id").getTextValue();
 			List<String> propertiesList = new ArrayList<String>();
 			List<String> propertyValuesList = new ArrayList<String>();
 			
@@ -49,7 +49,7 @@ public class UpdateObject {
 			propertiesList.toArray(properties);
 			propertyValuesList.toArray(propertyValues);
 			
-			result = new Upload().updateObject(id, properties, propertyValues);
+			result = new Upload().updateObject(c+"/"+id, properties, propertyValues);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return new Gson().toJson(result);
