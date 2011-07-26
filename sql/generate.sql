@@ -1,14 +1,6 @@
 -- Base script which creates necessary data structure for managing users, rights and uploaded media and objects
 -- Suitable (only?) for Openlink Virtuoso sql implementation
 
-DROP TABLE db.dba._user;
-CREATE TABLE db.dba._user (
-	SID INT IDENTITY,
-	userName VARCHAR(30),
-	pwd VARCHAR(60),
-	userType INT
-);
-
 DROP TABLE db.dba._media;
 CREATE TABLE db.dba._media (
 	SID INT IDENTITY,
