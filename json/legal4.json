@@ -5,15 +5,10 @@
 	PLEASE READ THE FOLLOWING INFORMATION BEFORE ANY FURTHER MODIFICATION
 
 	* Values must be either constant values (string, integer, boolean) or any data-name already introduced in the process
-	
 	* Each expression "exp" must always evaluate to boolean (true/false)
-	
 	* Expression available operators are "=", ">", "<", "!=", "&&", "||"
-	
 	* Expressions should always contain defined variables, otherwise, expression will not be evaluated (goes to next expression)
-	
 	* All variables are stored globally, which means all defined variables can be used on forward block rules and all variable names should be different
-	
 	* While the process is running: when a block is filled up, the rules are used to know which block to continue to
 */
 
@@ -535,6 +530,36 @@
 	        ]
 	    },
 	    
+	    {
+	        "name":"bContainerWork",
+	        "description":"",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "data":
+	        [
+	            {"name":"container_work_result", "type":"legal_result", "values":["green", "yellow", "orange", "red"]}
+	        ],
+	        
+	        "rules":
+	        [
+	            {"exp":"contains_other_works", "result":{"block":"bContainedWorks"}},
+	            {"exp":"true", "result":{"block":"bFinal"}}
+			]
+	    },
+	    
+	    {
+	        "name":"bContainedWorks",
+	        "description":"",
+	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "data":
+	        [
+	            {"name":"contained_works_result", "type":"legal_result", "values":["green", "yellow", "orange", "red"]}
+	        ],
+	        
+	        "rules":
+	        [
+	            {"exp":"true", "result":{"block":"bFinal"}}
+			]
+	    },
 	    
 	    /* TODO: RELATED WORKS */
 	    
@@ -563,6 +588,8 @@
 	            {"exp":"brand_publication_risk='high'", "result":{"color":"red"}},
 	            {"exp":"personal_data_is_person_informed=false || personal_data_consent=false || personal_data_publication_risk='high'", "result":{"color":"red"}},
 	            {"exp":"confidentiality_obligations='explicit' || (confidentiality_obligations='implicit' && confidential_info_publication_risk='high')", "result":{"color":"red"}},
+	            {"exp":"container_work_result='red'", "result":{"color":"red"}},
+	            {"exp":"contained_works_result='red'", "result":{"color":"red"}},
 	            
 	            {"exp":"is_author_known=true && author_role='other'", "result":{"color":"orange"}},
 	            {"exp":"is_author_known=true && author_role='contractor' && (payment_required='unpayed' || contractor_name='') ", "result":{"color":"orange"}},
@@ -579,6 +606,8 @@
 	            {"exp":"brand_publication_risk='medium' || brand_authorization_use_limit!=''", "result":{"color":"orange"}},
 	            {"exp":"personal_data_web_publication=false || personal_data_purposes='other' || personal_data_publication_risk='medium'", "result":{"color":"orange"}},
 	            {"exp":"confidentiality_obligations='implicit' && confidential_info_publication_risk='medium' ", "result":{"color":"orange"}},
+	            {"exp":"container_work_result='orange'", "result":{"color":"orange"}},
+	            {"exp":"contained_works_result='orange'", "result":{"color":"orange"}},
 	            
 	            {"exp":"orphan_risk='low'", "result":{"color":"yellow"}},
 	            {"exp":"music_publication_risk='low'", "result":{"color":"yellow"}},
@@ -592,6 +621,8 @@
 	            {"exp":"brand_publication_risk='low'", "result":{"color":"yellow"}},
 	            {"exp":"personal_data_purposes='internal_use' || personal_data_publication_risk='low'", "result":{"color":"yellow"}},
 	            {"exp":"confidential_info_publication_risk='low'", "result":{"color":"yellow"}},
+	            {"exp":"container_work_result='yellow'", "result":{"color":"yellow"}},
+	            {"exp":"contained_works_result='yellow'", "result":{"color":"yellow"}},
 	            
 	            {"exp":"true", "result":{"color":"green"}}
 	        ]

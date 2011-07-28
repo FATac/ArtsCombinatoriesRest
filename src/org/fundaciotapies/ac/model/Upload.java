@@ -156,7 +156,10 @@ public class Upload {
 							lang = "@en";
 						} 
 						
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.OWL_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?"@"+lang:"")+" }");
+						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
+						
+						propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.OWL_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
 					}
 				}
 				
@@ -166,6 +169,7 @@ public class Upload {
 			Command c = new Command() {
 				@Override
 				public Object execute() {
+					//System.out.println(script);
 					for (String s : script)
 						VirtuosoUpdateFactory.create(s, ((VirtGraph)(data.getBaseModel().getGraph()))).exec();
 					return null;
@@ -185,6 +189,7 @@ public class Upload {
 		
 		return result;
 	}
+	
 	
 	public String deleteObject(String objectId) {
 		String result = "error";

@@ -22,6 +22,10 @@ public class UploadObject {
 	
 	private static Logger log = Logger.getLogger(UploadObject.class);
 	
+	public String enc(String str) {
+		return null;
+	}
+	
 	@POST
 	@Produces("text/plain")
 	@Consumes("application/json")
@@ -40,8 +44,9 @@ public class UploadObject {
 				String s = it.next();
 				if (!"className".equals(s)) {
 					if (!"".equals(jsonRequest.path(s).getTextValue())) {
-						propertiesList.add(s);
 						propertyValuesList.add(jsonRequest.path(s).getTextValue());
+						s = s.replace("@ca", "").replace("@es", "").replace("@en", "");
+						propertiesList.add(s);
 					}
 				}
 			}

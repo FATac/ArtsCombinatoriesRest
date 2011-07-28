@@ -45,7 +45,7 @@ public class Request {
 			roleLevel++;
 		}
 		
-		return 0;
+		return 1;
 	}
 	
 	public String getObjectLegalColor(String id) {
@@ -70,7 +70,7 @@ public class Request {
 	}
 	
 	private String extractUriId(String URI) {
-		return URI.replace(Constants.baseURI, "");
+		return URI.replace(Constants.baseURI, "").replace(Constants.OWL_URI_NS, "");
 	}
 	
 	public String getRdf() {
@@ -83,7 +83,6 @@ public class Request {
 		return sw.toString();
 	}
 
-
 	public Map<String, String> getObject(String id, String userId) {
 		Map<String, String> result = null;
 
@@ -92,7 +91,7 @@ public class Request {
 			Right right = new Right();
 			right.load(id);
 			
-			int userLegalLevel = 0;
+			int userLegalLevel = 1;
 			
 			// userId = "" is internal code to allow full access, can only be used by internal calls!
 			if (userId != null && !"".equals(userId)) {
@@ -117,9 +116,7 @@ public class Request {
 				if (stmt.getObject().isLiteral())
 					result.put(stmt.getPredicate().getLocalName(), stmt.getObject().asLiteral().getString());
 				else {
-					String ns = stmt.getObject().asResource().getNameSpace();
-					ns = ns.substring(ns.indexOf("#")+1);
-					result.put(stmt.getPredicate().getLocalName(),  ns + stmt.getObject().asResource().getLocalName());
+					result.put(stmt.getPredicate().getLocalName(), extractUriId(stmt.getObject().toString()));
 				}
 			}
 			
@@ -238,6 +235,7 @@ public class Request {
 		try {
 			if (className == null) return null;
 			String classURI = Constants.OWL_URI_NS + className;
+
 			// Load ontology
 			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
 			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config 
@@ -318,6 +316,28 @@ public class Request {
 		return result; 
 	}
 	
+	public String getLegalObjectId(String referredObjectId) {
+		String result = null;
+		
+		try {
+			// Connect to rdf server
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			
+			// Create search query
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.OWL_URI_NS+"isAssignedTo> <"+Constants.baseURI+referredObjectId+"> . { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+"Rights> } } ORDER BY ?s "), (VirtGraph) data.getBaseModel().getGraph());
+			ResultSet rs = vqe.execSelect();
+			
+			while (rs.hasNext()) {
+				QuerySolution r = rs.next();
+				result = extractUriId(r.get("s").toString());
+			}
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+		
+		return result;	
+	}
+	
 	public Map<String, Map<String, String>> search(String word, String className, String userId) {
 		Map<String, Map<String, String>> result = new TreeMap<String, Map<String,String>>();
 		
@@ -357,7 +377,7 @@ public class Request {
 			Map<String, String> currentObject = null;
 			
 			// Get user role level
-			int userLegalLevel = 0;
+			int userLegalLevel = 1;
 			if (userId != null && !"".equals(userId)) {
 				User user = new User();
 				user.load(userId);
@@ -385,7 +405,7 @@ public class Request {
 				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) continue;
 				
 				if (r.get("o").isResource()) {
-					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asResource().getLocalName());
+					currentObject.put(r.get("p").asResource().getLocalName(), extractUriId(r.get("o").toString()));
 				} else {
 					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asLiteral().getString());
 				}

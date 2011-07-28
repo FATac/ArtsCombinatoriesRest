@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.logic.support.LegalAutodata;
@@ -20,6 +21,8 @@ import org.fundaciotapies.ac.logic.support.LegalBlockData;
 import org.fundaciotapies.ac.logic.support.LegalBlockRules;
 import org.fundaciotapies.ac.logic.support.LegalDefinition;
 import org.fundaciotapies.ac.logic.support.LegalExpressionCompiler;
+import org.fundaciotapies.ac.model.Request;
+import org.fundaciotapies.ac.model.Upload;
 import org.fundaciotapies.ac.model.bo.Right;
 
 
@@ -81,12 +84,42 @@ public class LegalProcess {
 		return null;
 	}
 	
-	
-	// TODO: extensively test expression evaluator
 	private Boolean evalExpression(String exp, Properties data) throws Exception {
 		LegalExpressionCompiler compiler = new LegalExpressionCompiler();
 		compiler.setData(data);
 		return (Boolean)compiler.eval(exp);		
+	}
+	
+	/*
+	 * This will only save data which is both in the properties and in the ontology object Rights
+	 */
+	private void saveLegalData(Properties prop) {
+		Set<Object> set = prop.keySet();
+		
+		List<String> plist = new ArrayList<String>();
+		List<String> vlist = new ArrayList<String>();
+		
+		for (Object k : set) {
+			if (k.equals("___lastBlock")) continue;
+			if (k.equals("___objects")) continue;
+			plist.add(k+"");
+			vlist.add(prop.getProperty(k+""));
+		}
+		
+		String[] s = prop.getProperty("___objects").split(",");
+		for (String x : s) {
+			if (x!=null && !"".equals(x.trim())) {
+				plist.add("isAssignedTo");
+				vlist.add(x.trim());
+				
+				String legalId = new Request().getLegalObjectId(x.trim());
+				if (legalId!=null) new Upload().deleteObject(legalId); 
+				new Upload().uploadObject("Rights", plist.toArray(new String[plist.size()]), vlist.toArray(new String[vlist.size()]));
+				
+				plist.remove(plist.size()-1);
+				vlist.remove(plist.size()-1);
+			}
+		}
 	}
 	
 	public List<LegalBlockData> nextBlockData(Map<String, String> data, String user) {
@@ -142,7 +175,7 @@ public class LegalProcess {
 						prop.store(new FileOutputStream(user + ".properties"), null);
 						return restoreData(b2, prop);
 					} else {
-						//TODO: Save legal data into ontology
+						saveLegalData(prop);
 						String color = r.getResult().getColor();
 						String objectIds = prop.getProperty("___objects");
 						setObjectsRight(Arrays.asList(objectIds.split(",")), color);
