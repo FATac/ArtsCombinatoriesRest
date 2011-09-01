@@ -130,7 +130,8 @@ public class Upload {
 			script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> rdf:type <"+Constants.OWL_URI_NS+className+"> } ");
 			
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
-			List<String> lcp = new Request().listClassPropertiesSimple(className);
+			
+			List<String> lcp = new ArrayList<String>(new Request().listClassPropertiesSimple(className));
 			while(i<properties.length) {
 				boolean isObjectProperty = false;
 				
@@ -148,6 +149,7 @@ public class Upload {
 					else {
 						String lang = null;
 						
+						// TODO: set languages list by configuration
 						if (propertyValues[i].endsWith("@ca")) {
 							lang = "@ca";
 						} else if (propertyValues[i].endsWith("@es")) {

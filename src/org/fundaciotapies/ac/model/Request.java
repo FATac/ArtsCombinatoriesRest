@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Constants;
@@ -26,6 +28,9 @@ import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.ontology.OntProperty;
 import com.hp.hpl.jena.ontology.OntResource;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
@@ -83,6 +88,7 @@ public class Request {
 		return sw.toString();
 	}
 
+	// TODO: show multi-value properties!!
 	public Map<String, String> getObject(String id, String userId) {
 		Map<String, String> result = null;
 
@@ -159,7 +165,7 @@ public class Request {
 			Right right = new Right();
 			right.load(id);
 
-			int userLegalLevel = 0;
+			int userLegalLevel = 1;
 			if (userId != null && !"".equals(userId)) {
 				User user = new User();
 				user.load(userId);
@@ -238,8 +244,8 @@ public class Request {
 
 			// Load ontology
 			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config 
-
+			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config
+			
 			OntClass ontClass = ont.getOntClass(classURI);
 
 			// Get all properties for given class
@@ -265,25 +271,30 @@ public class Request {
 		return result;
 	}
 	
-	public List<String> listClassPropertiesSimple(String className) {
-		List<String> result = null;
+	public Set<String> listClassPropertiesSimple(String className) {
+		Set<String> result = new TreeSet<String>();
 
 		try {
 			if (className == null) return null;
 			String classURI = Constants.OWL_URI_NS + className;
+			
 			// Load ontology
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config 
-
-			OntClass ontClass = ont.getOntClass(classURI);
-
+			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config
+			
 			// Get all properties for given class
-			Iterator<OntProperty> it = ontClass.listDeclaredProperties();
-			result = new ArrayList<String>();
-			while (it.hasNext()) {
-				OntProperty prop = it.next();
-				result.add(prop.getLocalName());
+			Query q = QueryFactory.create("SELECT ?prop WHERE { ?prop <http://www.w3.org/2000/01/rdf-schema#domain>  <"+classURI+"> } ");
+			QueryExecution qe = QueryExecutionFactory.create(q, ont);
+			ResultSet rs = qe.execSelect();
+			while(rs.hasNext()) {
+				QuerySolution s = rs.next();
+				result.add(extractUriId(s.get("prop").asResource().getURI()));
 			}
+
+			// Also get properties for its superclasses (for they are inherited)
+			OntClass ontClass = ont.getOntClass(classURI);
+			OntClass parentClass = ontClass.getSuperClass();
+			if (parentClass!=null)	result.addAll(listClassPropertiesSimple(parentClass.getLocalName()));
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
