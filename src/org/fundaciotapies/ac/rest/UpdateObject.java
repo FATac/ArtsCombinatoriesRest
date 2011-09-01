@@ -28,6 +28,7 @@ public class UpdateObject {
 	@Consumes("application/json")
 	public String updateObject(@Context HttpServletRequest httpRequest,  String request, @PathParam("class") String c, @PathParam("id") String id) {
 		String result = "error";
+		if (request==null || "".equals(request.trim())) return result;
 		
 		try {
 			ObjectMapper m = new ObjectMapper();
@@ -39,8 +40,17 @@ public class UpdateObject {
 			for (Iterator<String> it = jsonRequest.getFieldNames();it.hasNext();) {
 				String s = it.next();
 				if (!"className".equals(s) && !"id".equals(s) && !"filePath".equals(s)) {
-					propertiesList.add(s);
-					propertyValuesList.add(jsonRequest.path(s).getTextValue());
+					if (!jsonRequest.path(s).isArray()) {
+						if (!"".equals(jsonRequest.path(s).getTextValue())) {
+							propertyValuesList.add(jsonRequest.path(s).getTextValue());
+							propertiesList.add(s);
+						}
+					} else {
+						for (Iterator<JsonNode> it2 = jsonRequest.path(s).getElements();it2.hasNext();) {
+							propertyValuesList.add(it2.next().getTextValue());
+							propertiesList.add(s);
+						}
+					}
 				}
 			}
 			
