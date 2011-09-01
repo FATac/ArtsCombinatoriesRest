@@ -59,6 +59,9 @@ public class LegalProcess {
 		}
 	}
 	
+	/*
+	 * Prepares the minimum file data to start the legal process
+	 */
 	public String startLegal(List<String> objectIdList) {
 		String result = null;
 		
@@ -125,22 +128,18 @@ public class LegalProcess {
 	public List<LegalBlockData> nextBlockData(Map<String, String> data, String user) {
 		
 		try {
+			// load current legal process data
 			Properties prop = new Properties();
 			prop.load(new FileInputStream(user + ".properties"));
 			
-			FileReader f = new FileReader(new File("/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/legal4.json"));
+			// load data and rules from JSON specification
+			FileReader f = new FileReader(new File("/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/legal.json")); // TODO: get uri from configuration
 			LegalDefinition def = new Gson().fromJson(f, LegalDefinition.class);
 			f.close();
 			
+			// Determines whether it's on its first iteration, 
+			// if so, it starts the legal flow
 			String lastBlock = prop.getProperty("___lastBlock");
-			
-			/*for(Iterator<Map.Entry<String, String>> it = data.entrySet().iterator();it.hasNext();) {
-				Map.Entry<String, String> d = it.next();
-				
-				if (d.getValue()!=null)
-					prop.setProperty(d.getKey(), d.getValue());
-			}*/
-			
 			if ("".equals(lastBlock) || lastBlock == null) {
 				LegalBlock b = def.getBlock(def.getStartBlock());
 				prop.setProperty("___lastBlock", b.getName());
@@ -148,9 +147,8 @@ public class LegalProcess {
 				return restoreData(b, prop);
 			}
 			
-			
+			// Put blank values that where not input by the user and therefore not sent by html form 
 			LegalBlock b = def.getBlock(lastBlock);
-			
 			for (LegalBlockData d : b.getData()) {
 				if (d==null) break;
 				String value = data.get(d.getName());
@@ -163,8 +161,11 @@ public class LegalProcess {
 				}
 			}
 			
+			// Calls function that stores current data if specified by the autodata feature (see json specification)
 			storeData(b, data, prop);
 			
+			// Evaluates current informed data using current block rules 
+			// in order to determine which block to continue to, or what is the iteration result
 			for (LegalBlockRules r : b.getRules()) {
 				Boolean res = evalExpression(r.getExp(), prop);
 				if (res!=null && res) {
