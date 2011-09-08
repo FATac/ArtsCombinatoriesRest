@@ -15,6 +15,7 @@ import org.fundaciotapies.ac.Constants;
 import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.Right;
 import org.fundaciotapies.ac.model.bo.User;
+import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
 import virtuoso.jena.driver.VirtGraph;
@@ -89,8 +90,8 @@ public class Request {
 	}
 
 	// TODO: show multi-value properties!!
-	public Map<String, String> getObject(String id, String userId) {
-		Map<String, String> result = null;
+	public CustomMap getObject(String id, String userId) {
+		CustomMap result = null;
 
 		try {
 			// Checks whether user can view object or not
@@ -116,7 +117,7 @@ public class Request {
 			// Get object by Id
 			Individual ind = data.getIndividual(Constants.baseURI+id);
 			StmtIterator it = ind.listProperties();
-			result = new TreeMap<String, String>();
+			result = new CustomMap();
 			while(it.hasNext()) {
 				Statement stmt = it.next();
 				if (stmt.getObject().isLiteral())
@@ -176,7 +177,7 @@ public class Request {
 			}
 			
 			// Only media objects have associated files
-			String className = new Request().getObject(id.replace("_", "/"), "").get("type");
+			String className = (String)new Request().getObject(id.replace("_", "/"), "").get("type");
 			boolean isMediaObject = new Request().listSubclasses("Media", false).contains(className);
 			if (!isMediaObject) return null;
 			
@@ -349,8 +350,8 @@ public class Request {
 		return result;	
 	}
 	
-	public Map<String, Map<String, String>> search(String word, String className, String userId) {
-		Map<String, Map<String, String>> result = new TreeMap<String, Map<String,String>>();
+	public Map<String, CustomMap> search(String word, String className, String userId) {
+		Map<String, CustomMap> result = new TreeMap<String, CustomMap>();
 		
 		try {
 			// Connect to rdf server
@@ -385,7 +386,7 @@ public class Request {
 			
 			String currentId = null;
 			String lastId = null;
-			Map<String, String> currentObject = null;
+			CustomMap currentObject = null;
 			
 			// Get user role level
 			int userLegalLevel = 1;
@@ -405,7 +406,7 @@ public class Request {
 					if (lastId != null && (right.getRightLevel()==null || right.getRightLevel() <= userLegalLevel)) 
 						result.put(lastId, currentObject);
 					
-					currentObject = new TreeMap<String, String>();
+					currentObject = new CustomMap();
 					
 					right = new Right();
 					right.load(currentId);
@@ -429,6 +430,34 @@ public class Request {
 		}
 		
 		return result;
+	}
+
+	public List<String> specificObjectSearch(String field, String value, String className) {
+		List<String> idList = new ArrayList<String>();
+		
+		try {
+			// Connect to rdf server
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			
+			// Create search query
+			field = Constants.OWL_URI_NS + field;
+			className = Constants.OWL_URI_NS + className;
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+className+"> } ORDER BY ?s "),(VirtGraph) data.getBaseModel().getGraph());
+			ResultSet rs = vqe.execSelect();
+			
+			String currentId = null;
+			
+			// Get IDs that fit specific search
+			while (rs.hasNext()) {
+				QuerySolution r = rs.next();
+				currentId = extractUriId(r.get("s").toString());
+				idList.add(currentId);
+			}
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+		
+		return idList; 
 	}
 	
 }

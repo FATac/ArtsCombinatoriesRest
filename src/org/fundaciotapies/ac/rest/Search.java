@@ -8,6 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 import org.fundaciotapies.ac.model.Request;
+import org.fundaciotapies.ac.model.support.CustomMap;
 
 import com.google.gson.Gson;
 
@@ -17,7 +18,7 @@ public class Search {
 	@GET
 	@Produces("application/json")
 	public String search(@QueryParam("s") String word, @QueryParam("c") String className, @QueryParam("u") String uid) {
-		Map<String, Map<String, String>> result = new Request().search(word, className, uid);
+		Map<String, CustomMap> result = new Request().search(word, className, uid);
 		return new Gson().toJson(result);
 	}
 }

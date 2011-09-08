@@ -9,6 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 import org.fundaciotapies.ac.model.Request;
+import org.fundaciotapies.ac.model.support.CustomMap;
 
 import com.google.gson.Gson;
 
@@ -18,7 +19,7 @@ public class GetObject {
 	@GET
 	@Produces("application/json")
 	public String getObject(@PathParam("class") String c, @PathParam("id") String id, @QueryParam("u") String uid) {
-		Map<String, String> result = new Request().getObject(c+"/"+id, uid);
+		CustomMap result = new Request().getObject(c+"/"+id, uid);
 		if (result==null) return new Gson().toJson("Error: Object could not be found");
 		return new Gson().toJson(result);
 	}

@@ -8,6 +8,8 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Constants;
@@ -36,7 +38,8 @@ public class Upload {
 	public OntModel data = null;
 	
 	private String generateObjectId(String className) throws Exception {
-		if (className == null) throw new NullPointerException();
+		if (className == null) 
+			throw new NullPointerException();
 		ObjectCounter oc = new ObjectCounter();
 		
 		oc.load(className);
@@ -171,7 +174,7 @@ public class Upload {
 			Command c = new Command() {
 				@Override
 				public Object execute() {
-					//System.out.println(script);
+					System.out.println(script);
 					for (String s : script)
 						VirtuosoUpdateFactory.create(s, ((VirtGraph)(data.getBaseModel().getGraph()))).exec();
 					return null;
@@ -242,6 +245,8 @@ public class Upload {
 		String result = "error";
 		VirtTransactionHandler vth = null;
 		
+		Set<String> alreadyDeleted = new TreeSet<String>();
+		
 		try {
 			data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData", Constants.RDFDB_URL, "dba", "dba"));
 			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
@@ -262,8 +267,10 @@ public class Upload {
 					}
 				}
 				
-				if (!"filePath".equals(properties[i]) || "filePath".equals(properties[i]) && !"".equals(propertyValues[i]))
+				if ((!"filePath".equals(properties[i]) || "filePath".equals(properties[i]) && !"".equals(propertyValues[i])) && (!alreadyDeleted.contains(properties[i]))) {
 					script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a <"+Constants.OWL_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.baseURI+uniqueId+">) . ?a ?b ?c }");
+					alreadyDeleted.add(properties[i]);
+				}
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
