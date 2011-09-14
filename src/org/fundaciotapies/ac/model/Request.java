@@ -295,7 +295,7 @@ public class Request {
 			// Also get properties for its superclasses (for they are inherited)
 			OntClass ontClass = ont.getOntClass(classURI);
 			OntClass parentClass = ontClass.getSuperClass();
-			if (parentClass!=null)	result.addAll(listClassPropertiesSimple(parentClass.getLocalName()));
+			if (parentClass!=null)	result.addAll(listClassPropertiesSimple(extractUriId(parentClass.toString())));
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
