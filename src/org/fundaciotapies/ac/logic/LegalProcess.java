@@ -262,7 +262,7 @@ public class LegalProcess {
 		return b.getData();
 	}
 	
-	public List<LegalBlockData> restoreData(String key, String keyValue, String user) throws Exception {
+	public List<LegalBlockData> restoreData(String key, String keyValue) throws Exception {
 		if (sqlConnector==null) throw new Exception("Sql connector must be provided when autodata feature is used!");
 				
 		List<LegalBlockData> result = null;
