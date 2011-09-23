@@ -3,7 +3,6 @@ package org.fundaciotapies.ac.model;
 import java.io.FileInputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,12 +35,17 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 public class Request {
 	private static Logger log = Logger.getLogger(Request.class);
+	
+	public String getCurrentLanguage() {
+		return "ca"; // TODO: get language from client user config/cookies
+	}
 	
 	public Integer getRoleLevel(String roleName) {
 		if (roleName==null) return 1;
@@ -76,7 +80,7 @@ public class Request {
 	}
 	
 	private String extractUriId(String URI) {
-		return URI.replace(Constants.baseURI, "").replace(Constants.OWL_URI_NS, "");
+		return URI.replace(Constants.baseURI, "").replace(Constants.OWL_URI_NS, "").replace(Constants.RDFS_URI_NS, "");
 	}
 	
 	public String getRdf() {
@@ -89,7 +93,6 @@ public class Request {
 		return sw.toString();
 	}
 
-	// TODO: show multi-value properties!!
 	public CustomMap getObject(String id, String userId) {
 		CustomMap result = null;
 
@@ -120,10 +123,13 @@ public class Request {
 			result = new CustomMap();
 			while(it.hasNext()) {
 				Statement stmt = it.next();
-				if (stmt.getObject().isLiteral())
-					result.put(stmt.getPredicate().getLocalName(), stmt.getObject().asLiteral().getString());
-				else {
-					result.put(stmt.getPredicate().getLocalName(), extractUriId(stmt.getObject().toString()));
+				if (stmt.getObject().isLiteral()) {
+					String lang = stmt.getObject().asLiteral().getLanguage();
+					if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
+					
+					result.put(extractUriId(stmt.getPredicate().toString()), stmt.getObject().asLiteral().getString());
+				} else {
+					result.put(extractUriId(stmt.getPredicate().toString()), extractUriId(stmt.getObject().toString()));
 				}
 			}
 			
@@ -134,10 +140,19 @@ public class Request {
 		return result;
 	}
 	
-	public String getRealId(String className, String id) {
+	public String getRealId(String cls, String id) {
 		String result = null;
 
 		try {
+			String qc = "";
+			if (cls!=null && !"".equals(cls)) {
+				qc = " . { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+cls+"> } ";
+					
+				List<String> subClassesList = listSubclasses(cls, false);
+				for (String sc : subClassesList)
+					qc += " UNION { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+sc+"> } ";
+			}
+			
 			// Checks whether user can view object or not
 			Right right = new Right();
 			right.load(id);
@@ -145,7 +160,8 @@ public class Request {
 			// Connect to rdf server
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
 			
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <http://www.semanticweb.org/ontologies/2011/4/Ontology1304926436539.owl#FatacId> \""+id+"\" } "),(VirtGraph) data.getBaseModel().getGraph());
+			String query = "SELECT ?s FROM <http://localhost:8890/ACData> WHERE { { ?s <"+Constants.OWL_URI_NS+"FatacId> \""+id+"\" } " + qc + " } ";
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create(query),(VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
 			if (rs.hasNext()) {
@@ -226,7 +242,7 @@ public class Request {
 			while ( classesIt.hasNext() )
 	        {
 	            OntClass actual = classesIt.next();
-	            String name = actual.getLocalName();
+	            String name = extractUriId(actual.toString());
 	            if (name!=null) result.add(name);
 	        }
 		} catch (Throwable e) {
@@ -241,24 +257,22 @@ public class Request {
 
 		try {
 			if (className == null) return null;
-			String classURI = Constants.OWL_URI_NS + className;
 
 			// Load ontology
 			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
 			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config
 			
-			OntClass ontClass = ont.getOntClass(classURI);
-
-			// Get all properties for given class
-			Iterator<OntProperty> it = ontClass.listDeclaredProperties();
+			Set<String> props = listClassPropertiesSimple(className);
+			
 			result = new ArrayList<String>();
-			while (it.hasNext()) {
-				OntProperty prop = it.next();
+			for(String p : props) {
+				OntProperty prop = ont.getOntProperty(Constants.OWL_URI_NS + p);
 				ExtendedIterator<? extends OntResource> l = prop.listRange();
 				String range = "";
-				if (l!=null) while (l.hasNext()) range += l.next().getLocalName()+",";
+				if (l!=null) while (l.hasNext()) range += extractUriId(l.next().toString())+",";
+				
 				// Creates string with property info: whether it's data or object property, functional, symmetric, etc.
-				result.add(prop.getLocalName() + " " + ((!"".equals(range))?range:"_") + " " +
+				result.add(extractUriId(prop.toString()) + " " + ((!"".equals(range))?range:"_") + " " +
 						(prop.isDatatypeProperty()?"D":"O") +
 						(prop.isFunctionalProperty()?"F":"_") +
 						(prop.isSymmetricProperty()?"S":"_") +
@@ -294,8 +308,10 @@ public class Request {
 
 			// Also get properties for its superclasses (for they are inherited)
 			OntClass ontClass = ont.getOntClass(classURI);
-			OntClass parentClass = ontClass.getSuperClass();
-			if (parentClass!=null)	result.addAll(listClassPropertiesSimple(extractUriId(parentClass.toString())));
+			if (ontClass!=null) {
+				OntClass parentClass = ontClass.getSuperClass();
+				if (parentClass!=null)	result.addAll(listClassPropertiesSimple(extractUriId(parentClass.toString())));
+			}
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
@@ -318,7 +334,7 @@ public class Request {
 			// Use recursive calls to navigate through the class tree starting form given root class
 			for (ExtendedIterator<OntClass> it = ontClass.listSubClasses(direct);it.hasNext();) {
 				OntClass cls = it.next();
-				result.add(cls.getNameSpace().substring(cls.getNameSpace().indexOf("#")+1)+cls.getLocalName());
+				result.add(cls.getNameSpace().substring(cls.getNameSpace().indexOf("#")+1)+extractUriId(cls.toString()));
 			}	
 			
 		} catch (Throwable e) {
@@ -381,7 +397,8 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + "FILTER regex(?o,\""+word+"\",\"i\") } ORDER BY ?s "),(VirtGraph) data.getBaseModel().getGraph());
+			String filter = "FILTER (regex(?o,\""+word+"\",\"i\") && !regex(?o, \""+Constants.baseURI+"\",\"i\") && !regex(?o, \""+Constants.OWL_URI_NS+"\",\"i\")) ";
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + filter + " } "),(VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -400,11 +417,12 @@ public class Request {
 			Right right = null;
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
-				//currentId = r.get("s").asResource().getLocalName();
+				
 				currentId = extractUriId(r.get("s").toString());
 				if (!currentId.equals(lastId)) {
-					if (lastId != null && (right.getRightLevel()==null || right.getRightLevel() <= userLegalLevel)) 
-						result.put(lastId, currentObject);
+					if (lastId != null && (right.getRightLevel()==null || right.getRightLevel() <= userLegalLevel)) {
+						if (currentObject.size()>0) result.put(lastId, currentObject);
+					}
 					
 					currentObject = new CustomMap();
 					
@@ -417,13 +435,15 @@ public class Request {
 				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) continue;
 				
 				if (r.get("o").isResource()) {
-					currentObject.put(r.get("p").asResource().getLocalName(), extractUriId(r.get("o").toString()));
+					currentObject.put(extractUriId(r.get("p").asResource().toString()), extractUriId(r.get("o").toString()));
 				} else {
-					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asLiteral().getString());
+					String lang = r.get("o").asLiteral().getLanguage();
+					if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
+					
+					currentObject.put(extractUriId(r.get("p").asResource().toString()), r.get("o").asLiteral().getString());
 				}
 			}
-			
-			// Solved bug: we need to put the last found object!
+
 			if (lastId != null && (right.getRightLevel()==null || right.getRightLevel() <= userLegalLevel)) result.put(lastId, currentObject);
 		} catch (Throwable e) {
 			log.error("Error ", e);
@@ -458,6 +478,74 @@ public class Request {
 		}
 		
 		return idList; 
+	}
+	
+	
+	public List<String[]> query(String sparql) {
+		List<String[]> result = new ArrayList<String[]>();
+		
+		// Connect to rdf server
+		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+		
+		// Create search query
+		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create(sparql),(VirtGraph) data.getBaseModel().getGraph());
+		ResultSet rs = vqe.execSelect();
+		
+		// Get IDs that fit specific search
+		while (rs.hasNext()) {
+			QuerySolution r = rs.next();
+			
+			RDFNode na = r.get("a");
+			RDFNode nb = r.get("b");
+			RDFNode nc = r.get("c");
+			String a = "&lt;"+na.toString()+"&gt;";
+			String b = "&lt;"+nb.toString()+"&gt;";
+			String c = "";
+
+			if (nc.isResource())	c = "&lt;"+nc.toString()+"&gt;"; else c = "\""+nc.toString()+"\"";
+			
+			String[] insert = {a,b,c};
+			
+			result.add(insert);
+		}
+		
+		return result;
+	}
+
+	public List<String> saveBackup(String backupId) {
+		List<String> backupScript = new ArrayList<String>();
+		
+		try {
+			// Connect to rdf server
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			
+			// Create search query
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?a ?b ?c } "),(VirtGraph) data.getBaseModel().getGraph());
+			ResultSet rs = vqe.execSelect();
+			
+			// Get IDs that fit specific search
+			while (rs.hasNext()) {
+				QuerySolution r = rs.next();
+				
+				RDFNode na = r.get("a");
+				RDFNode nb = r.get("b");
+				RDFNode nc = r.get("c");
+				String a = "";
+				String b = "";
+				String c = "";
+				if (na.isResource())	a = "<"+na.toString()+">"; else a = "\""+na.toString()+"\"";
+				if (nb.isResource())	b = "<"+nb.toString()+">"; else b = "\""+nb.toString()+"\"";
+				if (nc.isResource())	c = "<"+nc.toString()+">"; else c = "\""+nc.toString()+"\"";
+				
+				String insert = "INSERT INTO GRAPH <http://localhost:8890/ACData> { "+a+" "+b+" "+c+" }";
+				
+				backupScript.add(insert);
+			}
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+		
+		return backupScript; 
 	}
 	
 }
