@@ -10,6 +10,9 @@ import org.fundaciotapies.ac.rest.client.TranscoEntity;
 
 import com.google.gson.Gson;
 
+/**
+ * DO NOT USE
+ */
 @Path("getTransco")
 public class GetTransco {
 

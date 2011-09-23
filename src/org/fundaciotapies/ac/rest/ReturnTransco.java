@@ -11,6 +11,9 @@ import org.fundaciotapies.ac.rest.serializer.TranscoDeserializer;
 
 import com.google.gson.GsonBuilder;
 
+/**
+ * DO NOT USE
+ */
 @Path("returnTransco")
 public class ReturnTransco {
 	

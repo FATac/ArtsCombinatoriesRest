@@ -19,10 +19,20 @@ import org.fundaciotapies.ac.model.Upload;
 
 import com.google.gson.Gson;
 
+/**
+ * Call: http://{host:port}/objects/{class}/{id}/update
+ * <br>
+ * Updates object data. Object data must be provided as field-value pairs list in JSON. Updates only the specified fields (non-specified fields are left untouched)<br>
+ * Params:<br>
+ *  - class: class name<br>
+ *  - id: object identifier<br>
+ * Return: "success" or "error"
+ */
 @Path("/objects/{class}/{id}/update")
 public class UpdateObject {
 	private static Logger log = Logger.getLogger(UpdateObject.class);
 	
+
 	@POST
 	@Produces("application/json")
 	@Consumes("application/json")

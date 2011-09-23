@@ -1,7 +1,5 @@
 package org.fundaciotapies.ac.rest;
 
-import java.util.Map;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -13,9 +11,18 @@ import org.fundaciotapies.ac.model.support.CustomMap;
 
 import com.google.gson.Gson;
 
+/**
+ * Call: http://{host:port}/object/{class}/{id}
+ * <br>
+ *  Get fields and data of a specific object <br>
+ * Params <br>
+ * - class: Class name <br>
+ * - id: Object identifier <br>
+ * Returns: field-value pairs list in JSON
+ */
 @Path("/objects/{class}/{id}")
 public class GetObject {
-	
+
 	@GET
 	@Produces("application/json")
 	public String getObject(@PathParam("class") String c, @PathParam("id") String id, @QueryParam("u") String uid) {

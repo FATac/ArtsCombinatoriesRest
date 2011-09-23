@@ -14,6 +14,15 @@ import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
+/**
+ * Call: http://{host:port}/objects/{class}/{id}/file
+ * <br>
+ * Get media file linked to specific object. Provided object id must be of a Media type <br>
+ * Params class: <br>
+ * - class: Class name <br>
+ * - id: object identifier <br>
+ * Returns: Binary file object by streaming
+ */
 @Path("/objects/{class}/{id}/file")
 public class GetObjectFile {
 	private static Logger log = Logger.getLogger(GetObjectFile.class);
@@ -25,7 +34,7 @@ public class GetObjectFile {
 		try {
 			
 			ObjectFile objectFile = new Request().getObjectFile(c+"_"+id, uid);
-			if (objectFile==null) throw new Exception("Object has no media file");
+			if (objectFile==null) throw new Exception("Object "+c+"_"+id+" has no media file");
 			response.setContentType(objectFile.getContentType());
 			
 			DataInputStream dis = new DataInputStream(objectFile.getInputStream());

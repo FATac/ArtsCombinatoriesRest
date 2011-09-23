@@ -16,13 +16,22 @@ import org.fundaciotapies.ac.logic.support.LegalBlockData;
 
 import com.google.gson.Gson;
 
+/**
+ * Call: http://{host:port}/legal/restore
+ * <br>
+ * While in legal process (after calling StartLegal function), you can get current legal context data calling this function. It's useful for filling up legal forms with previously introduced data that can be used back again<br>
+ * Params:<br>
+ *  - key: Key that is used as reference to restore all related data<br>
+ *  - value Key value<br>
+ * Returns: field-value pair list which is the restored context data
+ */
 @Path("/legal/restore")
 public class LegalRestoreData {
 	private static Logger log = Logger.getLogger(LegalRestoreData.class);
 	
 	@GET
 	@Produces("application/json")
-	public String legalRestoreData(@QueryParam("key") String key, @QueryParam("value") String value, @QueryParam("userId") String userId) {
+	public String legalRestoreData(@QueryParam("key") String key, @QueryParam("value") String value) {
 		
 		try {
 			LegalProcess process = new LegalProcess(); 
@@ -33,7 +42,7 @@ public class LegalRestoreData {
 			
 			process.setSqlConnector(conn);
 			
-			List<LegalBlockData> data = process.restoreData(key, value, userId);
+			List<LegalBlockData> data = process.restoreData(key, value);
 			if (data==null) return "error";
 			return new Gson().toJson(data);
 		} catch (Exception e) {

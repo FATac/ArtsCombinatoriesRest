@@ -17,14 +17,17 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.fundaciotapies.ac.model.Upload;
 
 
+/**
+ * Call: http://{host:port}/objects/{class}/{id}/upload
+ * <br>
+ * Uploads object. Class must be specified and data must be provided as field-value list in JSON
+ * <br>
+ * Return: Identifier of the uploaded object or "error"
+ */
 @Path("/objects/upload")
 public class UploadObject {
 	
 	private static Logger log = Logger.getLogger(UploadObject.class);
-	
-	public String enc(String str) {
-		return null;
-	}
 	
 	@POST
 	@Produces("text/plain")

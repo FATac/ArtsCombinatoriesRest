@@ -7,14 +7,17 @@ import javax.ws.rs.QueryParam;
 
 import org.fundaciotapies.ac.model.Request;
 
+/**
+ * DO NOT USE
+ */
 @Path("/getRealId")
 public class GetRealId {
-	
+
 	@GET
 	@Produces("application/json")
 	public String getRealId(@QueryParam("class") String c, @QueryParam("id") String id) {
 		String result = new Request().getRealId(c,id);
-		if (result!=null) return null;
+		if ("".equals(result)) return null;
 		return result;
 	}
 

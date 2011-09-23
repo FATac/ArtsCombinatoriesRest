@@ -22,6 +22,13 @@ import org.fundaciotapies.ac.logic.support.LegalBlockData;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+/**
+ * Call: http://{host:port}/legal/next
+ * <br>
+ * While in legal process (after calling StartLegal function), call this function to get further legal forms which to show to user.<br>
+ * This function must be feeded with key-value pairs from the legal form and the user id provided at the legal process start <br>
+ * Return: JSON with the next form to be filled-up, or "success" if finished
+ */
 @Path("/legal/next")
 public class LegalNext {
 	private static Logger log = Logger.getLogger(LegalNext.class);
