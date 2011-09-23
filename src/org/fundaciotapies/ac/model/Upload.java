@@ -115,6 +115,10 @@ public class Upload {
 		return "success";
 	}
 	
+	private String extractUriId(String URI) {
+		return URI.replace(Constants.baseURI, "").replace(Constants.OWL_URI_NS, "");
+	}
+	
 	public String uploadObject(String className, String[] properties, String[] propertyValues) {
 		String result = "error";
 		VirtTransactionHandler vth = null;
@@ -124,13 +128,15 @@ public class Upload {
 			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
 			ont.read("file:OntologiaArtsCombinatories.owl");
 			
-			String id = generateObjectId(className);
+			String[] cls = className.split(",");
+			String id = generateObjectId(cls[0]);
 			String fullId = Constants.baseURI + id;
 			
 			int i = 0;
 			
 			script = new ArrayList<String>();
-			script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> rdf:type <"+Constants.OWL_URI_NS+className+"> } ");
+			for (String classNameElement : cls) 
+				script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> rdfs:class <"+Constants.OWL_URI_NS+classNameElement+"> } ");
 			
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			
@@ -138,9 +144,9 @@ public class Upload {
 			while(i<properties.length) {
 				boolean isObjectProperty = false;
 				
-				if (!lcp.contains(properties[i])) { i++; continue; }
+				if (!lcp.contains(properties[i]) && !"FatacId".equals(properties[i])) { i++; continue; }
 				for(ObjectProperty op : lop) {
-					if (op.getLocalName().equals(properties[i])) {
+					if (extractUriId(op.toString()) .equals(properties[i])) {
 						isObjectProperty = true;
 						break;
 					}
@@ -258,10 +264,14 @@ public class Upload {
 
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			while(i<properties.length) {
+				if ("type".equals(properties[i])) {
+					i++;
+					continue;
+				}
 				boolean isObjectProperty = false;
 				
 				for(ObjectProperty op : lop) {
-					if (op.getLocalName().equals(properties[i])) {
+					if (extractUriId(op.toString()).equals(properties[i])) {
 						isObjectProperty = true;
 						break;
 					}
