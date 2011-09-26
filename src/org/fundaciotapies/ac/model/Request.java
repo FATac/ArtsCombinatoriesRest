@@ -80,7 +80,7 @@ public class Request {
 	}
 	
 	private String extractUriId(String URI) {
-		return URI.replace(Constants.baseURI, "").replace(Constants.OWL_URI_NS, "").replace(Constants.RDFS_URI_NS, "");
+		return URI.replace(Constants.OBJECT_BASE_URI, "").replace(Constants.RDFS_URI_NS, "").replace(Constants.AC_URI_NS, "");
 	}
 	
 	public String getRdf() {
@@ -118,7 +118,7 @@ public class Request {
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
 			
 			// Get object by Id
-			Individual ind = data.getIndividual(Constants.baseURI+id);
+			Individual ind = data.getIndividual(Constants.OBJECT_BASE_URI+id);
 			StmtIterator it = ind.listProperties();
 			result = new CustomMap();
 			while(it.hasNext()) {
@@ -146,11 +146,11 @@ public class Request {
 		try {
 			String qc = "";
 			if (cls!=null && !"".equals(cls)) {
-				qc = " . { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+cls+"> } ";
+				qc = " . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } ";
 					
 				List<String> subClassesList = listSubclasses(cls, false);
 				for (String sc : subClassesList)
-					qc += " UNION { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+sc+"> } ";
+					qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+sc+"> } ";
 			}
 			
 			// Checks whether user can view object or not
@@ -160,7 +160,7 @@ public class Request {
 			// Connect to rdf server
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
 			
-			String query = "SELECT ?s FROM <http://localhost:8890/ACData> WHERE { { ?s <"+Constants.OWL_URI_NS+"FatacId> \""+id+"\" } " + qc + " } ";
+			String query = "SELECT ?s FROM <http://localhost:8890/ACData> WHERE { { ?s <"+Constants.AC_URI_NS+"FatacId> \""+id+"\" } " + qc + " } ";
 			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create(query),(VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
@@ -193,7 +193,7 @@ public class Request {
 			}
 			
 			// Only media objects have associated files
-			String className = (String)new Request().getObject(id.replace("_", "/"), "").get("type");
+			String className = (String)new Request().getObject(id, "").get("class");
 			boolean isMediaObject = new Request().listSubclasses("Media", false).contains(className);
 			if (!isMediaObject) return null;
 			
@@ -266,7 +266,7 @@ public class Request {
 			
 			result = new ArrayList<String>();
 			for(String p : props) {
-				OntProperty prop = ont.getOntProperty(Constants.OWL_URI_NS + p);
+				OntProperty prop = ont.getOntProperty(Constants.AC_URI_NS + p);
 				ExtendedIterator<? extends OntResource> l = prop.listRange();
 				String range = "";
 				if (l!=null) while (l.hasNext()) range += extractUriId(l.next().toString())+",";
@@ -291,14 +291,14 @@ public class Request {
 
 		try {
 			if (className == null) return null;
-			String classURI = Constants.OWL_URI_NS + className;
+			String classURI = Constants.AC_URI_NS + className;
 			
 			// Load ontology
 			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
 			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config
 			
 			// Get all properties for given class
-			Query q = QueryFactory.create("SELECT ?prop WHERE { ?prop <http://www.w3.org/2000/01/rdf-schema#domain>  <"+classURI+"> } ");
+			Query q = QueryFactory.create("SELECT ?prop WHERE { ?prop <"+Constants.RDFS_URI_NS+"domain> <"+classURI+"> } ");
 			QueryExecution qe = QueryExecutionFactory.create(q, ont);
 			ResultSet rs = qe.execSelect();
 			while(rs.hasNext()) {
@@ -324,7 +324,7 @@ public class Request {
 
 		try {
 			if (className == null) return null;
-			String classURI = Constants.OWL_URI_NS + className;
+			String classURI = Constants.AC_URI_NS + className;
 			// Load ontology
 			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
 			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config 
@@ -352,7 +352,7 @@ public class Request {
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
 			
 			// Create search query
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.OWL_URI_NS+"isAssignedTo> <"+Constants.baseURI+referredObjectId+"> . { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+"Rights> } } ORDER BY ?s "), (VirtGraph) data.getBaseModel().getGraph());
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.AC_URI_NS+"isAssignedTo> <"+Constants.OBJECT_BASE_URI+referredObjectId+"> . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+"Rights> } } ORDER BY ?s "), (VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
 			while (rs.hasNext()) {
@@ -382,14 +382,14 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " . { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+cls+"> } "; 
+							qc = " . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } "; 
 						} else {
-							qc += " UNION { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+cls+"> } ";
+							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } ";
 						}
 						
 						List<String> subClassesList = listSubclasses(cls, false);
 						for (String sc : subClassesList)
-							qc += " UNION { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+Constants.OWL_URI_NS+sc+"> } ";
+							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+sc+"> } ";
 					}
 				}
 			}
@@ -397,7 +397,7 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			String filter = "FILTER (regex(?o,\""+word+"\",\"i\") && !regex(?o, \""+Constants.baseURI+"\",\"i\") && !regex(?o, \""+Constants.OWL_URI_NS+"\",\"i\")) ";
+			String filter = "FILTER (regex(?o,\""+word+"\",\"i\") && !regex(?o, \""+Constants.OBJECT_BASE_URI+"\",\"i\") && !regex(?o, \""+Constants.AC_URI_NS+"\",\"i\")) ";
 			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + filter + " } "),(VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
@@ -460,9 +460,9 @@ public class Request {
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
 			
 			// Create search query
-			field = Constants.OWL_URI_NS + field;
-			className = Constants.OWL_URI_NS + className;
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+className+"> } ORDER BY ?s "),(VirtGraph) data.getBaseModel().getGraph());
+			field = Constants.AC_URI_NS + field;
+			className = Constants.AC_URI_NS + className;
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s <"+Constants.RDFS_URI_NS+"Class> <"+className+"> } ORDER BY ?s "),(VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;

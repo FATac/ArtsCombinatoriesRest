@@ -116,12 +116,13 @@ public class Upload {
 	}
 	
 	private String extractUriId(String URI) {
-		return URI.replace(Constants.baseURI, "").replace(Constants.OWL_URI_NS, "");
+		return URI.replace(Constants.OBJECT_BASE_URI, "").replace(Constants.RDFS_URI_NS, "").replace(Constants.AC_URI_NS, "");
 	}
 	
 	public String uploadObject(String className, String[] properties, String[] propertyValues) {
 		String result = "error";
 		VirtTransactionHandler vth = null;
+		if (className==null) return "error";
 		
 		try {
 			data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData", Constants.RDFDB_URL, "dba", "dba"));
@@ -130,13 +131,13 @@ public class Upload {
 			
 			String[] cls = className.split(",");
 			String id = generateObjectId(cls[0]);
-			String fullId = Constants.baseURI + id;
+			String fullId = Constants.OBJECT_BASE_URI + id;
 			
 			int i = 0;
 			
 			script = new ArrayList<String>();
 			for (String classNameElement : cls) 
-				script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> rdfs:class <"+Constants.OWL_URI_NS+classNameElement+"> } ");
+				script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> rdfs:Class <"+Constants.AC_URI_NS+classNameElement+"> } ");
 			
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			
@@ -154,7 +155,7 @@ public class Upload {
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) 
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.OWL_URI_NS+properties[i].trim()+"> <"+Constants.baseURI+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.AC_URI_NS+properties[i].trim()+"> <"+Constants.OBJECT_BASE_URI+propertyValues[i]+"> }");
 					else {
 						String lang = null;
 						
@@ -170,7 +171,7 @@ public class Upload {
 						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
 						
 						propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.OWL_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.AC_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
 					}
 				}
 				
@@ -180,7 +181,7 @@ public class Upload {
 			Command c = new Command() {
 				@Override
 				public Object execute() {
-					System.out.println(script);
+					//System.out.println(script);
 					for (String s : script)
 						VirtuosoUpdateFactory.create(s, ((VirtGraph)(data.getBaseModel().getGraph()))).exec();
 					return null;
@@ -218,7 +219,7 @@ public class Upload {
 			data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData", Constants.RDFDB_URL, "dba", "dba"));
 			
 			script = new ArrayList<String>();
-			script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Constants.baseURI+objectId+"> or ?c = <"+Constants.baseURI+objectId+">) . ?a ?b ?c }");
+			script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Constants.OBJECT_BASE_URI+objectId+"> or ?c = <"+Constants.OBJECT_BASE_URI+objectId+">) . ?a ?b ?c }");
 			
 			Command c = new Command() {
 				@Override
@@ -264,7 +265,7 @@ public class Upload {
 
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			while(i<properties.length) {
-				if ("type".equals(properties[i])) {
+				if ("class".equalsIgnoreCase(properties[i])) {
 					i++;
 					continue;
 				}
@@ -278,15 +279,15 @@ public class Upload {
 				}
 				
 				if ((!"filePath".equals(properties[i]) || "filePath".equals(properties[i]) && !"".equals(propertyValues[i])) && (!alreadyDeleted.contains(properties[i]))) {
-					script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a <"+Constants.OWL_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.baseURI+uniqueId+">) . ?a ?b ?c }");
+					script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a <"+Constants.AC_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.OBJECT_BASE_URI+uniqueId+">) . ?a ?b ?c }");
 					alreadyDeleted.add(properties[i]);
 				}
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.baseURI+uniqueId+"> <"+Constants.OWL_URI_NS+properties[i]+"> <"+Constants.baseURI+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.OBJECT_BASE_URI+uniqueId+"> <"+Constants.AC_URI_NS+properties[i]+"> <"+Constants.OBJECT_BASE_URI+propertyValues[i]+"> }");
 					} else {
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.baseURI+uniqueId+"> <"+Constants.OWL_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.OBJECT_BASE_URI+uniqueId+"> <"+Constants.AC_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
 					}
 				}
 				i++;

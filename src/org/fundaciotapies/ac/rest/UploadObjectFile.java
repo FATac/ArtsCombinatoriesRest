@@ -33,7 +33,7 @@ public class UploadObjectFile {
 	public String uploadObjectFile(@Context HttpServletRequest request, @PathParam("class") String c, @PathParam("id") String id, @QueryParam("fn") String fn) {
 		try {
 			InputStream in = request.getInputStream();
-			return new Upload().addMediaFile(in, c+"_"+id, fn);
+			return new Upload().addMediaFile(in, c+"/"+id, fn);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";

@@ -33,8 +33,8 @@ public class GetObjectFile {
 		
 		try {
 			
-			ObjectFile objectFile = new Request().getObjectFile(c+"_"+id, uid);
-			if (objectFile==null) throw new Exception("Object "+c+"_"+id+" has no media file");
+			ObjectFile objectFile = new Request().getObjectFile(c+"/"+id, uid);
+			if (objectFile==null) throw new Exception("Object "+c+"/"+id+" has no media file");
 			response.setContentType(objectFile.getContentType());
 			
 			DataInputStream dis = new DataInputStream(objectFile.getInputStream());
