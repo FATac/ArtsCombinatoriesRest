@@ -12,6 +12,9 @@ public class Constants {
 	public static final String RDFS_URI_NS = "http://www.w3.org/2000/01/rdf-schema#";
 	public static final String OBJECT_BASE_URI = "http://www.artscombinatories.cat/objects/";		// This cannot be changed without updating all existing objects IDs
 	
+	public static final String[] LANG_LIST = { "ca", "en", "es", "fr", "it", "de" };
+	
 	public static final String[] userRoles = { "Contributor" , "Editor" , "Member" , "Reader", "Reviewer", "Site Administrator", "Manager" };
+	
 
 }
