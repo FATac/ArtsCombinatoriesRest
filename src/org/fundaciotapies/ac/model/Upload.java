@@ -159,14 +159,12 @@ public class Upload {
 					else {
 						String lang = null;
 						
-						// TODO: set languages list by configuration
-						if (propertyValues[i].endsWith("@ca")) {
-							lang = "@ca";
-						} else if (propertyValues[i].endsWith("@es")) {
-							lang = "@es";
-						} else if (propertyValues[i].endsWith("@en")) {
-							lang = "@en";
-						} 
+						for (String l : Constants.LANG_LIST) {
+							if (propertyValues[i].endsWith("@"+l)) {
+								lang = "@"+l;
+								break;
+							}
+						}
 						
 						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
 						
