@@ -1,0 +1,36 @@
+{
+	"className":"Person",
+	
+	"sections":
+	[
+		{
+			"name":"header",
+			"data":[
+		
+		    	{
+					"name":"Name",
+					"type":"text",
+					"path":["Person.givenName","Person.lastName"]
+				}
+			]
+		},
+		
+		{
+			"name":"body",
+			"data":[
+			
+			 	{
+			        "name":"CV",
+			        "type":"text",
+			        "path":["Person.CV"]
+			    },
+			    
+			    {
+			        "name":"Role",
+			        "type":"text",
+			        "path":["Person.performsRole:*.class"]
+			    }
+			]  
+		}
+	]
+}

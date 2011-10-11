@@ -1,36 +1,45 @@
 {
 	"className":"Media",
 	
-	"header":
+	"sections":
 	[
 		{
-		    "name":"Title",
-			"type":"text",
-			"path":["Media.Title"]
+			"name":"header",
+			"data":[
+		
+		    	{
+					"name":"Title",
+					"type":"text",
+					"path":["Media.Title"]
+				}
+			]
+		},
+		
+		{
+			"name":"body",
+			"data":[
+			
+			 	{
+			        "name":"Format",
+			        "type":"text",
+			        "path":["Media.format"]
+			    },
+			    
+			    {
+			        "name":"OriginalSource",
+			        "type":"text",
+			        "path":["Media.OriginalSource"]
+			    }
+			]  
+		},
+		
+		{
+			"name":"content",
+			"data":[
+			 	{
+			        "type":"media"
+			    }
+			]  
 		}
-	],
-	
-	"body":
-	[
-	    {
-	        "name":"Format",
-	        "type":"text",
-	        "path":["Media.format"]
-	    },
-	    
-	    {
-	        "name":"FileSize",
-	        "type":"text",
-	        "path":["Media.FileSize"]
-	    },
-	    
-	    {
-	        "name":"OriginalSource",
-	        "type":"text",
-	        "path":["Media.OriginalSource"]
-	    }
-	],
-	
-	"isMedia":"yes"
-	
+	]
 }

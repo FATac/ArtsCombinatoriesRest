@@ -21,6 +21,7 @@ import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.DataMapping;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 import org.fundaciotapies.ac.model.support.Template;
+import org.fundaciotapies.ac.model.support.TemplateSection;
 
 import virtuoso.jena.driver.VirtGraph;
 import virtuoso.jena.driver.VirtModel;
@@ -656,7 +657,7 @@ public class Request {
 		return result;
 	}
 	
-	private String[] resolveModelPathPart(String className, String property, String id) {
+	private String[] resolveModelPathPart(String className, String property, String id, boolean includeId) {
 		if ("class".equals(property)) return new String[]{ getObjectClass(id) }; // 'class' is reserved word
 		List<String> result = new ArrayList<String>();
 		
@@ -678,10 +679,16 @@ public class Request {
 		ResultSet rs = vqe.execSelect();
 		while(rs.hasNext()) {
 			QuerySolution s = rs.next();
-			if (s.get("c").isLiteral())
-				result.add(s.get("c").toString());
-			else
-				result.add(extractUriId(s.get("c").toString()));
+			RDFNode node = s.get("c");
+			
+			if (node.isLiteral())  {
+				String lang = node.asLiteral().getLanguage();
+				if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
+
+				result.add(node.asLiteral().getString() + (includeId?"@"+id:""));
+			} else {
+				result.add(extractUriId(node.toString()));
+			}
 		}
 		
 		String[] res = new String[result.size()];
@@ -690,23 +697,49 @@ public class Request {
 	}
 	
 	public String[] resolveModelPath(String path, String id) {
+		return resolveModelPath(path, id, false);
+	}
+	
+	public String[] resolveModelPath(String path, String id, boolean includeId) {
+		if (path==null) return new String[]{};
+		
 		int idx = path.indexOf(":");
 		String part = path;
 		if (idx!=-1) part = path.substring(0, idx);
 		
 		String[] atoms = part.split("\\.");
-		String[] values = resolveModelPathPart(atoms[0], atoms[1], id);
+		String[] values = resolveModelPathPart(atoms[0], atoms[1], id, includeId);
 		
 		if (idx!=-1) {
 			List<String> valueList = new ArrayList<String>();
 			for (String v : values) 
-				valueList.addAll(Arrays.asList(resolveModelPath(path.substring(idx+1), v)));
+				valueList.addAll(Arrays.asList(resolveModelPath(path.substring(idx+1), v, includeId)));
 			
 			values = new String[valueList.size()];
 			valueList.toArray(values);
 		} 
 		
 		return values;
+	}
+	
+	public void getObjectSectionView(TemplateSection section, String id) {
+		for (DataMapping dm : section.getData()) {
+			String type = dm.getType();
+			
+			if ("text".equals(type) || "objects".equals(type)) {
+				for (String path : dm.getPath()) {
+					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
+					dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id)));
+				}
+			} else if ("linkedObjects".equals(type)) {
+				for (String path : dm.getPath()) {
+					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
+					dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id, true)));
+				}
+			}
+			
+			dm.setPath(null);
+		}
 	}
 	
 	public Template getObjectView(String id) {
@@ -730,31 +763,7 @@ public class Request {
 			}
 			
 			template = new Gson().fromJson(new FileReader(f), Template.class);
-			for (DataMapping dm : template.getHeader()) {
-				String type = dm.getType();
-				
-				if ("text".equals(type)) {
-					for (String path : dm.getPath()) {
-						if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
-						dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id)));
-					}
-				}
-				
-				dm.setPath(null);
-			}
-			
-			for (DataMapping dm : template.getBody()) {
-				String type = dm.getType();
-				
-				if ("text".equals(type)) {
-					for (String path : dm.getPath()) {
-						if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
-						dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id)));
-					}
-				}
-				
-				dm.setPath(null);
-			}
+			for (TemplateSection section : template.getSections()) getObjectSectionView(section, id);
 			
 		} catch (Throwable e) {
 			log.error("Error ", e);

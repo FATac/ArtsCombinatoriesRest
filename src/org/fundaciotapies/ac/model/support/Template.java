@@ -5,9 +5,7 @@ import java.util.List;
 public class Template {
 
 	private String className;
-	private List<DataMapping> header;
-	private List<DataMapping> body;
-	private String isMedia = null;
+	private List<TemplateSection> sections;
 	
 	public String getClassName() {
 		return className;
@@ -15,23 +13,11 @@ public class Template {
 	public void setClassName(String className) {
 		this.className = className;
 	}
-	public List<DataMapping> getHeader() {
-		return header;
+	public void setSections(List<TemplateSection> sections) {
+		this.sections = sections;
 	}
-	public void setHeader(List<DataMapping> header) {
-		this.header = header;
-	}
-	public List<DataMapping> getBody() {
-		return body;
-	}
-	public void setBody(List<DataMapping> body) {
-		this.body = body;
-	}
-	public String getIsMedia() {
-		return isMedia;
-	}
-	public void setIsMedia(String isMedia) {
-		this.isMedia = isMedia;
+	public List<TemplateSection> getSections() {
+		return sections;
 	}
 
 }
