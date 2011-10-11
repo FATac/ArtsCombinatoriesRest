@@ -11,8 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 import org.apache.log4j.Logger;
-import org.fundaciotapies.ac.logic.LegalProcess;
-import org.fundaciotapies.ac.logic.support.LegalBlockData;
+import org.fundaciotapies.ac.logic.legal.LegalProcess;
+import org.fundaciotapies.ac.logic.legal.support.LegalBlockData;
 
 import com.google.gson.Gson;
 

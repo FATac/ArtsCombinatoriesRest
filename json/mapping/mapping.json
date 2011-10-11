@@ -1,0 +1,99 @@
+/* CATEGORIES SPECIFICATION */
+
+{
+	"data":
+	[
+		{
+			"name":"title",
+		    "type":"text",
+		    "path":["Case-Files.references:*.Title"]
+		},
+
+		{
+			"name":"description",
+		    "type":"text",
+		    "path":["Case-Files.references:*.Description"]
+		},
+
+		{
+		    "name":"year",
+		    "type":"date.year",
+		    "path":[
+		        "Case-Files.references:*.startDate",
+		        "Case-Files.references:*.endDate",
+		        "Case-Files.references:*.date",
+		    	"Case-Files.hasMedia:*.date"
+		    ],
+		    "category":"yes"
+		},
+
+		{
+		    "name":"country",
+		    "type":"text",
+		    "path":[
+		    	"Case-Files.references:*.tookPlaceAt:City.isLocatedIn:Country.name",
+		    	"Case-Files.references:*.tookPlaceAt:Country.name",
+		    	"Case-Files.references:*.tookPlaceAt:Country.name",
+		    	"Case-Files.references:*.hasAuthor:*.bornIn:Country.name",
+		    	"Case-Files.references:*.hasAuthor:*.bornIn:City.isLocatedIn:Country.name"
+		    ],
+		    "category":"yes"
+		},
+		
+		{
+		    "name":"media",
+		    "type":"text",
+		    "path":[
+		    	"Case-Files.hasMedia:*.class"
+		    ],
+		    "category":"yes"
+		},
+		
+		{
+		    "name":"license",
+		    "type":"text",
+		    "path":[
+		        "Case-Files.references:*.hasLicense:License.name"
+		    ],
+		    "category":"yes"
+		},
+		
+		{
+		    "name":"role",
+		    "type":"text",
+		    "path":[
+		        "Case-Files.references:Art_Work.hasRoles:Role.class"
+		    ],
+		    "category":"yes"
+		},
+		
+		{
+		    "name":"media",
+		    "type":"text",
+		    "path":[
+		        "Case-Files.references:Media.class"
+		    ],
+		    "category":"yes"
+		},
+		
+		{
+		    "name":"person",
+		    "type":"text",
+		    "path":[
+		        "Case-Files.references:Art_Work.hasRole:Role.performedBy:Person.fullName",
+		    ],
+		    "category":"yes"
+		},
+		
+		{
+		    "name":"artWork",
+		    "type":"text",
+		    "path":[
+		        "Case-Files.references:Art_Work.title",
+		    ],
+		    "category":"yes"
+		},
+		
+	],
+
+}

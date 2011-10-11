@@ -16,8 +16,8 @@ import javax.ws.rs.core.Context;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fundaciotapies.ac.logic.LegalProcess;
-import org.fundaciotapies.ac.logic.support.LegalBlockData;
+import org.fundaciotapies.ac.logic.legal.LegalProcess;
+import org.fundaciotapies.ac.logic.legal.support.LegalBlockData;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

@@ -1,8 +1,11 @@
 package org.fundaciotapies.ac.model;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,13 +18,16 @@ import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.Right;
 import org.fundaciotapies.ac.model.bo.User;
 import org.fundaciotapies.ac.model.support.CustomMap;
+import org.fundaciotapies.ac.model.support.DataMapping;
 import org.fundaciotapies.ac.model.support.ObjectFile;
+import org.fundaciotapies.ac.model.support.Template;
 
 import virtuoso.jena.driver.VirtGraph;
 import virtuoso.jena.driver.VirtModel;
 import virtuoso.jena.driver.VirtuosoQueryExecution;
 import virtuoso.jena.driver.VirtuosoQueryExecutionFactory;
 
+import com.google.gson.Gson;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -193,7 +199,7 @@ public class Request {
 			}
 			
 			// Only media objects have associated files
-			String className = (String)new Request().getObject(id, "").get("class");
+			String className = (String)new Request().getObject(id, "").get("Class");
 			boolean isMediaObject = new Request().listSubclasses("Media", false).contains(className);
 			if (!isMediaObject) return null;
 			
@@ -204,8 +210,9 @@ public class Request {
 			String ext = media.getPath().substring(media.getPath().length()-3);
 			
 			// Assign media type
+			ext = ext.toLowerCase();
 			String mime = "application/"+ext;
-			if ("png,jpg,gif,svg".contains(ext)) {
+			if ("png,jpg,gif,svg,jpeg".contains(ext)) {
 				mime = "image/"+ext;
 			} else if ("tml".equals(ext)) {
 				mime = "text/html";
@@ -217,6 +224,7 @@ public class Request {
 				mime = "video/mpeg";
 			}
 			
+			// Results back in a specific object containing file stream and mime type
 			ObjectFile result = new ObjectFile();
 			result.setInputStream(new FileInputStream(media.getPath()));
 			result.setContentType(mime);
@@ -366,6 +374,72 @@ public class Request {
 		return result;	
 	}
 	
+	public Map<String, CustomMap> listObjects(String className) {
+		Map<String, CustomMap> result = new TreeMap<String, CustomMap>();
+		
+		try {
+			// Connect to rdf server
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			
+			String qc = null;
+			
+			// If specified, filter results for given class name and for all its subclasses 
+			if (className!=null && !"".equals(className) && !"_".equals(className)) {
+				String[] clsl = className.split(",");
+				
+				for(String cls : clsl) {
+					if (cls!=null && !"".equals(cls)) {
+						if (qc==null) {
+							qc = " . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } "; 
+						} else {
+							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } ";
+						}
+						
+						List<String> subClassesList = listSubclasses(cls, false);
+						for (String sc : subClassesList)
+							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+sc+"> } ";
+					}
+				}
+			}
+
+			if (qc==null) qc = "";
+
+			// Create search query
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + " } "),(VirtGraph) data.getBaseModel().getGraph());
+			ResultSet rs = vqe.execSelect();
+			
+			String currentId = null;
+			String lastId = null;
+			CustomMap currentObject = null;
+			
+			// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
+			while (rs.hasNext()) {
+				QuerySolution r = rs.next();
+				
+				currentId = extractUriId(r.get("s").toString());
+				if (!currentId.equals(lastId)) {
+					if ((lastId != null) && currentObject.size()>0) result.put(lastId, currentObject);
+					currentObject = new CustomMap();
+				}
+				
+				lastId = currentId;
+				
+				if (r.get("o").isResource()) {
+					currentObject.put(extractUriId(r.get("p").asResource().toString()), extractUriId(r.get("o").toString()));
+				} else {
+					currentObject.put(extractUriId(r.get("p").asResource().toString()), r.get("o").asLiteral().getString());
+				}
+			}
+
+			result.put(lastId, currentObject);
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+		
+		return result;
+	}
+
+	
 	public Map<String, CustomMap> search(String word, String className, String userId) {
 		Map<String, CustomMap> result = new TreeMap<String, CustomMap>();
 		
@@ -502,7 +576,7 @@ public class Request {
 			String b = "&lt;"+nb.toString()+"&gt;";
 			String c = "";
 
-			if (nc.isResource())	c = "&lt;"+nc.toString()+"&gt;"; else c = "\""+nc.toString()+"\"";
+			if (nc.isResource()) c = "&lt;"+nc.toString()+"&gt;"; else c = "\""+nc.toString()+"\"";
 			
 			String[] insert = {a,b,c};
 			
@@ -546,6 +620,147 @@ public class Request {
 		}
 		
 		return backupScript; 
+	}
+	
+	public String getObjectClass(String id) {
+		// Connect to rdf server
+		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+		
+		// Create search query
+		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { <"+Constants.OBJECT_BASE_URI+id+"> <"+Constants.RDFS_URI_NS+"Class> ?c } "),(VirtGraph) data.getBaseModel().getGraph());
+		ResultSet rs = vqe.execSelect();
+		
+		if (rs.hasNext()) {
+			QuerySolution r = rs.next();
+			return extractUriId(r.get("c").toString());
+		} else return null;
+	}
+	
+	public List<String> listSuperClasses(String className) {
+		List<String> result = new ArrayList<String>();
+		List<String> tmp = new ArrayList<String>();
+		
+		OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
+		ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config
+		OntClass ontClass = ont.getOntClass(Constants.AC_URI_NS + className);
+		ExtendedIterator<OntClass> it = ontClass.listSuperClasses(true);
+		
+		while(it.hasNext())	{
+			OntClass cls = it.next();
+			result.add(extractUriId(cls.toString()));
+			tmp.add(extractUriId(cls.toString()));
+		}
+		
+		for(String c : tmp) result.addAll(listSuperClasses(c));
+			
+		return result;
+	}
+	
+	private String[] resolveModelPathPart(String className, String property, String id) {
+		if ("class".equals(property)) return new String[]{ getObjectClass(id) }; // 'class' is reserved word
+		List<String> result = new ArrayList<String>();
+		
+		// Connect to rdf server
+		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+		
+		String classClause = "";
+		String idClause = " ?a ";
+		String propertyClause = " <"+Constants.AC_URI_NS+property+"> ";
+		
+		if (id!=null) {
+			idClause = " <"+Constants.OBJECT_BASE_URI+id+"> ";
+		} else if (className!=null && !"*".equals(className)) {
+			classClause = ". ?a <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+className+"> "; // TODO: We need reasoning to include subclasses
+		}
+		
+		// Create search query
+		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { " + idClause + propertyClause + " ?c "+ classClause +" } "),(VirtGraph) data.getBaseModel().getGraph());
+		ResultSet rs = vqe.execSelect();
+		while(rs.hasNext()) {
+			QuerySolution s = rs.next();
+			if (s.get("c").isLiteral())
+				result.add(s.get("c").toString());
+			else
+				result.add(extractUriId(s.get("c").toString()));
+		}
+		
+		String[] res = new String[result.size()];
+		result.toArray(res);
+		return res;
+	}
+	
+	public String[] resolveModelPath(String path, String id) {
+		int idx = path.indexOf(":");
+		String part = path;
+		if (idx!=-1) part = path.substring(0, idx);
+		
+		String[] atoms = part.split("\\.");
+		String[] values = resolveModelPathPart(atoms[0], atoms[1], id);
+		
+		if (idx!=-1) {
+			List<String> valueList = new ArrayList<String>();
+			for (String v : values) 
+				valueList.addAll(Arrays.asList(resolveModelPath(path.substring(idx+1), v)));
+			
+			values = new String[valueList.size()];
+			valueList.toArray(values);
+		} 
+		
+		return values;
+	}
+	
+	public Template getObjectView(String id) {
+		Template template = null;
+		
+		try {
+			String className = getObjectClass(id);
+			File f = new File(Constants.JSON_PATH+"mapping/"+className+".json");
+			
+			if (!f.exists()) {
+				List<String> superClasses = listSuperClasses(className);
+				for (String superClassName : superClasses) {
+					f = new File(Constants.JSON_PATH+"mapping/"+superClassName+".json");
+					if (f.exists()) break;
+				}
+			}
+			
+			if (!f.exists()) { 
+				log.warn("Trying to obtain view from no-template object class");
+				return null;
+			}
+			
+			template = new Gson().fromJson(new FileReader(f), Template.class);
+			for (DataMapping dm : template.getHeader()) {
+				String type = dm.getType();
+				
+				if ("text".equals(type)) {
+					for (String path : dm.getPath()) {
+						if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
+						dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id)));
+					}
+				}
+				
+				dm.setPath(null);
+			}
+			
+			for (DataMapping dm : template.getBody()) {
+				String type = dm.getType();
+				
+				if ("text".equals(type)) {
+					for (String path : dm.getPath()) {
+						if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
+						dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id)));
+					}
+				}
+				
+				dm.setPath(null);
+			}
+			
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+		
+		return template;
 	}
 	
 }

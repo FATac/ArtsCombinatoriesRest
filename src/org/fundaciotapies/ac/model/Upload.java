@@ -1,13 +1,19 @@
 package org.fundaciotapies.ac.model;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -16,18 +22,25 @@ import org.fundaciotapies.ac.Constants;
 import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.ObjectCounter;
 import org.fundaciotapies.ac.model.bo.Right;
+import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.rest.client.Profile;
 import org.fundaciotapies.ac.rest.client.Transco;
 import org.fundaciotapies.ac.rest.client.TranscoEntity;
+import org.jsoup.Jsoup;
 
 import virtuoso.jena.driver.VirtGraph;
 import virtuoso.jena.driver.VirtModel;
 import virtuoso.jena.driver.VirtTransactionHandler;
+import virtuoso.jena.driver.VirtuosoQueryExecution;
+import virtuoso.jena.driver.VirtuosoQueryExecutionFactory;
 import virtuoso.jena.driver.VirtuosoUpdateFactory;
 
 import com.hp.hpl.jena.ontology.ObjectProperty;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.shared.Command;
 
@@ -85,15 +98,17 @@ public class Upload {
 			String ext = "";
 			if (tmp!=null && tmp.length>0) ext = tmp[tmp.length-1];
 			
-			filePath = id+"___file."+ext;
+			filePath = id.replace("/", "")+"___file."+ext;
 			File f = new File(Constants.FILE_DIR+filePath);
 			OutputStream fout = new FileOutputStream(f);
 			   
-			byte[] buffer = new byte[256]; 
+			byte[] buffer = new byte[1024*1024]; 
 			int len = 0;
-			while((len=in.read(buffer))!=-1) fout.write(buffer, 0, len);
+			while((len=in.read(buffer))!=-1) {
+				fout.write(buffer, 0, len);
+				fout.flush();
+			}
 			
-			fout.flush();
 			fout.close();
 			
 			Media media = new Media();
@@ -109,6 +124,7 @@ public class Upload {
 			}
 		} catch (Exception e) {
 			log.error("Error ", e);
+			e.printStackTrace();
 			return "error";
 		}
 		
@@ -314,5 +330,157 @@ public class Upload {
 		return result;
 	}
 	
+	public String proves() {
+        String queryString = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#> SELECT ?Pizza ?Eaten where {?Pizza a ?y. ?y rdfs:subClassOf pizza:Pizza. Optional {?Pizza pizza:Eaten ?Eaten}}";
+        
+		data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://www.co-ode.org/ontologies/pizza/pizza.owl#", Constants.RDFDB_URL, "dba", "dba"));
+		//OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
+		//ont.read("file:OntologiaArtsCombinatories.owl");
+		//ont.add(data);
+		
+		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create(queryString),(VirtGraph) data.getBaseModel().getGraph());
+		ResultSet rs = vqe.execSelect();
+		
+		String currentId = null;
+		
+		// Get IDs that fit specific search
+		while (rs.hasNext()) {
+			QuerySolution r = rs.next();
+			currentId = r.get("Pizza").toString() + "    " + r.get("Eaten").toString();
+			System.out.println(currentId);
+			
+		}
+		
+		return null;
+	}
+	
+	private List<String> listUtil(Object o) {
+		if (o==null) return null;
+		List<String> l = new ArrayList<String>();
+		if (o instanceof String) {
+			l.add((String)o);
+		} else {
+			for(String s : (String[])o) l.add(s);
+		}
+		
+		return l;
+	}
+	
+	public String solarize() throws Exception {
+		
+		Request request = new Request();
+		Map<String, CustomMap> result = request.listObjects("Case-Files");
+		Set<Map.Entry<String, CustomMap>> set = result.entrySet();
+		
+		String xml = "<add>\n";
+		
+		for (Map.Entry<String, CustomMap> e : set) {
+			String id = e.getKey();
+			CustomMap data = e.getValue();
+			Object v = data.get("references");
+			
+			String referenceId = "";
+			if (v instanceof String[]) { referenceId = ((String[])v)[0]; } else { referenceId = (String)v; }
+			if (referenceId!=null) {
+				referenceId = extractUriId(referenceId);
+				
+				CustomMap event = request.getObject(referenceId, "");
+				List<String> titles = listUtil(event.get("Title"));
+				List<String> desc = listUtil(event.get("Description"));
+				
+				xml += "<doc>\n";
+				xml += "  <field name='id'>"+id+"</field>\n";
+				if (titles!=null) 
+					for (String t : titles)	xml += "  <field name='title'><![CDATA["+Jsoup.parse(t).text()+"]]></field>\n";
+				else xml += "  <field name='title'> </field>\n";
+					
+				if (desc!=null) for (String d : desc)	xml += "  <field name='description'><![CDATA["+Jsoup.parse(d).text()+"]]></field>\n";
+				xml += "</doc>\n";
+			}
+		}
+		
+		xml += "</add>\n";
+		
+		// Connect
+		URL url = new URL("http://localhost:8080/solr/update");
+	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+	    conn.setRequestProperty("Content-Type", "application/xml");
+	    conn.setRequestMethod("POST");
+
+	    // Send data
+	    conn.setDoOutput(true);
+	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+	    wr.write(xml);
+	    wr.flush();
+	    wr.close();
+
+	    // Get the response
+	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+	    String str;
+	    StringBuffer sb = new StringBuffer();
+	    while ((str = rd.readLine()) != null) {
+	    	sb.append(str);
+	    	sb.append("\n");
+	    }
+
+	    log.info(sb.toString());
+	    rd.close();
+	    
+	    return xml;
+	}
+	
+	public void solrCommit() throws Exception {
+		// Connect
+		URL url = new URL("http://localhost:8080/solr/update");
+	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+	    conn.setRequestProperty("Content-Type", "application/xml");
+	    conn.setRequestMethod("POST");
+
+	    // Send data
+	    conn.setDoOutput(true);
+	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+	    wr.write("<commit/>");
+	    wr.flush();
+	    wr.close();
+
+	    // Get the response
+	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+	    String str;
+	    StringBuffer sb = new StringBuffer();
+	    while ((str = rd.readLine()) != null) {
+	    	sb.append(str);
+	    	sb.append("\n");
+	    }
+
+	    log.info(sb.toString());
+	    rd.close();
+	}
+	
+	public void solrDeleteAll() throws Exception {
+		// Connect
+		URL url = new URL("http://localhost:8080/solr/update");
+	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+	    conn.setRequestProperty("Content-Type", "application/xml");
+	    conn.setRequestMethod("POST");
+
+	    // Send data
+	    conn.setDoOutput(true);
+	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+	    wr.write("<delete><query>*:*</query></delete>");
+	    wr.flush();
+	    wr.close();
+
+	    // Get the response
+	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+	    String str;
+	    StringBuffer sb = new StringBuffer();
+	    while ((str = rd.readLine()) != null) {
+	    	sb.append(str);
+	    	sb.append("\n");
+	    }
+
+	    log.info(sb.toString());
+	    rd.close();
+	}
 
 }

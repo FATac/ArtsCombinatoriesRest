@@ -1,4 +1,4 @@
-package org.fundaciotapies.ac.logic;
+package org.fundaciotapies.ac.logic.legal;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,12 +15,12 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.fundaciotapies.ac.logic.support.LegalAutodata;
-import org.fundaciotapies.ac.logic.support.LegalBlock;
-import org.fundaciotapies.ac.logic.support.LegalBlockData;
-import org.fundaciotapies.ac.logic.support.LegalBlockRules;
-import org.fundaciotapies.ac.logic.support.LegalDefinition;
-import org.fundaciotapies.ac.logic.support.LegalExpressionCompiler;
+import org.fundaciotapies.ac.logic.legal.support.LegalAutodata;
+import org.fundaciotapies.ac.logic.legal.support.LegalBlock;
+import org.fundaciotapies.ac.logic.legal.support.LegalBlockData;
+import org.fundaciotapies.ac.logic.legal.support.LegalBlockRules;
+import org.fundaciotapies.ac.logic.legal.support.LegalDefinition;
+import org.fundaciotapies.ac.logic.legal.support.LegalExpressionCompiler;
 import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.Upload;
 import org.fundaciotapies.ac.model.bo.Right;
@@ -133,7 +133,7 @@ public class LegalProcess {
 			prop.load(new FileInputStream(user + ".properties"));
 			
 			// load data and rules from JSON specification
-			FileReader f = new FileReader(new File("/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/legal.json")); // TODO: get uri from configuration
+			FileReader f = new FileReader(new File("/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/legal/legal.json")); // TODO: get uri from configuration
 			LegalDefinition def = new Gson().fromJson(f, LegalDefinition.class);
 			f.close();
 			

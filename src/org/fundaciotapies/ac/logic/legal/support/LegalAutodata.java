@@ -1,4 +1,4 @@
-package org.fundaciotapies.ac.logic.support;
+package org.fundaciotapies.ac.logic.legal.support;
 
 public class LegalAutodata {
 	private String key;

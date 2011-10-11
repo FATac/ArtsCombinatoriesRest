@@ -15,7 +15,7 @@ public class GetRealId {
 
 	@GET
 	@Produces("application/json")
-	public String getRealId(@QueryParam("class") String c, @QueryParam("id") String id) {
+	public String getRealId(@QueryParam("c") String c, @QueryParam("id") String id) {
 		String result = new Request().getRealId(c,id);
 		if ("".equals(result)) return null;
 		return result;

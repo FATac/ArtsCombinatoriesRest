@@ -1,0 +1,36 @@
+{
+	"className":"Media",
+	
+	"header":
+	[
+		{
+		    "name":"Title",
+			"type":"text",
+			"path":["Media.Title"]
+		}
+	],
+	
+	"body":
+	[
+	    {
+	        "name":"Format",
+	        "type":"text",
+	        "path":["Media.format"]
+	    },
+	    
+	    {
+	        "name":"FileSize",
+	        "type":"text",
+	        "path":["Media.FileSize"]
+	    },
+	    
+	    {
+	        "name":"OriginalSource",
+	        "type":"text",
+	        "path":["Media.OriginalSource"]
+	    }
+	],
+	
+	"isMedia":"yes"
+	
+}

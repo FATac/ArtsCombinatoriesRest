@@ -1,0 +1,65 @@
+/* Template that maps ontology object into visualizable form */
+
+{
+	"entity":"Case-Files",
+	
+	"header":
+	[
+		{
+		    "name":"Title",
+			"type":"text",
+			"path":["Case-Files.Title"]
+		},    
+	
+	    {
+	        "type":"childCounter",
+	        "path":["Case-Files.hasMedia"]
+	    },
+	],
+	
+	"body":
+	[
+	    {
+	        "name":"Description",
+	        "type":"text",
+	        "path":["Case-Files.Description"]
+	    },
+	    
+	    {
+	        "name":"NumRegistre",
+	        "type":"text",
+	        "path":["Case-Files.numRegistre"]
+	    },
+	    
+	    {
+	        "name":"Authors",
+	        "type":"linkedObjects",
+	        "path":["Case-Files.references:ArtWork.hasAuthor:*.fullName"]
+	    },
+	    
+	    {
+	    	"name":"Producers",
+	    	"type":"linkedObjects",
+	        "path":["Case-Files.references:Media.hasProducer:*.fullName"]
+	    },
+
+	    {
+	        "name":"Language",
+	    	"type":"text",
+	        "path":[
+	         	"Case-Files.hasLanguage:Language.name",
+	         	"Case-Files.references:SpecialObject.hasLanguage:Language.name",
+	        ]
+	    }
+	],
+	
+	"mediaType":"no",
+	
+	"containedObjects":
+	[
+	    "Case-Files.references",
+	    "Case-Files.hasMedia",
+	    "Case-Files.reference:Art_Work.hasRole:Author.performedBy:Person"
+	]
+	
+}

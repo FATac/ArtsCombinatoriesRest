@@ -11,7 +11,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
-import org.fundaciotapies.ac.logic.LegalProcess;
+import org.fundaciotapies.ac.logic.legal.LegalProcess;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

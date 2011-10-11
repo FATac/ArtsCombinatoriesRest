@@ -14,7 +14,7 @@ import javax.ws.rs.core.Context;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.fundaciotapies.ac.logic.LegalProcess;
+import org.fundaciotapies.ac.logic.legal.LegalProcess;
 
 /**
  * DO NOT USE
