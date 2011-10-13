@@ -439,6 +439,57 @@ public class Request {
 		
 		return result;
 	}
+	
+	public List<String> listObjectsId(String className) {
+		List<String> result = new ArrayList<String>();
+		
+		try {
+			// Connect to rdf server
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			
+			String qc = null;
+			
+			// If specified, filter results for given class name and for all its subclasses 
+			if (className!=null && !"".equals(className) && !"_".equals(className)) {
+				String[] clsl = className.split(",");
+				
+				for(String cls : clsl) {
+					if (cls!=null && !"".equals(cls)) {
+						if (qc==null) {
+							qc = " . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } "; 
+						} else {
+							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } ";
+						}
+						
+						List<String> subClassesList = listSubclasses(cls, false);
+						for (String sc : subClassesList)
+							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+sc+"> } ";
+					}
+				}
+			}
+
+			if (qc==null) qc = "";
+
+			// Create search query
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + " } "),(VirtGraph) data.getBaseModel().getGraph());
+			ResultSet rs = vqe.execSelect();
+			
+			String currentId = null;
+			
+			// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
+			while (rs.hasNext()) {
+				QuerySolution r = rs.next();
+				
+				currentId = extractUriId(r.get("s").toString());
+				result.add(currentId);
+			}
+
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+		
+		return result;
+	}
 
 	
 	public Map<String, CustomMap> search(String word, String className, String userId) {

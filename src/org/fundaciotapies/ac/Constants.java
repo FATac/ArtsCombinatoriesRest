@@ -17,6 +17,7 @@ public class Constants {
 	public static final String[] userRoles = { "Contributor" , "Editor" , "Member" , "Reader", "Reviewer", "Site Administrator", "Manager" };
 	
 	public static final String JSON_PATH = "/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/";
+	public static final String SOLR_PATH = "/home/jordi.roig.prieto/solr/";
 	
 
 }

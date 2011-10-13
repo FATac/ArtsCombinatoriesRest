@@ -1,19 +1,13 @@
 package org.fundaciotapies.ac.model;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -22,11 +16,9 @@ import org.fundaciotapies.ac.Constants;
 import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.ObjectCounter;
 import org.fundaciotapies.ac.model.bo.Right;
-import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.rest.client.Profile;
 import org.fundaciotapies.ac.rest.client.Transco;
 import org.fundaciotapies.ac.rest.client.TranscoEntity;
-import org.jsoup.Jsoup;
 
 import virtuoso.jena.driver.VirtGraph;
 import virtuoso.jena.driver.VirtModel;
@@ -354,133 +346,5 @@ public class Upload {
 		return null;
 	}
 	
-	private List<String> listUtil(Object o) {
-		if (o==null) return null;
-		List<String> l = new ArrayList<String>();
-		if (o instanceof String) {
-			l.add((String)o);
-		} else {
-			for(String s : (String[])o) l.add(s);
-		}
-		
-		return l;
-	}
 	
-	public String solarize() throws Exception {
-		
-		Request request = new Request();
-		Map<String, CustomMap> result = request.listObjects("Case-Files");
-		Set<Map.Entry<String, CustomMap>> set = result.entrySet();
-		
-		String xml = "<add>\n";
-		
-		for (Map.Entry<String, CustomMap> e : set) {
-			String id = e.getKey();
-			CustomMap data = e.getValue();
-			Object v = data.get("references");
-			
-			String referenceId = "";
-			if (v instanceof String[]) { referenceId = ((String[])v)[0]; } else { referenceId = (String)v; }
-			if (referenceId!=null) {
-				referenceId = extractUriId(referenceId);
-				
-				CustomMap event = request.getObject(referenceId, "");
-				List<String> titles = listUtil(event.get("Title"));
-				List<String> desc = listUtil(event.get("Description"));
-				
-				xml += "<doc>\n";
-				xml += "  <field name='id'>"+id+"</field>\n";
-				if (titles!=null) 
-					for (String t : titles)	xml += "  <field name='title'><![CDATA["+Jsoup.parse(t).text()+"]]></field>\n";
-				else xml += "  <field name='title'> </field>\n";
-					
-				if (desc!=null) for (String d : desc)	xml += "  <field name='description'><![CDATA["+Jsoup.parse(d).text()+"]]></field>\n";
-				xml += "</doc>\n";
-			}
-		}
-		
-		xml += "</add>\n";
-		
-		// Connect
-		URL url = new URL("http://localhost:8080/solr/update");
-	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-	    conn.setRequestProperty("Content-Type", "application/xml");
-	    conn.setRequestMethod("POST");
-
-	    // Send data
-	    conn.setDoOutput(true);
-	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-	    wr.write(xml);
-	    wr.flush();
-	    wr.close();
-
-	    // Get the response
-	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-	    String str;
-	    StringBuffer sb = new StringBuffer();
-	    while ((str = rd.readLine()) != null) {
-	    	sb.append(str);
-	    	sb.append("\n");
-	    }
-
-	    log.info(sb.toString());
-	    rd.close();
-	    
-	    return xml;
-	}
-	
-	public void solrCommit() throws Exception {
-		// Connect
-		URL url = new URL("http://localhost:8080/solr/update");
-	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-	    conn.setRequestProperty("Content-Type", "application/xml");
-	    conn.setRequestMethod("POST");
-
-	    // Send data
-	    conn.setDoOutput(true);
-	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-	    wr.write("<commit/>");
-	    wr.flush();
-	    wr.close();
-
-	    // Get the response
-	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-	    String str;
-	    StringBuffer sb = new StringBuffer();
-	    while ((str = rd.readLine()) != null) {
-	    	sb.append(str);
-	    	sb.append("\n");
-	    }
-
-	    log.info(sb.toString());
-	    rd.close();
-	}
-	
-	public void solrDeleteAll() throws Exception {
-		// Connect
-		URL url = new URL("http://localhost:8080/solr/update");
-	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-	    conn.setRequestProperty("Content-Type", "application/xml");
-	    conn.setRequestMethod("POST");
-
-	    // Send data
-	    conn.setDoOutput(true);
-	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-	    wr.write("<delete><query>*:*</query></delete>");
-	    wr.flush();
-	    wr.close();
-
-	    // Get the response
-	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-	    String str;
-	    StringBuffer sb = new StringBuffer();
-	    while ((str = rd.readLine()) != null) {
-	    	sb.append(str);
-	    	sb.append("\n");
-	    }
-
-	    log.info(sb.toString());
-	    rd.close();
-	}
-
 }

@@ -15,7 +15,7 @@ import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
 /**
- * Call: http://{host:port}/objects/{class}/{id}/file
+ * Call: http://{host:port}/objects/{class}/{id}/media
  * <br>
  * Get media file linked to specific object. Provided object id must be of a Media type <br>
  * Params class: <br>
@@ -23,7 +23,7 @@ import org.fundaciotapies.ac.model.support.ObjectFile;
  * - id: object identifier <br>
  * Returns: Binary file object by streaming
  */
-@Path("/objects/{class}/{id}/file")
+@Path("/objects/{class}/{id}/media")
 public class GetObjectFile {
 	private static Logger log = Logger.getLogger(GetObjectFile.class);
 	

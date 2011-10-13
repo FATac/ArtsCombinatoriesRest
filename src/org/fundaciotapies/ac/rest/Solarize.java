@@ -2,23 +2,25 @@ package org.fundaciotapies.ac.rest;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 
-import org.fundaciotapies.ac.model.Upload;
+import org.fundaciotapies.ac.logic.solr.SolrManager;
 
-@Path("/solarize")
+@Path("/solr/{option}")
 public class Solarize {
 	@GET
 	@Produces("text/xml")
-	public String solarize(@QueryParam("option") String option) {
+	public String solarize(@PathParam("option") String option) {
 		try {
 			if ("commit".equals(option)) {
-				new Upload().solrCommit();
+				new SolrManager().commit();
 			} else if ("clear".equals(option)) {
-				new Upload().solrDeleteAll();
-			} else {
-				return new Upload().solarize();
+				new SolrManager().deleteAll();
+			} else if ("schema".equals(option)) {
+				new SolrManager().generateSchema();
+			} else if ("indexate".equals(option)) {
+				return new SolrManager().indexate();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
