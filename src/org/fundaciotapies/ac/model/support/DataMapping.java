@@ -10,6 +10,8 @@ public class DataMapping {
 	private List<String> value;
 	private String category;
 	
+	private String sortBy;
+	
 	public String getName() {
 		return name;
 	}
@@ -39,6 +41,12 @@ public class DataMapping {
 	}
 	public List<String> getValue() {
 		return value;
+	}
+	public void setSortBy(String sortBy) {
+		this.sortBy = sortBy;
+	}
+	public String getSortBy() {
+		return sortBy;
 	}
 	
 }

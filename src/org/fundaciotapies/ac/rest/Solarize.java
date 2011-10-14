@@ -4,14 +4,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 import org.fundaciotapies.ac.logic.solr.SolrManager;
 
 @Path("/solr/{option}")
 public class Solarize {
 	@GET
-	@Produces("text/xml")
-	public String solarize(@PathParam("option") String option) {
+	@Produces("text/plain")
+	public String solarize(@PathParam("option") String option, @QueryParam("s") String searchText) {
 		try {
 			if ("commit".equals(option)) {
 				new SolrManager().commit();
@@ -20,13 +21,15 @@ public class Solarize {
 			} else if ("schema".equals(option)) {
 				new SolrManager().generateSchema();
 			} else if ("indexate".equals(option)) {
-				return new SolrManager().indexate();
+				new SolrManager().indexate();
+			} else if ("search".equals(option)) {
+				return new SolrManager().search(searchText);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 		
-		return null;
+		return "success";
 	}
 }

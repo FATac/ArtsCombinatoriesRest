@@ -3,6 +3,12 @@
 {
 	"data":
 	[
+	    {
+	        "name":"objectType",
+	        "type":"text",
+	        "path":["*.class"]
+	    },
+	
 		{
 			"name":"title",
 		    "type":"text",
@@ -30,7 +36,6 @@
 		    "type":"text",
 		    "path":[
 		    	"Case-Files.references:*.tookPlaceAT:City.isLocatedIn:Country.name",
-		    	"Case-Files.references:*.tookPlaceAT:Country.name",
 		    	"Case-Files.references:*.tookPlaceAT:Country.name",
 		    	"Case-Files.references:*.hasAuthor:*.bornIn:Country.name",
 		    	"Case-Files.references:*.hasAuthor:*.bornIn:City.isLocatedIn:Country.name"
@@ -60,7 +65,7 @@
 		    "name":"role",
 		    "type":"text",
 		    "path":[
-		        "Case-Files.references:Art_Work.hasRoles:Role.class"
+		        "Case-Files.references:Art_Work.isApplicationOf:Role.class"
 		    ],
 		    "category":"yes"
 		},
@@ -69,7 +74,7 @@
 		    "name":"person",
 		    "type":"text",
 		    "path":[
-		        "Case-Files.references:Art_Work.hasRole:Role.performedBy:Person.fullName"
+		        "Case-Files.references:Art_Work.isApplicationOf:Role.performedBy:Person.fullName"
 		    ],
 		    "category":"yes"
 		},
@@ -82,7 +87,6 @@
 		    ],
 		    "category":"yes"
 		}
-
+		
 	]
-
 }

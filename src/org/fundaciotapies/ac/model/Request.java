@@ -708,7 +708,7 @@ public class Request {
 		return result;
 	}
 	
-	private String[] resolveModelPathPart(String className, String property, String id, boolean includeId) {
+	private String[] resolveModelPathPart(String className, String property, String id, boolean includeId, boolean anyLanguage) {
 		if ("class".equals(property)) return new String[]{ getObjectClass(id) }; // 'class' is reserved word
 		List<String> result = new ArrayList<String>();
 		
@@ -733,9 +733,10 @@ public class Request {
 			RDFNode node = s.get("c");
 			
 			if (node.isLiteral())  {
-				String lang = node.asLiteral().getLanguage();
-				if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
-
+				if (!anyLanguage) {
+					String lang = node.asLiteral().getLanguage();
+					if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
+				}
 				result.add(node.asLiteral().getString() + (includeId?"@"+id:""));
 			} else {
 				result.add(extractUriId(node.toString()));
@@ -747,11 +748,11 @@ public class Request {
 		return res;
 	}
 	
-	public String[] resolveModelPath(String path, String id) {
-		return resolveModelPath(path, id, false);
+	public String[] resolveModelPath(String path, String id, boolean anyLanguage) {
+		return resolveModelPath(path, id, false, anyLanguage);
 	}
 	
-	public String[] resolveModelPath(String path, String id, boolean includeId) {
+	public String[] resolveModelPath(String path, String id, boolean includeId, boolean anyLanguage) {
 		if (path==null) return new String[]{};
 		
 		int idx = path.indexOf(":");
@@ -759,12 +760,12 @@ public class Request {
 		if (idx!=-1) part = path.substring(0, idx);
 		
 		String[] atoms = part.split("\\.");
-		String[] values = resolveModelPathPart(atoms[0], atoms[1], id, includeId);
+		String[] values = resolveModelPathPart(atoms[0], atoms[1], id, includeId, anyLanguage);
 		
 		if (idx!=-1) {
 			List<String> valueList = new ArrayList<String>();
 			for (String v : values) 
-				valueList.addAll(Arrays.asList(resolveModelPath(path.substring(idx+1), v, includeId)));
+				valueList.addAll(Arrays.asList(resolveModelPath(path.substring(idx+1), v, includeId, anyLanguage)));
 			
 			values = new String[valueList.size()];
 			valueList.toArray(values);
@@ -780,7 +781,7 @@ public class Request {
 			if ("text".equals(type) || "objects".equals(type)) {
 				for (String path : dm.getPath()) {
 					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
-					dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id)));
+					dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id, false)));
 				}
 			} else if ("linkedObjects".equals(type)) {
 				for (String path : dm.getPath()) {

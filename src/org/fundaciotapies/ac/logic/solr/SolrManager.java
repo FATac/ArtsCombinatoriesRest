@@ -31,7 +31,6 @@ public class SolrManager {
 		StringBuffer sb = new StringBuffer();
 		sb.append(" <fields> \n");
 		sb.append(" 	<field name=\"id\" type=\"string\" indexed=\"true\" stored=\"true\" required=\"true\" /> \n");
-		sb.append(" 	<field name=\"objectType\" type=\"string\" indexed=\"true\" stored=\"true\" required=\"true\" /> \n");
 		
 		for(DataMapping m : mapping.getData()) {
 			String type = "text_general";
@@ -56,7 +55,36 @@ public class SolrManager {
 		fout.close();
 	}
 	
-	public String indexate() throws Exception {
+	public String createDocumentEntry(String id, String className, Mapping mapping) {
+		String xml = "	<doc>\n";
+		xml += "		<field name='id'>"+id+"</field>\n";
+		
+		for(DataMapping m : mapping.getData()) {
+			if (m.getPath()!=null) {
+				for (String path : m.getPath()) {
+					String currentClassName = path.split("\\.")[0].trim();
+					
+					if ("*".equals(currentClassName)) {
+						currentClassName = className;
+						path = className + path.trim().substring(1);
+					}
+					
+					if (className.equals(currentClassName)) {
+						String[] result = new Request().resolveModelPath(path, id, true);
+						for (String r : result) {
+							xml += "		<field name='"+m.getName()+"'><![CDATA["+r+"]]></field>\n";
+						}
+					}
+				}
+			}
+		}
+		
+		xml += "	</doc>\n";
+		
+		return xml;
+	}
+	
+	public void indexate() throws Exception {
 		BufferedReader fin = new BufferedReader(new FileReader(Constants.JSON_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		fin.close();
@@ -70,34 +98,14 @@ public class SolrManager {
 			if (m.getPath()!=null) {
 				for (String path : m.getPath()) {
 					String className = path.split("\\.")[0].trim();
-					objectTypesIndexed.add(className);
+					if (!"*".equals(className))	objectTypesIndexed.add(className);
 				}
 			}
 		}
 		
 		for(String className : objectTypesIndexed) {
 			List<String> list = request.listObjectsId(className);
-			
-			for(String id : list) {
-				xml += "	<doc>\n";
-				xml += "		<field name='id'>"+id+"</field>\n";
-				xml += "		<field name='objectType'>"+className+"</field>\n";
-				
-				for(DataMapping m : mapping.getData()) {
-					if (m.getPath()!=null) {
-						for (String path : m.getPath()) {
-							if (className.equals(path.split("\\.")[0].trim())) {
-								String[] result = request.resolveModelPath(path, id);
-								for (String r : result) {
-									xml += "		<field name='"+m.getName()+"'><![CDATA["+r+"]]></field>\n";
-								}
-							}
-						}
-					}
-				}
-				
-				xml += "	</doc>\n";
-			}
+			for(String id : list) xml += createDocumentEntry(id, className, mapping);
 		}
 		
 		xml += "</add>";
@@ -107,7 +115,7 @@ public class SolrManager {
 			fout.print(xml);
 			fout.close();
 		} catch (Exception e) {
-			System.out.println("Error desant data.xml");
+			System.out.println("Error saving indexation data.xml");
 			e.printStackTrace();
 		}
 		
@@ -135,8 +143,6 @@ public class SolrManager {
 
 	    log.info("Indexation Solr Response " + sb.toString());
 	    rd.close();
-	    
-	    return xml;
 	}
 	
 	public void commit() throws Exception {
@@ -191,6 +197,34 @@ public class SolrManager {
 
 	    log.info(sb.toString());
 	    rd.close();
+	}
+	
+	public String search(String searchText) throws Exception {
+		String solrQuery = "?q="+searchText+"&fl=id&facet=true";
+	
+		BufferedReader fin = new BufferedReader(new FileReader(Constants.JSON_PATH + "mapping/mapping.json"));
+		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
+		
+		for (DataMapping m : mapping.getData()) {
+			if ("yes".equals(m.getCategory())) solrQuery += "&facet.field="+m.getName();
+		}
+		
+		solrQuery += "&wt=json";
+		
+		URL url = new URL("http://localhost:8080/solr/select/"+solrQuery);
+		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+	    conn.setRequestMethod("GET");
+	    
+	    // Get the response
+	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+	    String str;
+	    StringBuffer sb = new StringBuffer();
+	    while ((str = rd.readLine()) != null) {
+	    	sb.append(str);
+	    	sb.append("\n");
+	    }
+	    
+	    return sb.toString();
 	}
 
 }
