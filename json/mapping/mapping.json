@@ -8,7 +8,7 @@
 	        "type":"text",
 	        "path":["*.class"]
 	    },
-	
+	    
 		{
 			"name":"title",
 		    "type":"text",

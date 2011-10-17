@@ -41,6 +41,7 @@ public class UploadObject {
 			JsonNode jsonRequest = m.readValue(request, JsonNode.class);
 			
 			String className = jsonRequest.path("className").getTextValue();
+			String about = jsonRequest.path("about").getTextValue();
 			List<String> propertiesList = new ArrayList<String>();
 			List<String> propertyValuesList = new ArrayList<String>();
 			
@@ -66,7 +67,7 @@ public class UploadObject {
 			propertiesList.toArray(properties);
 			propertyValuesList.toArray(propertyValues);
 			
-			result = new Upload().uploadObject(className, properties, propertyValues);
+			result = new Upload().uploadObject(className, about, properties, propertyValues);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return result;

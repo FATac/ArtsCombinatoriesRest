@@ -4,17 +4,18 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
+
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Constants;
 import org.fundaciotapies.ac.model.bo.Media;
-import org.fundaciotapies.ac.model.bo.ObjectCounter;
+import org.fundaciotapies.ac.model.bo.IdentifierCounter;
 import org.fundaciotapies.ac.model.bo.Right;
 import org.fundaciotapies.ac.rest.client.Profile;
 import org.fundaciotapies.ac.rest.client.Transco;
@@ -42,12 +43,17 @@ public class Upload {
 	public List<String> script = null;
 	public OntModel data = null;
 	
-	private String generateObjectId(String className) throws Exception {
-		if (className == null) 
-			throw new NullPointerException();
-		ObjectCounter oc = new ObjectCounter();
+	private String normalizeId(String about) throws Exception {
+		String temp = Normalizer.normalize(about, Normalizer.Form.NFD);
+	    Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+	    return pattern.matcher(temp).replaceAll("").replace(" ", "_");
+	}
+	
+	private String generateObjectId(String about) throws Exception {
+		if (about == null) throw new NullPointerException();
+		IdentifierCounter oc = new IdentifierCounter();
 		
-		oc.load(className);
+		oc.load(about);
 		oc.setCounter(oc.getCounter()+1);
 		if (oc.getCounter() == 1l) {
 			oc.save();
@@ -55,12 +61,11 @@ public class Upload {
 			oc.update();
 		}
 		
-		if (oc.getCounter()<1000000000) {
-			NumberFormat nf = new DecimalFormat("000000000");
-			return className.toLowerCase() + "/" + nf.format(oc.getCounter());
-		} else {
-			throw new Exception("Id counter limit reached!");
-		}
+		Long n = oc.getCounter();
+		if (n>1) 
+			return normalizeId(about) + "_" + oc.getCounter();
+		else
+			return normalizeId(about);
 	}
 	
 	public void addVideoFile(String id) {
@@ -83,14 +88,17 @@ public class Upload {
 		}
 	}
 	
-	public String addMediaFile(InputStream in, String id, String filePath) {
+	public String addMediaFile(InputStream in, String filePath) {
+		
+		String id = Long.toHexString(Double.doubleToLongBits(Math.random()));
 		
 		try {
 			String[] tmp = filePath.split("\\.");
 			String ext = "";
 			if (tmp!=null && tmp.length>0) ext = tmp[tmp.length-1];
 			
-			filePath = id.replace("/", "")+"___file."+ext;
+			
+			filePath = id +"___media."+ext;
 			File f = new File(Constants.FILE_DIR+filePath);
 			OutputStream fout = new FileOutputStream(f);
 			   
@@ -120,17 +128,18 @@ public class Upload {
 			return "error";
 		}
 		
-		return "success";
+		return Constants.REST_URL+"media/"+id;
 	}
 	
 	private String extractUriId(String URI) {
-		return URI.replace(Constants.OBJECT_BASE_URI, "").replace(Constants.RDFS_URI_NS, "").replace(Constants.AC_URI_NS, "");
+		return URI.replace(Constants.RESOURCE_BASE_URI, "").replace(Constants.RDFS_URI_NS, "").replace(Constants.AC_URI_NS, "");
 	}
 	
-	public String uploadObject(String className, String[] properties, String[] propertyValues) {
+	public String uploadObject(String className, String about, String[] properties, String[] propertyValues) {
 		String result = "error";
 		VirtTransactionHandler vth = null;
 		if (className==null) return "error";
+		if (about==null) about = className;
 		
 		try {
 			data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData", Constants.RDFDB_URL, "dba", "dba"));
@@ -138,8 +147,8 @@ public class Upload {
 			ont.read("file:OntologiaArtsCombinatories.owl");
 			
 			String[] cls = className.split(",");
-			String id = generateObjectId(cls[0]);
-			String fullId = Constants.OBJECT_BASE_URI + id;
+			String id = generateObjectId(about);
+			String fullId = Constants.RESOURCE_BASE_URI + id;
 			
 			int i = 0;
 			
@@ -163,7 +172,7 @@ public class Upload {
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) 
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.AC_URI_NS+properties[i].trim()+"> <"+Constants.OBJECT_BASE_URI+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.AC_URI_NS+properties[i].trim()+"> <"+Constants.RESOURCE_BASE_URI+propertyValues[i]+"> }");
 					else {
 						String lang = null;
 						
@@ -225,7 +234,7 @@ public class Upload {
 			data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData", Constants.RDFDB_URL, "dba", "dba"));
 			
 			script = new ArrayList<String>();
-			script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Constants.OBJECT_BASE_URI+objectId+"> or ?c = <"+Constants.OBJECT_BASE_URI+objectId+">) . ?a ?b ?c }");
+			script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Constants.RESOURCE_BASE_URI+objectId+"> or ?c = <"+Constants.RESOURCE_BASE_URI+objectId+">) . ?a ?b ?c }");
 			
 			Command c = new Command() {
 				@Override
@@ -285,15 +294,15 @@ public class Upload {
 				}
 				
 				if ((!"filePath".equals(properties[i]) || "filePath".equals(properties[i]) && !"".equals(propertyValues[i])) && (!alreadyDeleted.contains(properties[i]))) {
-					script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a <"+Constants.AC_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.OBJECT_BASE_URI+uniqueId+">) . ?a ?b ?c }");
+					script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a <"+Constants.AC_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.RESOURCE_BASE_URI+uniqueId+">) . ?a ?b ?c }");
 					alreadyDeleted.add(properties[i]);
 				}
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.OBJECT_BASE_URI+uniqueId+"> <"+Constants.AC_URI_NS+properties[i]+"> <"+Constants.OBJECT_BASE_URI+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.RESOURCE_BASE_URI+uniqueId+"> <"+Constants.AC_URI_NS+properties[i]+"> <"+Constants.RESOURCE_BASE_URI+propertyValues[i]+"> }");
 					} else {
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.OBJECT_BASE_URI+uniqueId+"> <"+Constants.AC_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.RESOURCE_BASE_URI+uniqueId+"> <"+Constants.AC_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
 					}
 				}
 				i++;

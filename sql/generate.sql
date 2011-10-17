@@ -17,8 +17,8 @@ CREATE TABLE db.dba._right (
 )
 
 -- DROP TABLE db.dba._object_counter;
-CREATE TABLE db.dba._object_counter (
-	objectClass VARCHAR(80),
+CREATE TABLE db.dba._identifier_counter (
+	objectClass VARCHAR(150),
 	counter INT
 )
 

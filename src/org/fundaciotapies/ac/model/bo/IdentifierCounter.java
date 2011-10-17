@@ -9,7 +9,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
 
-public class ObjectCounter implements Serializable {
+public class IdentifierCounter implements Serializable {
 	private static final long serialVersionUID = -3923708885085790461L;
 	
 	private String objectClass;
@@ -32,7 +32,7 @@ public class ObjectCounter implements Serializable {
 		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
 		    conn = ds.getConnection();
 		      
-		    stmt = conn.prepareStatement("SELECT * FROM _object_counter WHERE objectClass = ? ");
+		    stmt = conn.prepareStatement("SELECT * FROM _identifier_counter WHERE objectClass = ? ");
 		    stmt.setString(1, objectClass);
 		      
 		    rs = stmt.executeQuery();
@@ -64,7 +64,7 @@ public class ObjectCounter implements Serializable {
 		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
 		    conn = ds.getConnection();
 		      
-		    String sql = "INSERT INTO _object_counter (objectClass, counter) VALUES (?,?)";
+		    String sql = "INSERT INTO _identifier_counter (objectClass, counter) VALUES (?,?)";
 		    stmt = conn.prepareStatement(sql);
 		    	  
 		    stmt.setString(1, objectClass);
@@ -91,7 +91,7 @@ public class ObjectCounter implements Serializable {
 		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
 		    conn = ds.getConnection();
 		      
-		    String sql = "UPDATE _object_counter SET counter = ? WHERE objectClass = ? ";
+		    String sql = "UPDATE _identifier_counter SET counter = ? WHERE objectClass = ? ";
 		    stmt = conn.prepareStatement(sql);
 		    	  
 		    stmt.setLong(1, getCounter());

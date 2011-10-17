@@ -37,7 +37,8 @@
 			"name":"content",
 			"data":[
 			 	{
-			        "type":"media"
+			        "type":"media",
+			        "path":["Media.Uri"]
 			    }
 			]  
 		}

@@ -51,7 +51,7 @@ public class Request {
 	private static Logger log = Logger.getLogger(Request.class);
 	
 	public String getCurrentLanguage() {
-		return "ca"; // TODO: get language from client user config/cookies
+		return "ca"; // TODO: get language from client user config/cookies/session
 	}
 	
 	public Integer getRoleLevel(String roleName) {
@@ -87,7 +87,7 @@ public class Request {
 	}
 	
 	private String extractUriId(String URI) {
-		return URI.replace(Constants.OBJECT_BASE_URI, "").replace(Constants.RDFS_URI_NS, "").replace(Constants.AC_URI_NS, "");
+		return URI.replace(Constants.RESOURCE_BASE_URI, "").replace(Constants.RDFS_URI_NS, "").replace(Constants.AC_URI_NS, "");
 	}
 	
 	public String getRdf() {
@@ -125,7 +125,7 @@ public class Request {
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
 			
 			// Get object by Id
-			Individual ind = data.getIndividual(Constants.OBJECT_BASE_URI+id);
+			Individual ind = data.getIndividual(Constants.RESOURCE_BASE_URI+id);
 			StmtIterator it = ind.listProperties();
 			result = new CustomMap();
 			while(it.hasNext()) {
@@ -361,7 +361,7 @@ public class Request {
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
 			
 			// Create search query
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.AC_URI_NS+"isAssignedTo> <"+Constants.OBJECT_BASE_URI+referredObjectId+"> . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+"Rights> } } ORDER BY ?s "), (VirtGraph) data.getBaseModel().getGraph());
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.AC_URI_NS+"isAssignedTo> <"+Constants.RESOURCE_BASE_URI+referredObjectId+"> . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+"Rights> } } ORDER BY ?s "), (VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
 			while (rs.hasNext()) {
@@ -523,7 +523,7 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			String filter = "FILTER (regex(?o,\""+word+"\",\"i\") && !regex(?o, \""+Constants.OBJECT_BASE_URI+"\",\"i\") && !regex(?o, \""+Constants.AC_URI_NS+"\",\"i\")) ";
+			String filter = "FILTER (regex(?o,\""+word+"\",\"i\") && !regex(?o, \""+Constants.RESOURCE_BASE_URI+"\",\"i\") && !regex(?o, \""+Constants.AC_URI_NS+"\",\"i\")) ";
 			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + filter + " } "),(VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
@@ -679,7 +679,7 @@ public class Request {
 		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
 		
 		// Create search query
-		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { <"+Constants.OBJECT_BASE_URI+id+"> <"+Constants.RDFS_URI_NS+"Class> ?c } "),(VirtGraph) data.getBaseModel().getGraph());
+		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { <"+Constants.RESOURCE_BASE_URI+id+"> <"+Constants.RDFS_URI_NS+"Class> ?c } "),(VirtGraph) data.getBaseModel().getGraph());
 		ResultSet rs = vqe.execSelect();
 		
 		if (rs.hasNext()) {
@@ -720,7 +720,7 @@ public class Request {
 		String propertyClause = " <"+Constants.AC_URI_NS+property+"> ";
 		
 		if (id!=null) {
-			idClause = " <"+Constants.OBJECT_BASE_URI+id+"> ";
+			idClause = " <"+Constants.RESOURCE_BASE_URI+id+"> ";
 		} else if (className!=null && !"*".equals(className)) {
 			classClause = ". ?a <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+className+"> "; // TODO: We need reasoning to include subclasses
 		}

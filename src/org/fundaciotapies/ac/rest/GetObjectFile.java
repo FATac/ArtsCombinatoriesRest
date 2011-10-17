@@ -15,26 +15,24 @@ import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
 /**
- * Call: http://{host:port}/objects/{class}/{id}/media
+ * Call: http://{host:port}/media/{id}
  * <br>
  * Get media file linked to specific object. Provided object id must be of a Media type <br>
  * Params class: <br>
- * - class: Class name <br>
  * - id: object identifier <br>
  * Returns: Binary file object by streaming
  */
-@Path("/objects/{class}/{id}/media")
+@Path("/media/{id}")
 public class GetObjectFile {
 	private static Logger log = Logger.getLogger(GetObjectFile.class);
 	
 	@GET
-	public String getObjectFile(@Context HttpServletResponse response, @PathParam("class") String c, @PathParam("id") String id, @QueryParam("u") String uid) {
+	public String getObjectFile(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("u") String uid) {
 		byte[] content = null;
 		
 		try {
-			
-			ObjectFile objectFile = new Request().getObjectFile(c+"/"+id, uid);
-			if (objectFile==null) throw new Exception("Object "+c+"/"+id+" has no media file");
+			ObjectFile objectFile = new Request().getObjectFile(id, uid);
+			if (objectFile==null) throw new Exception("There is no media file");
 			response.setContentType(objectFile.getContentType());
 			
 			DataInputStream dis = new DataInputStream(objectFile.getInputStream());

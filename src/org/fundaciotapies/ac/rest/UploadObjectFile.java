@@ -5,7 +5,6 @@ import java.io.InputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -23,17 +22,16 @@ import org.fundaciotapies.ac.model.Upload;
  *  - id: object identifier<br>
  *  - fn: File name<br>
  */
-@Path("/objects/{class}/{id}/file/upload")
+@Path("/media/upload")
 public class UploadObjectFile {
 	private static Logger log = Logger.getLogger(UploadObjectFile.class);
-	
 
 	@POST
 	@Produces("application/json")
-	public String uploadObjectFile(@Context HttpServletRequest request, @PathParam("class") String c, @PathParam("id") String id, @QueryParam("fn") String fn) {
+	public String uploadObjectFile(@Context HttpServletRequest request, @QueryParam("fn") String fn) {
 		try {
 			InputStream in = request.getInputStream();
-			return new Upload().addMediaFile(in, c+"/"+id, fn);
+			return new Upload().addMediaFile(in, fn);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";

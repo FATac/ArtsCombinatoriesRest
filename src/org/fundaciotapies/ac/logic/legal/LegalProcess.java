@@ -116,8 +116,9 @@ public class LegalProcess {
 				vlist.add(x.trim());
 				
 				String legalId = new Request().getLegalObjectId(x.trim());
-				if (legalId!=null) new Upload().deleteObject(legalId); 
-				new Upload().uploadObject("Rights", plist.toArray(new String[plist.size()]), vlist.toArray(new String[vlist.size()]));
+				if (legalId!=null) new Upload().deleteObject(legalId);
+				// TODO: Reference to existing valid License and allow configurability
+				//new Upload().uploadObject("Rights", plist.toArray(new String[plist.size()]), vlist.toArray(new String[vlist.size()]));
 				
 				plist.remove(plist.size()-1);
 				vlist.remove(plist.size()-1);

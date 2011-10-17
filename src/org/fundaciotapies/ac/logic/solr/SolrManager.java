@@ -7,6 +7,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -33,7 +34,7 @@ public class SolrManager {
 		sb.append(" 	<field name=\"id\" type=\"string\" indexed=\"true\" stored=\"true\" required=\"true\" /> \n");
 		
 		for(DataMapping m : mapping.getData()) {
-			String type = "text_general";
+			String type = "string";
 			if ("date.year".equals(m.getType())) type = "int";								// TODO: add more types
 			
 			sb.append("		<field name=\""+m.getName()+"\" type=\""+type+"\" indexed=\"true\" stored=\"true\" multiValued=\"true\" /> \n");
@@ -200,13 +201,15 @@ public class SolrManager {
 	}
 	
 	public String search(String searchText) throws Exception {
-		String solrQuery = "?q="+searchText+"&fl=id&facet=true";
+		String solrQuery = "?q="+URLEncoder.encode(searchText,"UTF-8")+"&fl=id&facet=true";
 	
 		BufferedReader fin = new BufferedReader(new FileReader(Constants.JSON_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
 		for (DataMapping m : mapping.getData()) {
 			if ("yes".equals(m.getCategory())) solrQuery += "&facet.field="+m.getName();
+			
+			if ("date.year".equals(m.getType())) solrQuery += "&f."+m.getName()+".facet.sort=index";
 		}
 		
 		solrQuery += "&wt=json";
