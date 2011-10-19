@@ -20,13 +20,13 @@ import com.google.gson.Gson;
  * - id: Object identifier <br>
  * Returns: field-value pairs list in JSON
  */
-@Path("/objects/{class}/{id}/view")
+@Path("/resource/{id}/view")
 public class GetObjectView {
 
 	@GET
 	@Produces("application/json")
-	public String getObjectView(@PathParam("class") String c, @PathParam("id") String id, @QueryParam("u") String uid) {
-		Template result = new Request().getObjectView(c+"/"+id);
+	public String getObjectView(@PathParam("id") String id, @QueryParam("u") String uid) {
+		Template result = new Request().getObjectView(id);
 		if (result==null) return new Gson().toJson("Error: Object class has no template");
 		return new Gson().toJson(result);
 	}

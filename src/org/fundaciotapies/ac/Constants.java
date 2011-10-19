@@ -5,7 +5,7 @@ public class Constants {
 	public static final String RDFDB_URL = "jdbc:virtuoso://localhost:1111";
 	public static final String REST_URL = "http://stress.upc.es:8080/ArtsCombinatoriesRest/";
 	
-	public static final String FILE_DIR = "";
+	public static final String FILE_DIR = "./ac_media/";
 	public static final String[] VIDEO_FILE_EXTENSIONS = {"dv", "mpg", "avi"};
 	
 	public static final String AC_URI_NS = "http://www.fundaciotapies.org/ontologies/2011/4/ac.owl#";

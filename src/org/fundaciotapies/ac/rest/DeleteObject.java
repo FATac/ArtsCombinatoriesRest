@@ -14,17 +14,16 @@ import com.google.gson.Gson;
  * <br>
  * Deletes referenced object<br>
  * Params:<br>
- * - class: Object class<br>
  * - id: Object identifier<br>
  * Returns "success" or "error"
  */
-@Path("/objects/{class}/{id}/delete")
+@Path("/resource/{id}/delete")
 public class DeleteObject {
 
 	@GET
 	@Produces("application/json")
-	public String deleteObject(@PathParam("class") String c, @PathParam("id") String id) {
-		String result = new Upload().deleteObject(c+"/"+id);
+	public String deleteObject(@PathParam("id") String id) {
+		String result = new Upload().deleteObject(id);
 		return new Gson().toJson(result);
 	}
 }

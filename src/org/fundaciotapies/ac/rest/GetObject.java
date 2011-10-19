@@ -20,13 +20,13 @@ import com.google.gson.Gson;
  * - id: Object identifier <br>
  * Returns: field-value pairs list in JSON
  */
-@Path("/objects/{class}/{id}")
+@Path("/resource/{id}")
 public class GetObject {
 
 	@GET
 	@Produces("application/json")
-	public String getObject(@PathParam("class") String c, @PathParam("id") String id, @QueryParam("u") String uid) {
-		CustomMap result = new Request().getObject(c+"/"+id, uid);
+	public String getObject(@PathParam("id") String id, @QueryParam("u") String uid) {
+		CustomMap result = new Request().getObject(id, uid);
 		if (result==null) return new Gson().toJson("Error: Object could not be found");
 		return new Gson().toJson(result);
 	}

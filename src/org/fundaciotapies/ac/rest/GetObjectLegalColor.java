@@ -17,7 +17,7 @@ import org.fundaciotapies.ac.model.Request;
  * - id: object identifier <br>
  * Returns: HTML color code
  */
-@Path("/objects/{class}/{id}/color")
+@Path("/resource/{id}/color")
 public class GetObjectLegalColor {
 	
 	@GET

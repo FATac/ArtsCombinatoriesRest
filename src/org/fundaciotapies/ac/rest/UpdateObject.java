@@ -24,11 +24,10 @@ import com.google.gson.Gson;
  * <br>
  * Updates object data. Object data must be provided as field-value pairs list in JSON. Updates only the specified fields (non-specified fields are left untouched)<br>
  * Params:<br>
- *  - class: class name<br>
  *  - id: object identifier<br>
  * Return: "success" or "error"
  */
-@Path("/objects/{class}/{id}/update")
+@Path("/resource/{id}/update")
 public class UpdateObject {
 	private static Logger log = Logger.getLogger(UpdateObject.class);
 	
@@ -36,7 +35,7 @@ public class UpdateObject {
 	@POST
 	@Produces("application/json")
 	@Consumes("application/json")
-	public String updateObject(@Context HttpServletRequest httpRequest,  String request, @PathParam("class") String c, @PathParam("id") String id) {
+	public String updateObject(@Context HttpServletRequest httpRequest,  String request, @PathParam("id") String id) {
 		String result = "error";
 		if (request==null || "".equals(request.trim())) return result;
 		
@@ -69,7 +68,7 @@ public class UpdateObject {
 			propertiesList.toArray(properties);
 			propertyValuesList.toArray(propertyValues);
 			
-			result = new Upload().updateObject(c+"/"+id, properties, propertyValues);
+			result = new Upload().updateObject(id, properties, propertyValues);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return new Gson().toJson(result);

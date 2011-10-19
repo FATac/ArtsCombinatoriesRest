@@ -50,6 +50,13 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 public class Request {
 	private static Logger log = Logger.getLogger(Request.class);
 	
+	private VirtModel vm = null;
+	
+	private VirtModel getVirtModel() {
+		if (vm==null || vm.isClosed()) vm = VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba");
+		return vm;
+	}
+	
 	public String getCurrentLanguage() {
 		return "ca"; // TODO: get language from client user config/cookies/session
 	}
@@ -92,7 +99,7 @@ public class Request {
 	
 	public String getRdf() {
 		// Connect to rdf server
-		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 
 		// Get object in its RDF specification
 		StringWriter sw = new StringWriter();
@@ -122,7 +129,7 @@ public class Request {
 			}
 			
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 			
 			// Get object by Id
 			Individual ind = data.getIndividual(Constants.RESOURCE_BASE_URI+id);
@@ -165,7 +172,7 @@ public class Request {
 			right.load(id);
 			
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 			
 			String query = "SELECT ?s FROM <http://localhost:8890/ACData> WHERE { { ?s <"+Constants.AC_URI_NS+"FatacId> \""+id+"\" } " + qc + " } ";
 			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create(query),(VirtGraph) data.getBaseModel().getGraph());
@@ -358,7 +365,7 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 			
 			// Create search query
 			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.AC_URI_NS+"isAssignedTo> <"+Constants.RESOURCE_BASE_URI+referredObjectId+"> . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+"Rights> } } ORDER BY ?s "), (VirtGraph) data.getBaseModel().getGraph());
@@ -380,7 +387,7 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 			
 			String qc = null;
 			
@@ -445,7 +452,7 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 			
 			String qc = null;
 			
@@ -497,7 +504,7 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 			
 			String qc = null;
 			
@@ -583,7 +590,7 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 			
 			// Create search query
 			field = Constants.AC_URI_NS + field;
@@ -611,7 +618,7 @@ public class Request {
 		List<String[]> result = new ArrayList<String[]>();
 		
 		// Connect to rdf server
-		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 		
 		// Create search query
 		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create(sparql),(VirtGraph) data.getBaseModel().getGraph());
@@ -643,7 +650,7 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 			
 			// Create search query
 			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?a ?b ?c } "),(VirtGraph) data.getBaseModel().getGraph());
@@ -676,7 +683,7 @@ public class Request {
 	
 	public String getObjectClass(String id) {
 		// Connect to rdf server
-		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 		
 		// Create search query
 		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { <"+Constants.RESOURCE_BASE_URI+id+"> <"+Constants.RDFS_URI_NS+"Class> ?c } "),(VirtGraph) data.getBaseModel().getGraph());
@@ -713,7 +720,7 @@ public class Request {
 		List<String> result = new ArrayList<String>();
 		
 		// Connect to rdf server
-		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba"));
+		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 		
 		String classClause = "";
 		String idClause = " ?a ";

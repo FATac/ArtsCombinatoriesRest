@@ -74,7 +74,8 @@
 		    "name":"person",
 		    "type":"text",
 		    "path":[
-		        "Case-Files.references:Art_Work.isApplicationOf:Role.performedBy:Person.fullName"
+		        "Case-Files.references:Art_Work.isApplicationOf:Role.performedBy:Person.givenName",
+		        "Person.givenName",
 		    ],
 		    "category":"yes"
 		},

@@ -44,14 +44,18 @@ public class Upload {
 	public OntModel data = null;
 	
 	private String normalizeId(String about) throws Exception {
-		String temp = Normalizer.normalize(about, Normalizer.Form.NFD);
+		String temp = Normalizer.normalize(about.trim(), Normalizer.Form.NFD);
 	    Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-	    return pattern.matcher(temp).replaceAll("").replace(" ", "_");
+	    String result = pattern.matcher(temp).replaceAll("").replaceAll("\\<.*?>","").replaceAll("[^A-Za-z0-9()_\\s\\-\\']", "").replaceAll("[\\s+\\n+\\t+]", "_");
+	    if (result.length()>140) result = result.substring(0, 140);
+	    return result;
 	}
 	
 	private String generateObjectId(String about) throws Exception {
 		if (about == null) throw new NullPointerException();
 		IdentifierCounter oc = new IdentifierCounter();
+		
+		about = normalizeId(about);
 		
 		oc.load(about);
 		oc.setCounter(oc.getCounter()+1);
@@ -63,9 +67,9 @@ public class Upload {
 		
 		Long n = oc.getCounter();
 		if (n>1) 
-			return normalizeId(about) + "_" + oc.getCounter();
+			return about + "_" + oc.getCounter();
 		else
-			return normalizeId(about);
+			return about;
 	}
 	
 	public void addVideoFile(String id) {
@@ -90,16 +94,22 @@ public class Upload {
 	
 	public String addMediaFile(InputStream in, String filePath) {
 		
-		String id = Long.toHexString(Double.doubleToLongBits(Math.random()));
+		//String id = Long.toHexString(Double.doubleToLongBits(Math.random())) + Long.toHexString(Double.doubleToLongBits(Math.random()));
+		String id = "_media_file_";
 		
 		try {
 			String[] tmp = filePath.split("\\.");
 			String ext = "";
 			if (tmp!=null && tmp.length>0) ext = tmp[tmp.length-1];
 			
+			IdentifierCounter oc = new IdentifierCounter();
+			oc.load(id);
+			oc.setCounter(oc.getCounter()+1);
+			if (oc.getCounter() == 1l) oc.save(); else oc.update();
 			
-			filePath = id +"___media."+ext;
+			filePath = id + oc.getCounter() + "." + ext;
 			File f = new File(Constants.FILE_DIR+filePath);
+			
 			OutputStream fout = new FileOutputStream(f);
 			   
 			byte[] buffer = new byte[1024*1024]; 
@@ -148,6 +158,7 @@ public class Upload {
 			
 			String[] cls = className.split(",");
 			String id = generateObjectId(about);
+			
 			String fullId = Constants.RESOURCE_BASE_URI + id;
 			
 			int i = 0;

@@ -10,7 +10,7 @@
 		    	{
 					"name":"Name",
 					"type":"text",
-					"path":["Person.givenName","Person.lastName"]
+					"path":["Person.fullName"]
 				}
 			]
 		},

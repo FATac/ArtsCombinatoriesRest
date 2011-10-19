@@ -24,7 +24,7 @@ import org.fundaciotapies.ac.model.Upload;
  * <br>
  * Return: Identifier of the uploaded object or "error"
  */
-@Path("/objects/upload")
+@Path("/resource/upload")
 public class UploadObject {
 	
 	private static Logger log = Logger.getLogger(UploadObject.class);
