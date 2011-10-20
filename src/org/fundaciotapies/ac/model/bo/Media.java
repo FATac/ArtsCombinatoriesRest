@@ -13,7 +13,7 @@ public class Media implements Serializable {
 	private static final long serialVersionUID = 944291245319558902L;
 	
 	private Long sid = null;
-	private String objectId;
+	private String mediaId;
 	private String path;
 	private String moment;
 	
@@ -47,7 +47,7 @@ public class Media implements Serializable {
 		    if (rs.next()) {
 		    	this.sid = sid;
 		    	this.path = rs.getString("path");
-		    	this.objectId = rs.getString("objectId");
+		    	this.mediaId = rs.getString("mediaId");
 		    	this.moment = rs.getString("moment");
 		    } else {
 		    	this.sid = null;
@@ -63,7 +63,7 @@ public class Media implements Serializable {
 		} 
 	}
 	
-	public void load(String objectId) throws Exception {
+	public void load(String mediaId) throws Exception {
 		Connection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
@@ -73,14 +73,14 @@ public class Media implements Serializable {
 		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
 		    conn = ds.getConnection();
 		      
-		    stmt = conn.prepareStatement("SELECT * FROM _media WHERE objectId = ? ");
-		    stmt.setString(1, objectId);
+		    stmt = conn.prepareStatement("SELECT * FROM _media WHERE mediaId = ? ");
+		    stmt.setString(1, mediaId);
 		      
 		    rs = stmt.executeQuery();
 		    if (rs.next()) {
 		    	this.sid = rs.getLong("sid");
 		    	this.path = rs.getString("path");
-		    	this.objectId = rs.getString("objectId");
+		    	this.mediaId = rs.getString("mediaId");
 		    	this.moment = rs.getString("moment");
 		    } else {
 		    	this.sid = null;
@@ -105,12 +105,12 @@ public class Media implements Serializable {
 		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
 		    conn = ds.getConnection();
 		      
-		    String sql = "UPDATE _media SET path = ?,objectId=? WHERE sid = ? ";
-		    if (sid ==null) sql = "INSERT INTO _media (path,objectId) VALUES (?,?)";
+		    String sql = "UPDATE _media SET path = ?,mediaId=? WHERE sid = ? ";
+		    if (sid ==null) sql = "INSERT INTO _media (path,mediaId) VALUES (?,?)";
 		    stmt = conn.prepareStatement(sql);
 		    	  
 		    stmt.setString(1, path);
-		    stmt.setString(2, objectId);
+		    stmt.setString(2, mediaId);
 		    if (sid != null) stmt.setLong(3, sid);
 		      
 		    stmt.executeUpdate();
@@ -134,11 +134,11 @@ public class Media implements Serializable {
 		    conn = ds.getConnection();
 		      
 		    if (sid==null) {
-		    	if (objectId!=null) {
-		    		String sql = "DELETE FROM _media WHERE objectId = ? ";
+		    	if (mediaId!=null) {
+		    		String sql = "DELETE FROM _media WHERE mediaId = ? ";
 		    		stmt = conn.prepareStatement(sql);
-		    		stmt.setString(1, objectId);
-		    	} else throw new Exception("Either sid or objectId values must be set to perform deletion");
+		    		stmt.setString(1, mediaId);
+		    	} else throw new Exception("Either sid or mediaId values must be set to perform deletion");
 		    } else {
 		    	String sql = "DELETE FROM _media WHERE sid = ? "; 
 		    	stmt = conn.prepareStatement(sql);
@@ -155,12 +155,12 @@ public class Media implements Serializable {
 		}   
 	}
 	
-	public void setObjectId(String objectId) {
-		this.objectId = objectId;
+	public void setMediaId(String mediaId) {
+		this.mediaId = mediaId;
 	}
 	
-	public String getObjectId() {
-		return objectId;
+	public String getMediaId() {
+		return mediaId;
 	}
 	
 	

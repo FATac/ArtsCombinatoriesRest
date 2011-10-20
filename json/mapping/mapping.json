@@ -4,25 +4,25 @@
 	"data":
 	[
 	    {
-	        "name":"objectType",
+	        "name":"ObjectType",
 	        "type":"text",
 	        "path":["*.class"]
 	    },
 	    
 		{
-			"name":"title",
+			"name":"Title",
 		    "type":"text",
 		    "path":["Case-Files.references:*.Title"]
 		},
 
 		{
-			"name":"description",
+			"name":"Description",
 		    "type":"text",
 		    "path":["Case-Files.references:*.Description"]
 		},
 
 		{
-		    "name":"year",
+		    "name":"Year",
 		    "type":"date.year",
 		    "path":[
 		        "Case-Files.references:*.StartDate",
@@ -32,7 +32,7 @@
 		},
 
 		{
-		    "name":"country",
+		    "name":"Country",
 		    "type":"text",
 		    "path":[
 		    	"Case-Files.references:*.tookPlaceAT:City.isLocatedIn:Country.name",
@@ -44,7 +44,7 @@
 		},
 		
 		{
-		    "name":"media",
+		    "name":"Media",
 		    "type":"text",
 		    "path":[
 		    	"Case-Files.hasMedia:*.class"
@@ -53,7 +53,7 @@
 		},
 		
 		{
-		    "name":"license",
+		    "name":"License",
 		    "type":"text",
 		    "path":[
 		        "Case-Files.references:*.hasLicense:License.name"
@@ -62,7 +62,7 @@
 		},
 		
 		{
-		    "name":"role",
+		    "name":"Role",
 		    "type":"text",
 		    "path":[
 		        "Case-Files.references:Art_Work.isApplicationOf:Role.class"
@@ -71,17 +71,17 @@
 		},
 		
 		{
-		    "name":"person",
+		    "name":"Person",
 		    "type":"text",
 		    "path":[
 		        "Case-Files.references:Art_Work.isApplicationOf:Role.performedBy:Person.givenName",
-		        "Person.givenName",
+		        "Person.givenName"
 		    ],
 		    "category":"yes"
 		},
 		
 		{
-		    "name":"artWork",
+		    "name":"ArtWork",
 		    "type":"text",
 		    "path":[
 		        "Case-Files.references:Art_Work.Title"

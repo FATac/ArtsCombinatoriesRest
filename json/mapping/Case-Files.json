@@ -23,14 +23,8 @@
 			        "name":"Description",
 			        "type":"text",
 			        "path":["Case-Files.references:Event.Description"]
-			    },
-			    
-			    {
-			        "name":"Authors",
-			        "type":"linkedObjects",
-			        "path":["Case-Files.hasMedia:*.format"]
 			    }
-			]  
+			]
 		},
 		
 		{

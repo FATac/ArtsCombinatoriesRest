@@ -4,8 +4,16 @@
 DROP TABLE db.dba._media;
 CREATE TABLE db.dba._media (
 	SID INT IDENTITY,
+	mediaId VARCHAR(60),
 	path VARCHAR(500),
+	moment TIMESTAMP
+)
+
+DROP TABLE db.dba._thumbnail;
+CREATE TABLE db.dba._thumbnail (
+	SID INT IDENTITY,
 	objectId VARCHAR(60),
+	path VARCHAR(500),
 	moment TIMESTAMP
 )
 
@@ -16,9 +24,9 @@ CREATE TABLE db.dba._right (
 	rightLevel INT
 )
 
--- DROP TABLE db.dba._object_counter;
+DROP TABLE db.dba._identifier_counter;
 CREATE TABLE db.dba._identifier_counter (
-	objectClass VARCHAR(150),
+	identifier VARCHAR(150),
 	counter INT
 )
 

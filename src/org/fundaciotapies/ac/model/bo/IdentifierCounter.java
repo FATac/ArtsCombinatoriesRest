@@ -12,16 +12,17 @@ import javax.sql.DataSource;
 public class IdentifierCounter implements Serializable {
 	private static final long serialVersionUID = -3923708885085790461L;
 	
-	private String objectClass;
+	private String identifier;
 	private Long counter;
-	public void setObjectClass(String objectClass) {
-		this.objectClass = objectClass;
+	
+	public void setIdentifier(String identifier) {
+		this.identifier = identifier;
 	}
-	public String getObjectClass() {
-		return objectClass;
+	public String getIdentifier() {
+		return identifier;
 	}
 	
-	public void load(String objectClass) throws Exception {
+	public void load(String identifier) throws Exception {
 		
 		Connection conn = null;
 		PreparedStatement stmt = null;
@@ -32,15 +33,15 @@ public class IdentifierCounter implements Serializable {
 		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
 		    conn = ds.getConnection();
 		      
-		    stmt = conn.prepareStatement("SELECT * FROM _identifier_counter WHERE objectClass = ? ");
-		    stmt.setString(1, objectClass);
+		    stmt = conn.prepareStatement("SELECT * FROM _identifier_counter WHERE identifier = ? ");
+		    stmt.setString(1, identifier);
 		      
 		    rs = stmt.executeQuery();
 		    if (rs.next()) {
-		    	this.objectClass = objectClass;
+		    	this.identifier = identifier;
 		    	this.setCounter(rs.getLong("counter"));
 		    } else {
-		    	this.objectClass = objectClass;
+		    	this.identifier = identifier;
 		    	this.setCounter(0l);
 		    }
 		} catch (Exception e) {
@@ -64,10 +65,10 @@ public class IdentifierCounter implements Serializable {
 		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
 		    conn = ds.getConnection();
 		      
-		    String sql = "INSERT INTO _identifier_counter (objectClass, counter) VALUES (?,?)";
+		    String sql = "INSERT INTO _identifier_counter (identifier, counter) VALUES (?,?)";
 		    stmt = conn.prepareStatement(sql);
 		    	  
-		    stmt.setString(1, objectClass);
+		    stmt.setString(1, identifier);
 		    stmt.setLong(2, getCounter());
 		      
 		    stmt.executeUpdate();
@@ -91,11 +92,11 @@ public class IdentifierCounter implements Serializable {
 		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
 		    conn = ds.getConnection();
 		      
-		    String sql = "UPDATE _identifier_counter SET counter = ? WHERE objectClass = ? ";
+		    String sql = "UPDATE _identifier_counter SET counter = ? WHERE identifier = ? ";
 		    stmt = conn.prepareStatement(sql);
 		    	  
 		    stmt.setLong(1, getCounter());
-		    stmt.setString(2, objectClass);
+		    stmt.setString(2, identifier);
 		      
 		    stmt.executeUpdate();
 		} catch (Exception e) {

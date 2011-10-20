@@ -24,6 +24,7 @@ public class SolrManager {
 	private static Logger log = Logger.getLogger(SolrManager.class);
 		
 	public void generateSchema() throws Exception {
+		// TODO: set deafaultSearchField in Schema.xml
 		BufferedReader fin = new BufferedReader(new FileReader(Constants.JSON_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
@@ -99,14 +100,15 @@ public class SolrManager {
 			if (m.getPath()!=null) {
 				for (String path : m.getPath()) {
 					String className = path.split("\\.")[0].trim();
-					if (!"*".equals(className))	objectTypesIndexed.add(className);
+					if (!"*".equals(className) && !objectTypesIndexed.contains(className))	objectTypesIndexed.add(className);
 				}
 			}
 		}
 		
 		for(String className : objectTypesIndexed) {
 			List<String> list = request.listObjectsId(className);
-			for(String id : list) xml += createDocumentEntry(id, className, mapping);
+			for(String id : list) 
+				xml += createDocumentEntry(id, className, mapping);
 		}
 		
 		xml += "</add>";

@@ -17,7 +17,8 @@ public class GetRDF {
 	@GET
 	@Produces("text/plain; charset=UTF-8")
 	public String getRdf() {
-		return new Request().getRdf();
+		new Request().getRdf();
+		return null;
 	}
 
 }

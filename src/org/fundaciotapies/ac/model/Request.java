@@ -1,9 +1,17 @@
 package org.fundaciotapies.ac.model;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.StringWriter;
+import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,6 +19,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
+import javax.imageio.ImageIO;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Constants;
@@ -42,7 +52,9 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
@@ -50,7 +62,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 public class Request {
 	private static Logger log = Logger.getLogger(Request.class);
 	
-	private VirtModel vm = null;
+	private static VirtModel vm = null;
 	
 	private VirtModel getVirtModel() {
 		if (vm==null || vm.isClosed()) vm = VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba");
@@ -94,17 +106,18 @@ public class Request {
 	}
 	
 	private String extractUriId(String URI) {
-		return URI.replace(Constants.RESOURCE_BASE_URI, "").replace(Constants.RDFS_URI_NS, "").replace(Constants.AC_URI_NS, "");
+		return URI.replace(Constants.RESOURCE_BASE_URI, "").replace(Constants.RDF_URI_NS, "").replace(Constants.AC_URI_NS, "");
 	}
 	
 	public String getRdf() {
-		// Connect to rdf server
-		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
-
-		// Get object in its RDF specification
-		StringWriter sw = new StringWriter();
-		data.write(sw);
-		return sw.toString();
+		
+		try {
+			saveBackup();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 
 	public CustomMap getObject(String id, String userId) {
@@ -160,11 +173,11 @@ public class Request {
 		try {
 			String qc = "";
 			if (cls!=null && !"".equals(cls)) {
-				qc = " . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } ";
+				qc = " . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } ";
 					
 				List<String> subClassesList = listSubclasses(cls, false);
 				for (String sc : subClassesList)
-					qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+sc+"> } ";
+					qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+sc+"> } ";
 			}
 			
 			// Checks whether user can view object or not
@@ -190,6 +203,20 @@ public class Request {
 		return result;
 	}
 	
+	public String getObjectFileFormat(String id) {
+		try {
+			Media media = new Media();
+			media.load(id);
+			String path = media.getPath();
+			if (path==null) return null;
+			String[] parts = path.split("\\.");
+			return parts[parts.length-1].toLowerCase();
+		} catch (Exception e) {
+			log.error("Error ", e);
+			return null;
+		}
+	}
+	
 	public ObjectFile getObjectFile(String id, String userId) {
 		try {
 			// Checks whether user can view object or not
@@ -205,11 +232,6 @@ public class Request {
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) {
 				throw new Exception("Access to object denied due to legal restrictions");
 			}
-			
-			// Only media objects have associated files
-			String className = (String)new Request().getObject(id, "").get("Class");
-			boolean isMediaObject = new Request().listSubclasses("Media", false).contains(className);
-			if (!isMediaObject) return null;
 			
 			Media media = new Media();
 			media.load(id);
@@ -368,7 +390,7 @@ public class Request {
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 			
 			// Create search query
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.AC_URI_NS+"isAssignedTo> <"+Constants.RESOURCE_BASE_URI+referredObjectId+"> . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+"Rights> } } ORDER BY ?s "), (VirtGraph) data.getBaseModel().getGraph());
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.AC_URI_NS+"isAssignedTo> <"+Constants.RESOURCE_BASE_URI+referredObjectId+"> . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+"Rights> } } ORDER BY ?s "), (VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
 			while (rs.hasNext()) {
@@ -398,14 +420,14 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } "; 
+							qc = " . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } "; 
 						} else {
-							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } ";
 						}
 						
 						List<String> subClassesList = listSubclasses(cls, false);
 						for (String sc : subClassesList)
-							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+sc+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+sc+"> } ";
 					}
 				}
 			}
@@ -463,14 +485,14 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } "; 
+							qc = " { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } "; 
 						} else {
-							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } ";
 						}
 						
 						List<String> subClassesList = listSubclasses(cls, false);
 						for (String sc : subClassesList)
-							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+sc+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+sc+"> } ";
 					}
 				}
 			}
@@ -478,7 +500,7 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + " } "),(VirtGraph) data.getBaseModel().getGraph());
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { " + qc + " } "),(VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -515,14 +537,14 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " . { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } "; 
+							qc = " . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } "; 
 						} else {
-							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+cls+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } ";
 						}
 						
 						List<String> subClassesList = listSubclasses(cls, false);
 						for (String sc : subClassesList)
-							qc += " UNION { ?s <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+sc+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+sc+"> } ";
 					}
 				}
 			}
@@ -595,7 +617,7 @@ public class Request {
 			// Create search query
 			field = Constants.AC_URI_NS + field;
 			className = Constants.AC_URI_NS + className;
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s <"+Constants.RDFS_URI_NS+"Class> <"+className+"> } ORDER BY ?s "),(VirtGraph) data.getBaseModel().getGraph());
+			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s <"+Constants.RDF_URI_NS+"type> <"+className+"> } ORDER BY ?s "),(VirtGraph) data.getBaseModel().getGraph());
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -645,12 +667,13 @@ public class Request {
 		return result;
 	}
 
-	public List<String> saveBackup(String backupId) {
-		List<String> backupScript = new ArrayList<String>();
+	public void saveBackup() {
 		
 		try {
 			// Connect to rdf server
 			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+			
+			OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
 			
 			// Create search query
 			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?a ?b ?c } "),(VirtGraph) data.getBaseModel().getGraph());
@@ -663,22 +686,28 @@ public class Request {
 				RDFNode na = r.get("a");
 				RDFNode nb = r.get("b");
 				RDFNode nc = r.get("c");
-				String a = "";
-				String b = "";
-				String c = "";
-				if (na.isResource())	a = "<"+na.toString()+">"; else a = "\""+na.toString()+"\"";
-				if (nb.isResource())	b = "<"+nb.toString()+">"; else b = "\""+nb.toString()+"\"";
-				if (nc.isResource())	c = "<"+nc.toString()+">"; else c = "\""+nc.toString()+"\"";
 				
-				String insert = "INSERT INTO GRAPH <http://localhost:8890/ACData> { "+a+" "+b+" "+c+" }";
+				Resource res = model.getResource(na.toString());
+				if (res==null) res = model.createResource(na.toString());
 				
-				backupScript.add(insert);
+				Property prop = model.getProperty(nb.toString());
+				if (prop==null) prop = model.createProperty(nb.toString());
+				
+				RDFNode node = null;
+				if (nc.isResource()) {
+					node = model.getResource(nc.toString());
+					if (node==null) node = model.createResource(nc.toString());
+					res.addProperty(prop, node);
+				} else if (nc.isLiteral()) {
+					res.addProperty(prop, nc.asLiteral().getString(), nc.asLiteral().getLanguage());
+				}
 			}
+			
+			BufferedWriter buf = new BufferedWriter(new FileWriter("out.owl"));
+			model.write(buf);
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
-		
-		return backupScript; 
 	}
 	
 	public String getObjectClass(String id) {
@@ -686,7 +715,7 @@ public class Request {
 		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
 		
 		// Create search query
-		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { <"+Constants.RESOURCE_BASE_URI+id+"> <"+Constants.RDFS_URI_NS+"Class> ?c } "),(VirtGraph) data.getBaseModel().getGraph());
+		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { <"+Constants.RESOURCE_BASE_URI+id+"> <"+Constants.RDF_URI_NS+"type> ?c } "),(VirtGraph) data.getBaseModel().getGraph());
 		ResultSet rs = vqe.execSelect();
 		
 		if (rs.hasNext()) {
@@ -729,7 +758,7 @@ public class Request {
 		if (id!=null) {
 			idClause = " <"+Constants.RESOURCE_BASE_URI+id+"> ";
 		} else if (className!=null && !"*".equals(className)) {
-			classClause = ". ?a <"+Constants.RDFS_URI_NS+"Class> <"+Constants.AC_URI_NS+className+"> "; // TODO: We need reasoning to include subclasses
+			classClause = ". ?a <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+className+"> "; // TODO: We need reasoning to include subclasses
 		}
 		
 		// Create search query
@@ -781,11 +810,32 @@ public class Request {
 		return values;
 	}
 	
+	private Template getObjectTemplate(String id) throws Exception {
+		
+		String className = getObjectClass(id);
+		File f = new File(Constants.JSON_PATH+"mapping/"+className+".json");
+		
+		if (!f.exists()) {
+			List<String> superClasses = listSuperClasses(className);
+			for (String superClassName : superClasses) {
+				f = new File(Constants.JSON_PATH+"mapping/"+superClassName+".json");
+				if (f.exists()) break;
+			}
+		}
+		
+		if (!f.exists()) { 
+			log.warn("Trying to obtain template from no-template object class");
+			return null;
+		}
+		
+		return new Gson().fromJson(new FileReader(f), Template.class);
+	}
+	
 	public void getObjectSectionView(TemplateSection section, String id) {
 		for (DataMapping dm : section.getData()) {
 			String type = dm.getType();
 			
-			if ("text".equals(type) || "objects".equals(type)) {
+			if ("text".equals(type) || "objects".equals(type) || "media".equals(type)) {
 				for (String path : dm.getPath()) {
 					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
 					dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id, false)));
@@ -805,23 +855,9 @@ public class Request {
 		Template template = null;
 		
 		try {
-			String className = getObjectClass(id);
-			File f = new File(Constants.JSON_PATH+"mapping/"+className+".json");
+			template = getObjectTemplate(id);
+			if (template == null) return null;
 			
-			if (!f.exists()) {
-				List<String> superClasses = listSuperClasses(className);
-				for (String superClassName : superClasses) {
-					f = new File(Constants.JSON_PATH+"mapping/"+superClassName+".json");
-					if (f.exists()) break;
-				}
-			}
-			
-			if (!f.exists()) { 
-				log.warn("Trying to obtain view from no-template object class");
-				return null;
-			}
-			
-			template = new Gson().fromJson(new FileReader(f), Template.class);
 			for (TemplateSection section : template.getSections()) getObjectSectionView(section, id);
 			
 		} catch (Throwable e) {
@@ -829,6 +865,151 @@ public class Request {
 		}
 		
 		return template;
+	}
+	
+	private void downloadImage(String path) throws Exception {
+		URL url = new URL(path);
+		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+		conn.setRequestProperty("Content-Type", "application/jpg");
+		conn.setDoInput(true);
+	    conn.setRequestMethod("GET");
+	    
+	    OutputStream os = new FileOutputStream(Constants.FILE_DIR+"tmp.jpg");
+	    
+	    InputStream is = conn.getInputStream();
+	    byte[] buffer = new byte[1024];
+	    int byteReaded = is.read(buffer);
+	    while(byteReaded != -1)
+	    {
+	        os.write(buffer,0,byteReaded);
+	        byteReaded = is.read(buffer);
+	    }
+	    
+	    os.close();
+	}
+	
+	private void resizeImage(BufferedImage img0, BufferedImage img1, BufferedImage img2, BufferedImage img3, String id) throws Exception {
+		int w = Constants.THUMBNAIL_WIDTH;
+		int h = Constants.THUMBNAIL_HEIGHT;
+		
+		BufferedImage resizedImage = new BufferedImage(Constants.THUMBNAIL_WIDTH, Constants.THUMBNAIL_WIDTH, img0.getType());
+		Graphics2D g2 = resizedImage.createGraphics();
+		
+		float margin = w*0.14f;
+		
+		if (img1!=null && img2==null) w = Math.round((w/2) - margin/2);
+		if (img2!=null && img3!=null) {
+			w = Math.round((w/2) - margin/2);
+			h = Math.round((h/2) - margin/2);
+		}
+		
+		float widthScale = img0.getWidth() / w;
+		float heightScale = img0.getHeight() / h;
+		float scale = widthScale>heightScale?heightScale:widthScale;
+		
+		BufferedImage cutImage = new BufferedImage(Math.round(w*scale), Math.round(h*scale), img0.getType()); 
+		Graphics2D g1 = cutImage.createGraphics();
+		g1.drawImage(img0, 0, 0, null);
+		
+		g2.drawImage(cutImage, 0, 0, w, h, null);
+		
+		if (img1!=null && img2==null) {
+			widthScale = img1.getWidth() / w;
+			heightScale = img1.getHeight() / h;
+			scale = widthScale>heightScale?heightScale:widthScale;
+			
+			g1.drawImage(img1, 0, 0, null);
+			g2.drawImage(cutImage, w+Math.round(margin), 0, w, h, null);
+		} 
+		
+		if (img2!=null && img3!=null) {
+			widthScale = img2.getWidth() / w;
+			heightScale = img2.getHeight() / h;
+			scale = widthScale>heightScale?heightScale:widthScale;
+			
+			g1.drawImage(img2, 0, 0, null);
+			g2.drawImage(cutImage, 0, h+Math.round(margin), w, h, null);
+			
+			widthScale = img3.getWidth() / w;
+			heightScale = img3.getHeight() / h;
+			scale = widthScale>heightScale?heightScale:widthScale;
+			
+			g1.drawImage(img3, 0, 0, null);
+			
+			g2.drawImage(cutImage, w+Math.round(margin), h+Math.round(margin), w, h, null);
+		}
+		
+		g2.dispose();
+		
+		File f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
+		ImageIO.write(resizedImage, "jpg", f);
+	}
+
+	
+	public InputStream getObjectThumbnail(String id) {
+		try {
+			File f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
+			
+			if (!f.exists()) {
+				String className = getObjectClass(id);
+				f = new File(Constants.FILE_DIR + "thumbnails/default/" + className + ".jpg");
+			}
+			
+			List<String> medias = new ArrayList<String>();
+			List<String> subobjects = new ArrayList<String>();
+			
+			if (!f.exists()) {
+			
+				Template template = getObjectTemplate(id);
+				if (template == null) return null;
+				
+				for (TemplateSection section : template.getSections()) {
+					for (DataMapping d : section.getData()) {
+						for (String path : d.getPath()) {
+							if (d.getType().equals("media")) {
+								medias.addAll(Arrays.asList(resolveModelPath(path, id, false, true)));
+							} else if (d.getType().equals("objects")) {
+								subobjects.addAll(Arrays.asList(resolveModelPath(path, id, false, true)));
+							}
+						}
+					}
+				}
+				
+				if (medias.size()>0) {
+					BufferedImage img0 = null;
+					BufferedImage img1 = null;
+					BufferedImage img2 = null;
+					BufferedImage img3 = null;
+					
+					downloadImage(medias.get(0));
+					img0 = ImageIO.read(new File(Constants.FILE_DIR+"tmp.jpg"));
+					
+					
+					if (medias.size()>1) {
+						downloadImage(medias.get(1));
+						img1 = ImageIO.read(new File(Constants.FILE_DIR+"tmp.jpg"));
+					}
+
+					if (medias.size()>3) {
+						downloadImage(medias.get(2));
+						img2 = ImageIO.read(new File(Constants.FILE_DIR+"tmp.jpg"));
+						
+						downloadImage(medias.get(3));
+						img3 = ImageIO.read(new File(Constants.FILE_DIR+"tmp.jpg"));
+					}
+					
+					resizeImage(img0, img1, img2, img3, id);
+					
+					f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
+				}
+			} 
+			
+			if (f.exists())	return new FileInputStream(f);
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+		
+		return null;
 	}
 	
 }
