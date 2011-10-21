@@ -11,6 +11,7 @@ public class CustomMap extends HashMap<String, Object>{
 		if (key==null) return null;
 		key = key.trim();
 		Object prev = super.get(key);
+		if (prev!=null && key.equals("type")) return null;
 		if (prev!=null && value!=null) {
 			if (prev instanceof String) {
 				super.put(key, new String[]{(String)prev, value});
