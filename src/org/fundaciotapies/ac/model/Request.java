@@ -1,5 +1,6 @@
 package org.fundaciotapies.ac.model;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
@@ -867,10 +868,15 @@ public class Request {
 		return template;
 	}
 	
-	private void downloadImage(String path) throws Exception {
+	private boolean downloadImage(String path) throws Exception {
+		boolean downloaded = false;
+		
+		File f = new File(Constants.FILE_DIR+"tmp.jpg");
+		if (f.exists()) f.delete();
+		
 		URL url = new URL(path);
 		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-		conn.setRequestProperty("Content-Type", "application/jpg");
+		conn.setRequestProperty("Content-Type", "image/jpg");
 		conn.setDoInput(true);
 	    conn.setRequestMethod("GET");
 	    
@@ -878,24 +884,31 @@ public class Request {
 	    
 	    InputStream is = conn.getInputStream();
 	    byte[] buffer = new byte[1024];
-	    int byteReaded = is.read(buffer);
-	    while(byteReaded != -1)
+	    int readLength = is.read(buffer);
+	    while(readLength != -1)
 	    {
-	        os.write(buffer,0,byteReaded);
-	        byteReaded = is.read(buffer);
+	    	downloaded = true;
+	        os.write(buffer,0,readLength);
+	        readLength = is.read(buffer);
 	    }
 	    
 	    os.close();
+	    
+	    return downloaded;
 	}
 	
 	private void resizeImage(BufferedImage img0, BufferedImage img1, BufferedImage img2, BufferedImage img3, String id) throws Exception {
+		if (img0==null) return;
+		
 		int w = Constants.THUMBNAIL_WIDTH;
 		int h = Constants.THUMBNAIL_HEIGHT;
 		
-		BufferedImage resizedImage = new BufferedImage(Constants.THUMBNAIL_WIDTH, Constants.THUMBNAIL_WIDTH, img0.getType());
-		Graphics2D g2 = resizedImage.createGraphics();
+		BufferedImage resizedImage = new BufferedImage(Constants.THUMBNAIL_WIDTH, Constants.THUMBNAIL_HEIGHT, img0.getType());
+		Graphics2D gResult = resizedImage.createGraphics();
+		gResult.setColor(Color.WHITE);
+		gResult.fillRect(0, 0, Constants.THUMBNAIL_WIDTH, Constants.THUMBNAIL_HEIGHT);
 		
-		float margin = w*0.14f;
+		float margin = w*0.04f;
 		
 		if (img1!=null && img2==null) w = Math.round((w/2) - margin/2);
 		if (img2!=null && img3!=null) {
@@ -907,19 +920,26 @@ public class Request {
 		float heightScale = img0.getHeight() / h;
 		float scale = widthScale>heightScale?heightScale:widthScale;
 		
-		BufferedImage cutImage = new BufferedImage(Math.round(w*scale), Math.round(h*scale), img0.getType()); 
-		Graphics2D g1 = cutImage.createGraphics();
-		g1.drawImage(img0, 0, 0, null);
+		BufferedImage cutImage = new BufferedImage(scale>1?Math.round(w*scale):w, scale>1?Math.round(h*scale):h, img0.getType());
+		Graphics2D gCut = cutImage.createGraphics();
+		gCut.setColor(Color.WHITE);
+		gCut.fillRect(0, 0, cutImage.getWidth(), cutImage.getHeight());
+		gCut.drawImage(img0, cutImage.getWidth()/2 - img0.getWidth()/2, cutImage.getHeight()/2 - img0.getHeight()/2, null);
+		gResult.drawImage(cutImage, 0, 0, w, h, null);
+		cutImage.flush();
 		
-		g2.drawImage(cutImage, 0, 0, w, h, null);
-		
-		if (img1!=null && img2==null) {
+		if (img1!=null) {
 			widthScale = img1.getWidth() / w;
 			heightScale = img1.getHeight() / h;
 			scale = widthScale>heightScale?heightScale:widthScale;
 			
-			g1.drawImage(img1, 0, 0, null);
-			g2.drawImage(cutImage, w+Math.round(margin), 0, w, h, null);
+			cutImage = new BufferedImage(scale>1?Math.round(w*scale):w, scale>1?Math.round(h*scale):h, img1.getType());
+			gCut = cutImage.createGraphics();
+			gCut.setColor(Color.WHITE);
+			gCut.fillRect(0, 0, cutImage.getWidth(), cutImage.getHeight());
+			gCut.drawImage(img1, cutImage.getWidth()/2 - img1.getWidth()/2, cutImage.getHeight()/2 - img1.getHeight()/2, null);
+			gResult.drawImage(cutImage, w+Math.round(margin), 0, w, h, null);
+			cutImage.flush();
 		} 
 		
 		if (img2!=null && img3!=null) {
@@ -927,19 +947,29 @@ public class Request {
 			heightScale = img2.getHeight() / h;
 			scale = widthScale>heightScale?heightScale:widthScale;
 			
-			g1.drawImage(img2, 0, 0, null);
-			g2.drawImage(cutImage, 0, h+Math.round(margin), w, h, null);
+			cutImage = new BufferedImage(scale>1?Math.round(w*scale):w, scale>1?Math.round(h*scale):h, img2.getType());
+			gCut = cutImage.createGraphics();
+			gCut.setColor(Color.WHITE);
+			gCut.fillRect(0, 0, cutImage.getWidth(), cutImage.getHeight());
+			gCut.drawImage(img2, cutImage.getWidth()/2 - img2.getWidth()/2, cutImage.getHeight()/2 - img2.getHeight()/2, null);
+			gResult.drawImage(cutImage, 0, h+Math.round(margin), w, h, null);
+			cutImage.flush();
 			
 			widthScale = img3.getWidth() / w;
 			heightScale = img3.getHeight() / h;
 			scale = widthScale>heightScale?heightScale:widthScale;
 			
-			g1.drawImage(img3, 0, 0, null);
-			
-			g2.drawImage(cutImage, w+Math.round(margin), h+Math.round(margin), w, h, null);
+			cutImage = new BufferedImage(scale>1?Math.round(w*scale):w, scale>1?Math.round(h*scale):h, img3.getType());
+			gCut = cutImage.createGraphics();
+			gCut.setColor(Color.WHITE);
+			gCut.fillRect(0, 0, cutImage.getWidth(), cutImage.getHeight());
+			gCut.drawImage(img3, cutImage.getWidth()/2 - img3.getWidth()/2, cutImage.getHeight()/2 - img3.getHeight()/2, null);
+			gResult.drawImage(cutImage, w+Math.round(margin), h+Math.round(margin), w, h, null);
+			cutImage.flush();
 		}
 		
-		g2.dispose();
+		gResult.dispose();
+		gCut.dispose();
 		
 		File f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
 		ImageIO.write(resizedImage, "jpg", f);
@@ -949,11 +979,6 @@ public class Request {
 	public InputStream getObjectThumbnail(String id) {
 		try {
 			File f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
-			
-			if (!f.exists()) {
-				String className = getObjectClass(id);
-				f = new File(Constants.FILE_DIR + "thumbnails/default/" + className + ".jpg");
-			}
 			
 			List<String> medias = new ArrayList<String>();
 			List<String> subobjects = new ArrayList<String>();
@@ -975,34 +1000,40 @@ public class Request {
 					}
 				}
 				
+				int count = 0;
+				List<BufferedImage> il = new ArrayList<BufferedImage>();
+				
 				if (medias.size()>0) {
-					BufferedImage img0 = null;
-					BufferedImage img1 = null;
-					BufferedImage img2 = null;
-					BufferedImage img3 = null;
-					
-					downloadImage(medias.get(0));
-					img0 = ImageIO.read(new File(Constants.FILE_DIR+"tmp.jpg"));
-					
-					
-					if (medias.size()>1) {
-						downloadImage(medias.get(1));
-						img1 = ImageIO.read(new File(Constants.FILE_DIR+"tmp.jpg"));
-					}
-
-					if (medias.size()>3) {
-						downloadImage(medias.get(2));
-						img2 = ImageIO.read(new File(Constants.FILE_DIR+"tmp.jpg"));
+					for (String m : medias) {
+						if (downloadImage(m)) {
+							il.add(ImageIO.read(new File(Constants.FILE_DIR+"tmp.jpg")));
+							count++;
+						}
 						
-						downloadImage(medias.get(3));
-						img3 = ImageIO.read(new File(Constants.FILE_DIR+"tmp.jpg"));
+						if (count>=4) break;
 					}
-					
-					resizeImage(img0, img1, img2, img3, id);
-					
-					f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
+				} else if (subobjects.size()>0) {					
+					for (String o : subobjects) {
+						InputStream in = getObjectThumbnail(o);
+						if (in!=null) {
+							il.add(ImageIO.read(in));
+							count++;
+						}
+						
+						if (count>=4) break;
+					}
 				}
-			} 
+				
+				resizeImage(il.size()>0?il.get(0):null, il.size()>1?il.get(1):null, il.size()>2?il.get(2):null, il.size()>3?il.get(3):null, id);
+				f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
+			}
+
+			if (!f.exists()) {
+				String className = getObjectClass(id);
+				f = new File(Constants.FILE_DIR + "thumbnails/default/" + className + ".jpg");
+			}
+			
+			if (!f.exists()) f = new File(Constants.FILE_DIR + "thumbnails/default/default.jpg");
 			
 			if (f.exists())	return new FileInputStream(f);
 		} catch (Throwable e) {
