@@ -976,6 +976,28 @@ public class Request {
 	}
 
 	
+	public File getClassThumbnail(String className) {
+		try {
+			File f = new File(Constants.FILE_DIR + "thumbnails/classes/" + className + ".jpg");
+			
+			if (!f.exists()) {
+				List<String> superClasses = listSuperClasses(className);
+				for (String superClassName : superClasses) {
+					f = new File(Constants.FILE_DIR + "thumbnails/classes/"+superClassName+".jpg");
+					if (f.exists()) break;
+				}
+			}
+			
+			if (!f.exists()) f = new File(Constants.FILE_DIR + "thumbnails/classes/default.jpg");
+			
+			return f;
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+		
+		return null;
+	}
+	
 	public InputStream getObjectThumbnail(String id) {
 		try {
 			File f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
@@ -1030,10 +1052,8 @@ public class Request {
 
 			if (!f.exists()) {
 				String className = getObjectClass(id);
-				f = new File(Constants.FILE_DIR + "thumbnails/default/" + className + ".jpg");
+				f = getClassThumbnail(className);
 			}
-			
-			if (!f.exists()) f = new File(Constants.FILE_DIR + "thumbnails/default/default.jpg");
 			
 			if (f.exists())	return new FileInputStream(f);
 		} catch (Throwable e) {
