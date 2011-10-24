@@ -20,6 +20,12 @@
 		    "type":"text",
 		    "path":["Case-Files.references:*.Description"]
 		},
+		
+		{
+			"name":"CaseFile",
+			"type":"text",
+			"path":["Art_Work.isReferencedBy"]
+		},
 
 		{
 		    "name":"Year",
@@ -84,7 +90,8 @@
 		    "name":"ArtWork",
 		    "type":"text",
 		    "path":[
-		        "Case-Files.references:Art_Work.Title"
+		        "Case-Files.references:Art_Work.Title",
+		        "Art_Work.Title"
 		    ],
 		    "category":"yes"
 		}
