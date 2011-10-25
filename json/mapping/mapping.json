@@ -24,7 +24,7 @@
 		{
 			"name":"CaseFile",
 			"type":"text",
-			"path":["Art_Work.isReferencedBy"]
+			"path":["Art_Work.isReferencedBy", "Event.isReferencedBy", "SpecialObject.isReferencedBy"]
 		},
 
 		{
@@ -41,10 +41,10 @@
 		    "name":"Country",
 		    "type":"text",
 		    "path":[
-		    	"Case-Files.references:*.tookPlaceAT:City.isLocatedIn:Country.name",
-		    	"Case-Files.references:*.tookPlaceAT:Country.name",
-		    	"Case-Files.references:*.hasAuthor:*.bornIn:Country.name",
-		    	"Case-Files.references:*.hasAuthor:*.bornIn:City.isLocatedIn:Country.name"
+		    	"Case-Files.references:*.tookPlaceAT:City.isLocatedIn:Country.Name",
+		    	"Case-Files.references:*.tookPlaceAT:Country.Name",
+		    	"Case-Files.references:*.isAuthoredBy:*.bornIn:Country.Name",
+		    	"Case-Files.references:*.isAuthoredBy:*.bornIn:City.isLocatedIn:Country.Name"
 		    ],
 		    "category":"yes"
 		},
@@ -71,7 +71,7 @@
 		    "name":"Role",
 		    "type":"text",
 		    "path":[
-		        "Case-Files.references:Art_Work.isApplicationOf:Role.class"
+		        "Case-Files.references:*.applicationOf:Role.class"
 		    ],
 		    "category":"yes"
 		},
@@ -80,8 +80,8 @@
 		    "name":"Person",
 		    "type":"text",
 		    "path":[
-		        "Case-Files.references:Art_Work.isApplicationOf:Role.performedBy:Person.givenName",
-		        "Person.givenName"
+		        "Case-Files.references:Art_Work.applicationOf:Role.performedBy:Person.Name",
+		        "Person.Name"
 		    ],
 		    "category":"yes"
 		},

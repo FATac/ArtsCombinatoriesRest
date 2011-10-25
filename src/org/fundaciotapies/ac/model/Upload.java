@@ -2,7 +2,6 @@ package org.fundaciotapies.ac.model;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.Normalizer;
@@ -23,39 +22,35 @@ import org.fundaciotapies.ac.rest.client.Transco;
 import org.fundaciotapies.ac.rest.client.TranscoEntity;
 
 import virtuoso.jena.driver.VirtGraph;
-import virtuoso.jena.driver.VirtModel;
+import virtuoso.jena.driver.VirtInfGraph;
 import virtuoso.jena.driver.VirtTransactionHandler;
-import virtuoso.jena.driver.VirtuosoQueryExecution;
 import virtuoso.jena.driver.VirtuosoQueryExecutionFactory;
 import virtuoso.jena.driver.VirtuosoUpdateFactory;
 
 import com.hp.hpl.jena.ontology.ObjectProperty;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.reasoner.InfGraph;
 import com.hp.hpl.jena.shared.Command;
-import com.hp.hpl.jena.vocabulary.RDF;
 
 public class Upload {
 	private static Logger log = Logger.getLogger(Upload.class);
 	
 	public List<String> script = null;
-	public OntModel data = null;
 	
-	private static VirtModel vm = null;
-	
-	private VirtModel getVirtModel() {
-		if (vm==null || vm.isClosed()) vm = VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba");
-		return vm;
-	}
+	public InfModel model = null;
 	
 	private String normalizeId(String about) throws Exception {
 		String temp = Normalizer.normalize(about.trim(), Normalizer.Form.NFD);
@@ -124,7 +119,7 @@ public class Upload {
 			id = id + oc.getCounter();
 			
 			filePath = id + "." + ext;
-			File f = new File(Constants.FILE_DIR+filePath);
+			File f = new File(Constants.MEDIA_PATH+filePath);
 			
 			OutputStream fout = new FileOutputStream(f);
 			   
@@ -138,7 +133,7 @@ public class Upload {
 			fout.close();
 			
 			Media media = new Media();
-			media.setPath(Constants.FILE_DIR+filePath);
+			media.setPath(Constants.MEDIA_PATH+filePath);
 			media.setMediaId(id);
 			media.saveUpdate();
 			
@@ -157,64 +152,6 @@ public class Upload {
 		return Constants.REST_URL+"media/"+id;
 	}
 	
-	private String extractUriId(String URI) {
-		return URI.replace(Constants.RESOURCE_BASE_URI, "").replace(Constants.RDF_URI_NS, "").replace(Constants.AC_URI_NS, "");
-	}
-	
-	public String uploadResource(String className, String about, String[] properties, String[] propertyValues) {
-		String result = "error";
-		if (className==null) return "error";
-		if (about==null) about = className;
-		
-		try {
-			OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-			if (new File("data.owl").exists())	model.read("file:data.owl");
-			
-			String[] cls = className.split(",");
-			String id = generateObjectId(about);
-			String fullId = Constants.RESOURCE_BASE_URI + id;
-			
-			Resource res = model.getResource(fullId);
-			if (res==null) res = model.createResource(fullId);
-			
-			List<ObjectProperty> lop = model.listObjectProperties().toList();
-			
-			int i = 0;
-			
-			for (String classNameElement : cls) 
-				res.addProperty(RDF.type, model.getResource(Constants.AC_URI_NS+classNameElement));
-			
-			while(i<properties.length) {
-				boolean isObjectProperty = false;
-				
-				for(ObjectProperty op : lop) {
-					if (extractUriId(op.toString()) .equals(properties[i])) {
-						isObjectProperty = true;
-						break;
-					}
-				}
-				
-				Property prop = model.getProperty(Constants.AC_URI_NS+properties[i].trim());
-				if (isObjectProperty) {
-					Resource res2 = model.getResource(Constants.RESOURCE_BASE_URI+propertyValues[i]);
-					res.addProperty(prop, res2);
-				} else {
-					propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
-					res.addProperty(prop, propertyValues[i]);
-				}
-				
-				i++;
-			}
-			
-			model.write(new FileWriter("data.owl"));
-			result = "sucess";
-		} catch (Exception e) {
-			log.error("Error ", e);
-		}
-		
-		return result;
-	}
-	
 	public String uploadObject(String className, String about, String[] properties, String[] propertyValues) {
 		String result = "error";
 		VirtTransactionHandler vth = null;
@@ -222,20 +159,19 @@ public class Upload {
 		if (about==null) about = className;
 		
 		try {
-			data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-			ont.read("file:OntologiaArtsCombinatories.owl");
+			model = ModelUtil.getModel();
+			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, ModelUtil.getOntology());
 			
 			String[] cls = className.split(",");
 			String id = generateObjectId(about);
 			
-			String fullId = Constants.RESOURCE_BASE_URI + id;
+			String fullId = Constants.RESOURCE_URI_NS + id;
 			
 			int i = 0;
 			
 			script = new ArrayList<String>();
 			for (String classNameElement : cls) 
-				script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> rdf:type <"+Constants.AC_URI_NS+classNameElement+"> } ");
+				script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> rdf:type <"+Constants.ONTOLOGY_URI_NS+classNameElement+"> } ");
 			
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			
@@ -245,7 +181,7 @@ public class Upload {
 				
 				if (!lcp.contains(properties[i]) && !"FatacId".equals(properties[i])) { i++; continue; }
 				for(ObjectProperty op : lop) {
-					if (extractUriId(op.toString()) .equals(properties[i])) {
+					if (op.getLocalName().equals(properties[i])) {
 						isObjectProperty = true;
 						break;
 					}
@@ -253,7 +189,7 @@ public class Upload {
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) 
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.AC_URI_NS+properties[i].trim()+"> <"+Constants.RESOURCE_BASE_URI+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i].trim()+"> <"+Constants.RESOURCE_URI_NS+propertyValues[i]+"> }");
 					else {
 						String lang = null;
 						
@@ -267,7 +203,7 @@ public class Upload {
 						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
 						
 						propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.AC_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
 					}
 				}
 				
@@ -279,12 +215,12 @@ public class Upload {
 				public Object execute() {
 					//System.out.println(script);
 					for (String s : script)
-						VirtuosoUpdateFactory.create(s, ((VirtGraph)(data.getBaseModel().getGraph()))).exec();
+						VirtuosoUpdateFactory.create(s, ((VirtGraph)(model.getGraph()))).exec();
 					return null;
 				}
 			};
 			
-			vth = new VirtTransactionHandler((VirtGraph)data.getBaseModel().getGraph());
+			vth = new VirtTransactionHandler((VirtGraph)model.getGraph());
 			vth.begin();
 			vth.executeInTransaction(c);
 			vth.commit();
@@ -312,21 +248,21 @@ public class Upload {
 				if (f.exists()) f.delete();
 			}
 			
-			data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+			model = ModelUtil.getModel();
 			
 			script = new ArrayList<String>();
-			script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Constants.RESOURCE_BASE_URI+objectId+"> or ?c = <"+Constants.RESOURCE_BASE_URI+objectId+">) . ?a ?b ?c }");
+			script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Constants.RESOURCE_URI_NS+objectId+"> or ?c = <"+Constants.RESOURCE_URI_NS+objectId+">) . ?a ?b ?c }");
 			
 			Command c = new Command() {
 				@Override
 				public Object execute() {
 					for (String s : script)
-						VirtuosoUpdateFactory.create(s, ((VirtGraph)(data.getBaseModel().getGraph()))).exec();
+						VirtuosoUpdateFactory.create(s, ((VirtGraph)(model.getGraph()))).exec();
 					return null;
 				}
 			};
 			
-			vth = new VirtTransactionHandler((VirtGraph)data.getBaseModel().getGraph());
+			vth = new VirtTransactionHandler((VirtGraph)model.getGraph());
 			vth.begin();
 			vth.executeInTransaction(c);
 			vth.commit();
@@ -351,10 +287,8 @@ public class Upload {
 		Set<String> alreadyDeleted = new TreeSet<String>();
 		
 		try {
-			data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-			ont.read("file:OntologiaArtsCombinatories.owl");
-			
+			model = ModelUtil.getModel();
+			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, ModelUtil.getOntology());
 			int i = 0;
 			
 			script = new ArrayList<String>();
@@ -368,22 +302,22 @@ public class Upload {
 				boolean isObjectProperty = false;
 				
 				for(ObjectProperty op : lop) {
-					if (extractUriId(op.toString()).equals(properties[i])) {
+					if (op.getLocalName().equals(properties[i])) {
 						isObjectProperty = true;
 						break;
 					}
 				}
 				
 				if ((!"filePath".equals(properties[i]) || "filePath".equals(properties[i]) && !"".equals(propertyValues[i])) && (!alreadyDeleted.contains(properties[i]))) {
-					script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a <"+Constants.AC_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.RESOURCE_BASE_URI+uniqueId+">) . ?a ?b ?c }");
+					script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.RESOURCE_URI_NS+uniqueId+">) . ?a ?b ?c }");
 					alreadyDeleted.add(properties[i]);
 				}
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.RESOURCE_BASE_URI+uniqueId+"> <"+Constants.AC_URI_NS+properties[i]+"> <"+Constants.RESOURCE_BASE_URI+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.RESOURCE_URI_NS+uniqueId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> <"+Constants.RESOURCE_URI_NS+propertyValues[i]+"> }");
 					} else {
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.RESOURCE_BASE_URI+uniqueId+"> <"+Constants.AC_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
+						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.RESOURCE_URI_NS+uniqueId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
 					}
 				}
 				i++;
@@ -393,12 +327,12 @@ public class Upload {
 				@Override
 				public Object execute() {
 					for (String s : script)
-						VirtuosoUpdateFactory.create(s, ((VirtGraph)(data.getBaseModel().getGraph()))).exec();
+						VirtuosoUpdateFactory.create(s, ((VirtGraph)(model.getGraph()))).exec();
 					return null;
 				}
 			};
 			
-			vth = new VirtTransactionHandler((VirtGraph)data.getBaseModel().getGraph());
+			vth = new VirtTransactionHandler((VirtGraph)model.getGraph());
 			vth.begin();
 			vth.executeInTransaction(c);
 			vth.commit();
@@ -412,37 +346,12 @@ public class Upload {
 		return result;
 	}
 	
-	public String proves() {
-        String queryString = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#> SELECT ?Pizza ?Eaten where {?Pizza a ?y. ?y rdfs:subClassOf pizza:Pizza. Optional {?Pizza pizza:Eaten ?Eaten}}";
-        
-		data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, VirtModel.openDatabaseModel("http://www.co-ode.org/ontologies/pizza/pizza.owl#", Constants.RDFDB_URL, "dba", "dba"));
-		//OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-		//ont.read("file:OntologiaArtsCombinatories.owl");
-		//ont.add(data);
-		
-		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create(queryString),(VirtGraph) data.getBaseModel().getGraph());
-		ResultSet rs = vqe.execSelect();
-		
-		String currentId = null;
-		
-		// Get IDs that fit specific search
-		while (rs.hasNext()) {
-			QuerySolution r = rs.next();
-			currentId = r.get("Pizza").toString() + "    " + r.get("Eaten").toString();
-			System.out.println(currentId);
-			
-		}
-		
-		return null;
-	}
-	
 	public String mixAndExportOntologyAndData() {
 		VirtTransactionHandler vth = null;
 		
 		try {
-			data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-			ont.read("file:OntologiaArtsCombinatories.owl");
+			model = ModelUtil.getModel();
+			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, ModelUtil.getOntology());
 			
 			script = new ArrayList<String>();
 			
@@ -466,13 +375,13 @@ public class Upload {
 				public Object execute() {
 					for (String s : script) {
 						System.out.println(s);
-						VirtuosoUpdateFactory.create(s, ((VirtGraph)(data.getBaseModel().getGraph()))).exec();
+						VirtuosoUpdateFactory.create(s, ((VirtGraph)(model.getGraph()))).exec();
 					}
 					return null;
 				}
 			};
 			
-			vth = new VirtTransactionHandler((VirtGraph)data.getBaseModel().getGraph());
+			vth = new VirtTransactionHandler((VirtGraph)model.getGraph());
 			vth.begin();
 			vth.executeInTransaction(c);
 			vth.commit();
@@ -483,5 +392,26 @@ public class Upload {
 		}
 		
 		return "success";
+	}
+	
+	public void reset() throws Exception {
+		
+		try {
+			// removes db stored data
+			ModelUtil.reset();
+			Media.clear();
+			IdentifierCounter.clear();
+			
+			// removes all media files 
+			File f = new File(Constants.MEDIA_PATH);
+			for(String x : f.list()) {
+				File fx = new File(Constants.MEDIA_PATH+x);
+				if (fx.isFile()) fx.delete();
+			}
+		} catch (Exception e) {
+			log.error("Error ", e);
+			throw e;
+		}
+		
 	}
 }

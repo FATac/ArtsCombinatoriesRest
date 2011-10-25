@@ -15,6 +15,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.fundaciotapies.ac.Constants;
 import org.fundaciotapies.ac.logic.legal.support.LegalAutodata;
 import org.fundaciotapies.ac.logic.legal.support.LegalBlock;
 import org.fundaciotapies.ac.logic.legal.support.LegalBlockData;
@@ -74,7 +75,7 @@ public class LegalProcess {
 			prop.setProperty("___lastBlock", "");
 			prop.setProperty("___objects", idList);
 			
-			prop.store(new FileOutputStream(result + ".properties"), null);
+			prop.store(new FileOutputStream(Constants.CONFIGURATIONS_PATH + "legal/" + result + ".properties"), null);
 		} catch (Exception e) {
 			log.error("Exception ", e);
 		}
@@ -134,7 +135,7 @@ public class LegalProcess {
 			prop.load(new FileInputStream(user + ".properties"));
 			
 			// load data and rules from JSON specification
-			FileReader f = new FileReader(new File("/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/legal/legal.json")); // TODO: get uri from configuration
+			FileReader f = new FileReader(new File(Constants.CONFIGURATIONS_PATH + "legal/legal.json"));
 			LegalDefinition def = new Gson().fromJson(f, LegalDefinition.class);
 			f.close();
 			

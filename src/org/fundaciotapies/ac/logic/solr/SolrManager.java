@@ -25,7 +25,7 @@ public class SolrManager {
 		
 	public void generateSchema() throws Exception {
 		// TODO: set deafaultSearchField in Schema.xml
-		BufferedReader fin = new BufferedReader(new FileReader(Constants.JSON_PATH + "mapping/mapping.json"));
+		BufferedReader fin = new BufferedReader(new FileReader(Constants.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
 		fin.close();
@@ -87,7 +87,7 @@ public class SolrManager {
 	}
 	
 	public void indexate() throws Exception {
-		BufferedReader fin = new BufferedReader(new FileReader(Constants.JSON_PATH + "mapping/mapping.json"));
+		BufferedReader fin = new BufferedReader(new FileReader(Constants.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		fin.close();
 		
@@ -123,7 +123,7 @@ public class SolrManager {
 		}
 		
 		// Connect
-		URL url = new URL("http://localhost:8080/solr/update");
+		URL url = new URL(Constants.SOLR_URL + "update");
 	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 	    conn.setRequestProperty("Content-Type", "application/xml");
 	    conn.setRequestMethod("POST");
@@ -150,7 +150,7 @@ public class SolrManager {
 	
 	public void commit() throws Exception {
 		// Connect
-		URL url = new URL("http://localhost:8080/solr/update");
+		URL url = new URL(Constants.SOLR_URL + "update");
 	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 	    conn.setRequestProperty("Content-Type", "application/xml");
 	    conn.setRequestMethod("POST");
@@ -177,7 +177,7 @@ public class SolrManager {
 	
 	public void deleteAll() throws Exception {
 		// Connect
-		URL url = new URL("http://localhost:8080/solr/update");
+		URL url = new URL(Constants.SOLR_URL + "update");
 	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 	    conn.setRequestProperty("Content-Type", "application/xml");
 	    conn.setRequestMethod("POST");
@@ -205,7 +205,7 @@ public class SolrManager {
 	public String search(String searchText) throws Exception {
 		String solrQuery = "?q="+URLEncoder.encode(searchText,"UTF-8")+"&fl=id&facet=true";
 	
-		BufferedReader fin = new BufferedReader(new FileReader(Constants.JSON_PATH + "mapping/mapping.json"));
+		BufferedReader fin = new BufferedReader(new FileReader(Constants.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
 		for (DataMapping m : mapping.getData()) {
@@ -216,7 +216,7 @@ public class SolrManager {
 		
 		solrQuery += "&wt=json";
 		
-		URL url = new URL("http://localhost:8080/solr/select/"+solrQuery);
+		URL url = new URL(Constants.SOLR_URL + "select/" + solrQuery);
 		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 	    conn.setRequestMethod("GET");
 	    

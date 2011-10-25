@@ -34,24 +34,22 @@ public class GetInsertObjectForm {
 	@GET
 	@Produces("application/json")
 	public String getInsertObjectForm(@PathParam("class") String className) {
-		List<String> fieldList = new Request().listClassProperties(className);
+		List<String[]> fieldList = new Request().listClassProperties(className);
 		List<GenericInput> inputList = new ArrayList<GenericInput>();
 		
 		// TODO: Base class/es that should be considered as Media class/es should be taken from properties file  
 		boolean isMediaObject = new Request().listSubclasses("Media", false).contains(className);
 		
-		for (String f: fieldList) {
-			String[] s = f.split(" ");
-			
-			String prop = s[0];
-			String range = s[1];
-			String dType = s[2].charAt(0)+"";
+		for (String[] f: fieldList) {
+			String prop = f[0];
+			String range = f[1];
+			String dType = f[2];
 			
 			if (range==null || dType==null) {
 				inputList.add(new TextInput(prop));				
-			} else if ("O".equals(dType)){
+			} else if ("ObjectProperty".equals(dType)){
 				inputList.add(new ObjectInput(prop, range));
-			} else if ("D".equals(dType)) {
+			} else if ("DatatypeProperty".equals(dType)) {
 				range = range.substring(0, range.length()-1);
 				if ("boolean".equals(range)) {
 					inputList.add(new CheckInput(prop));

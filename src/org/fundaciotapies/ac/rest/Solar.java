@@ -8,28 +8,35 @@ import javax.ws.rs.QueryParam;
 
 import org.fundaciotapies.ac.logic.solr.SolrManager;
 
+import com.google.gson.Gson;
+
 @Path("/solr/{option}")
-public class Solarize {
+public class Solar {
 	@GET
-	@Produces("text/plain")
+	@Produces("application/json")
 	public String solarize(@PathParam("option") String option, @QueryParam("s") String searchText) {
 		try {
+			SolrManager solr = new SolrManager();
+			
 			if ("commit".equals(option)) {
-				new SolrManager().commit();
+				solr.commit();
 			} else if ("clear".equals(option)) {
-				new SolrManager().deleteAll();
+				solr.deleteAll();
 			} else if ("schema".equals(option)) {
-				new SolrManager().generateSchema();
-			} else if ("indexate".equals(option)) {
-				new SolrManager().indexate();
+				solr.generateSchema();
+			} else if ("update".equals(option)) {
+				solr.indexate();
+			} else if ("reload".equals(option)) {
+				solr.deleteAll();
+				solr.indexate();
 			} else if ("search".equals(option)) {
-				return new SolrManager().search(searchText);
+				return solr.search(searchText);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
+			return new Gson().toJson("error");
 		}
 		
-		return "success";
+		return new Gson().toJson("success");
 	}
 }

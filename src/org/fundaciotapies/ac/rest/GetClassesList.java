@@ -26,7 +26,7 @@ public class GetClassesList {
 	public String getClassesList(@QueryParam("c") String parentClass) {
 		List<String> classesList = null;
 		if (parentClass == null)
-			classesList = new Request().listObjectClasses();
+			classesList = new Request().listOntologyClasses();
 		else
 			classesList = new Request().listSubclasses(parentClass, false);
 			classesList.add(0, parentClass);

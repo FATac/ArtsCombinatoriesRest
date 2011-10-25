@@ -1,0 +1,42 @@
+{
+	"className":"Organisation",
+	
+	"sections":
+	[
+		{
+			"name":"header",
+			"data":[
+		
+		    	{
+					"name":"Name",
+					"type":"text",
+					"path":["Organisation.name"]
+				}
+			]
+		},
+		
+		{
+			"name":"body",
+			"data":[
+			
+			 	{
+					"name":"Description",
+					"type":"text",
+					"path":["Organisation.Description"]
+			    },
+			    
+			    {
+					"name":"Home",
+					"type":"text",
+					"path":["Organisation.Homepage"]
+			    },
+			    
+			    {
+					"name":"Publications",
+					"type":"linkedObjects",
+					"path":["Organisation.performsRole:*.appliesOn:SpecialObjects.Title"]
+			    }
+			]  
+		}
+	]
+}

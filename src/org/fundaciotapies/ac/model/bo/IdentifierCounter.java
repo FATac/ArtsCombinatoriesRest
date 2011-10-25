@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -108,6 +109,27 @@ public class IdentifierCounter implements Serializable {
 			} catch (Exception e) { throw e; }
 		}   
 	}
+	
+	public static void clear() throws Exception {
+		Connection conn = null;
+		Statement stmt = null;
+		
+		try {
+		    Context ctx = new InitialContext();
+		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
+		    conn = ds.getConnection();
+		      
+		    conn.createStatement().executeUpdate("DELETE FROM _identifier_counter ");
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			try {
+				if (stmt!=null) stmt.close();
+				if (conn!=null) conn.close();
+			} catch (Exception e) { throw e; }
+		}   
+	}
+	
 	public void setCounter(Long counter) {
 		this.counter = counter;
 	}

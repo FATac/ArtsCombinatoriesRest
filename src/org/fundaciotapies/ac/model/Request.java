@@ -34,24 +34,19 @@ import org.fundaciotapies.ac.model.support.ObjectFile;
 import org.fundaciotapies.ac.model.support.Template;
 import org.fundaciotapies.ac.model.support.TemplateSection;
 
-import virtuoso.jena.driver.VirtGraph;
 import virtuoso.jena.driver.VirtModel;
-import virtuoso.jena.driver.VirtuosoQueryExecution;
 import virtuoso.jena.driver.VirtuosoQueryExecutionFactory;
 
 import com.google.gson.Gson;
-import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.ontology.OntProperty;
-import com.hp.hpl.jena.ontology.OntResource;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
@@ -62,13 +57,6 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 public class Request {
 	private static Logger log = Logger.getLogger(Request.class);
-	
-	private static VirtModel vm = null;
-	
-	private VirtModel getVirtModel() {
-		if (vm==null || vm.isClosed()) vm = VirtModel.openDatabaseModel("http://localhost:8890/ACData",Constants.RDFDB_URL, "dba", "dba");
-		return vm;
-	}
 	
 	public String getCurrentLanguage() {
 		return "ca"; // TODO: get language from client user config/cookies/session
@@ -106,10 +94,6 @@ public class Request {
 		}
 	}
 	
-	private String extractUriId(String URI) {
-		return URI.replace(Constants.RESOURCE_BASE_URI, "").replace(Constants.RDF_URI_NS, "").replace(Constants.AC_URI_NS, "");
-	}
-	
 	public String getRdf() {
 		
 		try {
@@ -143,11 +127,11 @@ public class Request {
 			}
 			
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+			InfModel model = ModelUtil.getModel();
 			
 			// Get object by Id
-			Individual ind = data.getIndividual(Constants.RESOURCE_BASE_URI+id);
-			StmtIterator it = ind.listProperties();
+			Resource res = model.getResource(Constants.RESOURCE_URI_NS+id);
+			StmtIterator it = res.listProperties();
 			result = new CustomMap();
 			while(it.hasNext()) {
 				Statement stmt = it.next();
@@ -155,9 +139,9 @@ public class Request {
 					String lang = stmt.getObject().asLiteral().getLanguage();
 					if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
 					
-					result.put(extractUriId(stmt.getPredicate().toString()), stmt.getObject().asLiteral().getString());
+					result.put(stmt.getPredicate().getLocalName(), stmt.getObject().asLiteral().getString());
 				} else {
-					result.put(extractUriId(stmt.getPredicate().toString()), extractUriId(stmt.getObject().toString()));
+					result.put(stmt.getPredicate().getLocalName(), stmt.getObject().asResource().getLocalName());
 				}
 			}
 			
@@ -174,11 +158,11 @@ public class Request {
 		try {
 			String qc = "";
 			if (cls!=null && !"".equals(cls)) {
-				qc = " . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } ";
+				qc = " . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+cls+"> } ";
 					
 				List<String> subClassesList = listSubclasses(cls, false);
 				for (String sc : subClassesList)
-					qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+sc+"> } ";
+					qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+sc+"> } ";
 			}
 			
 			// Checks whether user can view object or not
@@ -186,15 +170,16 @@ public class Request {
 			right.load(id);
 			
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+			InfModel model = ModelUtil.getModel();
 			
-			String query = "SELECT ?s FROM <http://localhost:8890/ACData> WHERE { { ?s <"+Constants.AC_URI_NS+"FatacId> \""+id+"\" } " + qc + " } ";
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create(query),(VirtGraph) data.getBaseModel().getGraph());
-			ResultSet rs = vqe.execSelect();
+			String query = "SELECT ?s FROM <http://localhost:8890/ACData> WHERE { { ?s <"+Constants.ONTOLOGY_URI_NS+"FatacId> \""+id+"\" } " + qc + " } ";
+			Query sparql = QueryFactory.create(query); 
+		    QueryExecution qexec = VirtuosoQueryExecutionFactory.create(sparql, model) ;
+			ResultSet rs = qexec.execSelect();
 			
 			if (rs.hasNext()) {
 				QuerySolution qs = rs.next();
-				result = extractUriId(qs.get("s").toString());
+				result = qs.get("s").asResource().getLocalName();
 			}
 			
 		} catch (Throwable e) {
@@ -267,23 +252,24 @@ public class Request {
 		}
 	}
 	
-	public List<String> listObjectClasses() {
+	public List<String> listOntologyClasses() {
 		List<String> result = null;
 
 		try {
 			// Load ontology
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config 
-
-			// Get all classes in the ontology
-			ExtendedIterator<OntClass> classesIt = ont.listNamedClasses();
-			result = new ArrayList<String>();
-			while ( classesIt.hasNext() )
-	        {
-	            OntClass actual = classesIt.next();
-	            String name = extractUriId(actual.toString());
-	            if (name!=null) result.add(name);
-	        }
+			VirtModel ont = ModelUtil.getOntology();
+			
+			Query sparql = QueryFactory.create(" select ?a where { ?a rdf:type owl:Class } "); 
+		    QueryExecution qexec = VirtuosoQueryExecutionFactory.create(sparql, ont);
+		    ResultSet rs = qexec.execSelect();
+		    
+		    result = new ArrayList<String>();
+		    
+			while(rs.hasNext()) {
+				QuerySolution qs = rs.next();
+				RDFNode node = qs.get("a");
+				result.add(node.asResource().getNameSpace());
+			}
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
@@ -291,33 +277,38 @@ public class Request {
 		return result;
 	}
 	
-	public List<String> listClassProperties(String className) {
-		List<String> result = null;
+	public List<String[]> listClassProperties(String className) {
+		List<String[]> result = new ArrayList<String[]>();
 
 		try {
 			if (className == null) return null;
-
-			// Load ontology
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config
+			String classURI = Constants.ONTOLOGY_URI_NS + className;
 			
-			Set<String> props = listClassPropertiesSimple(className);
-			
-			result = new ArrayList<String>();
-			for(String p : props) {
-				OntProperty prop = ont.getOntProperty(Constants.AC_URI_NS + p);
-				ExtendedIterator<? extends OntResource> l = prop.listRange();
-				String range = "";
-				if (l!=null) while (l.hasNext()) range += extractUriId(l.next().toString())+",";
+			QueryExecution qe = VirtuosoQueryExecutionFactory.create("select * where { ?prop <http://www.w3.org/2000/01/rdf-schema#domain> <"+classURI+"> . ?prop <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type . OPTIONAL { ?prop <http://www.w3.org/2000/01/rdf-schema#range> ?range } } ", ModelUtil.getOntology());
+			ResultSet rs = qe.execSelect();
+			String lastPropName = null;
+			String range = "";
+			String propType = null;
+			while(rs.hasNext()) {
+				QuerySolution qs = rs.next();
+				String propName = qs.get("prop").asResource().getLocalName();
+				if (!propName.equals(lastPropName) && lastPropName != null) {
+					result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(2):"_"),  propType } );
+					range = "";
+				}
 				
-				// Creates string with property info: whether it's data or object property, functional, symmetric, etc.
-				result.add(extractUriId(prop.toString()) + " " + ((!"".equals(range))?range:"_") + " " +
-						(prop.isDatatypeProperty()?"D":"O") +
-						(prop.isFunctionalProperty()?"F":"_") +
-						(prop.isSymmetricProperty()?"S":"_") +
-						(prop.isTransitiveProperty()?"T":"_") +
-						(prop.hasInverse()?"I":"_"));
+				propType = qs.get("type").asResource().getLocalName();
+				if (qs.get("range")!=null) range += ", "+qs.get("range").asResource().getLocalName();
+				lastPropName = propName;
 			}
+			
+			if (lastPropName != null) {
+				result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(2):"_") , propType } );
+				range = "";
+			}
+			
+			List<String> scl = listSuperClasses(className);
+			for (String sc : scl) result.addAll(0, listClassProperties(sc));
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
@@ -330,27 +321,19 @@ public class Request {
 
 		try {
 			if (className == null) return null;
-			String classURI = Constants.AC_URI_NS + className;
+			String classURI = Constants.ONTOLOGY_URI_NS + className;
 			
-			// Load ontology
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config
-			
-			// Get all properties for given class
-			Query q = QueryFactory.create("SELECT ?prop WHERE { ?prop <"+Constants.RDFS_URI_NS+"domain> <"+classURI+"> } ");
-			QueryExecution qe = QueryExecutionFactory.create(q, ont);
+			QueryExecution qe = VirtuosoQueryExecutionFactory.create("select * where { ?prop <http://www.w3.org/2000/01/rdf-schema#domain> <"+classURI+"> } ", ModelUtil.getOntology());
 			ResultSet rs = qe.execSelect();
+			
 			while(rs.hasNext()) {
-				QuerySolution s = rs.next();
-				result.add(extractUriId(s.get("prop").asResource().getURI()));
+				QuerySolution qs = rs.next();
+				String propName = qs.get("prop").asResource().getLocalName();
+				result.add(propName);
 			}
-
-			// Also get properties for its superclasses (for they are inherited)
-			OntClass ontClass = ont.getOntClass(classURI);
-			if (ontClass!=null) {
-				OntClass parentClass = ontClass.getSuperClass();
-				if (parentClass!=null)	result.addAll(listClassPropertiesSimple(extractUriId(parentClass.toString())));
-			}
+			
+			List<String> scl = listSuperClasses(className);
+			for (String sc : scl) result.addAll(listClassPropertiesSimple(sc));
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
@@ -363,17 +346,15 @@ public class Request {
 
 		try {
 			if (className == null) return null;
-			String classURI = Constants.AC_URI_NS + className;
+			String classURI = Constants.ONTOLOGY_URI_NS + className;
 			// Load ontology
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-			ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config 
-
+			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, ModelUtil.getOntology());
 			OntClass ontClass = ont.getOntClass(classURI);
 			
 			// Use recursive calls to navigate through the class tree starting form given root class
 			for (ExtendedIterator<OntClass> it = ontClass.listSubClasses(direct);it.hasNext();) {
 				OntClass cls = it.next();
-				result.add(cls.getNameSpace().substring(cls.getNameSpace().indexOf("#")+1)+extractUriId(cls.toString()));
+				result.add(cls.getLocalName());
 			}	
 			
 		} catch (Throwable e) {
@@ -388,15 +369,15 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+			InfModel model = ModelUtil.getModel();
 			
 			// Create search query
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.AC_URI_NS+"isAssignedTo> <"+Constants.RESOURCE_BASE_URI+referredObjectId+"> . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+"Rights> } } ORDER BY ?s "), (VirtGraph) data.getBaseModel().getGraph());
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.ONTOLOGY_URI_NS+"isAssignedTo> <"+Constants.RESOURCE_URI_NS+referredObjectId+"> . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+"Rights> } } ORDER BY ?s ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
-				result = extractUriId(r.get("s").toString());
+				result = r.get("s").asResource().getLocalName();
 			}
 		} catch (Throwable e) {
 			log.error("Error ", e);
@@ -410,7 +391,7 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+			InfModel model = ModelUtil.getModel();
 			
 			String qc = null;
 			
@@ -421,14 +402,14 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } "; 
+							qc = " . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+cls+"> } "; 
 						} else {
-							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+cls+"> } ";
 						}
 						
 						List<String> subClassesList = listSubclasses(cls, false);
 						for (String sc : subClassesList)
-							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+sc+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+sc+"> } ";
 					}
 				}
 			}
@@ -436,7 +417,7 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + " } "),(VirtGraph) data.getBaseModel().getGraph());
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + " } ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -447,7 +428,7 @@ public class Request {
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
 				
-				currentId = extractUriId(r.get("s").toString());
+				currentId = r.get("s").asResource().getLocalName();
 				if (!currentId.equals(lastId)) {
 					if ((lastId != null) && currentObject.size()>0) result.put(lastId, currentObject);
 					currentObject = new CustomMap();
@@ -456,9 +437,9 @@ public class Request {
 				lastId = currentId;
 				
 				if (r.get("o").isResource()) {
-					currentObject.put(extractUriId(r.get("p").asResource().toString()), extractUriId(r.get("o").toString()));
+					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asResource().getLocalName());
 				} else {
-					currentObject.put(extractUriId(r.get("p").asResource().toString()), r.get("o").asLiteral().getString());
+					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asLiteral().getString());
 				}
 			}
 
@@ -475,7 +456,7 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+			InfModel model = ModelUtil.getModel();
 			
 			String qc = null;
 			
@@ -486,14 +467,14 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } "; 
+							qc = " { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+cls+"> } "; 
 						} else {
-							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+cls+"> } ";
 						}
 						
 						List<String> subClassesList = listSubclasses(cls, false);
 						for (String sc : subClassesList)
-							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+sc+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+sc+"> } ";
 					}
 				}
 			}
@@ -501,7 +482,7 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { " + qc + " } "),(VirtGraph) data.getBaseModel().getGraph());
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { " + qc + " } ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -510,7 +491,7 @@ public class Request {
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
 				
-				currentId = extractUriId(r.get("s").toString());
+				currentId = r.get("s").asResource().getLocalName();
 				result.add(currentId);
 			}
 
@@ -527,7 +508,7 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+			InfModel model = ModelUtil.getModel();
 			
 			String qc = null;
 			
@@ -538,14 +519,14 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } "; 
+							qc = " . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+cls+"> } "; 
 						} else {
-							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+cls+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+cls+"> } ";
 						}
 						
 						List<String> subClassesList = listSubclasses(cls, false);
 						for (String sc : subClassesList)
-							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+sc+"> } ";
+							qc += " UNION { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+sc+"> } ";
 					}
 				}
 			}
@@ -553,8 +534,8 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			String filter = "FILTER (regex(?o,\""+word+"\",\"i\") && !regex(?o, \""+Constants.RESOURCE_BASE_URI+"\",\"i\") && !regex(?o, \""+Constants.AC_URI_NS+"\",\"i\")) ";
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + filter + " } "),(VirtGraph) data.getBaseModel().getGraph());
+			String filter = "FILTER (regex(?o,\""+word+"\",\"i\") && !regex(?o, \""+Constants.RESOURCE_URI_NS+"\",\"i\") && !regex(?o, \""+Constants.ONTOLOGY_URI_NS+"\",\"i\")) ";
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + filter + " } ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -574,7 +555,7 @@ public class Request {
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
 				
-				currentId = extractUriId(r.get("s").toString());
+				currentId = r.get("s").asResource().getLocalName();
 				if (!currentId.equals(lastId)) {
 					if (lastId != null && (right.getRightLevel()==null || right.getRightLevel() <= userLegalLevel)) {
 						if (currentObject.size()>0) result.put(lastId, currentObject);
@@ -591,12 +572,12 @@ public class Request {
 				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) continue;
 				
 				if (r.get("o").isResource()) {
-					currentObject.put(extractUriId(r.get("p").asResource().toString()), extractUriId(r.get("o").toString()));
+					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asResource().getLocalName());
 				} else {
 					String lang = r.get("o").asLiteral().getLanguage();
 					if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
 					
-					currentObject.put(extractUriId(r.get("p").asResource().toString()), r.get("o").asLiteral().getString());
+					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asLiteral().getString());
 				}
 			}
 
@@ -613,12 +594,12 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+			InfModel model = ModelUtil.getModel();
 			
 			// Create search query
-			field = Constants.AC_URI_NS + field;
-			className = Constants.AC_URI_NS + className;
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s <"+Constants.RDF_URI_NS+"type> <"+className+"> } ORDER BY ?s "),(VirtGraph) data.getBaseModel().getGraph());
+			field = Constants.ONTOLOGY_URI_NS + field;
+			className = Constants.ONTOLOGY_URI_NS + className;
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s <"+Constants.RDF_URI_NS+"type> <"+className+"> } ORDER BY ?s ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -626,7 +607,7 @@ public class Request {
 			// Get IDs that fit specific search
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
-				currentId = extractUriId(r.get("s").toString());
+				currentId = r.get("s").asResource().getLocalName();
 				idList.add(currentId);
 			}
 		} catch (Throwable e) {
@@ -641,10 +622,10 @@ public class Request {
 		List<String[]> result = new ArrayList<String[]>();
 		
 		// Connect to rdf server
-		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+		InfModel model = ModelUtil.getModel();
 		
 		// Create search query
-		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create(sparql),(VirtGraph) data.getBaseModel().getGraph());
+		QueryExecution vqe = VirtuosoQueryExecutionFactory.create(sparql, model);
 		ResultSet rs = vqe.execSelect();
 		
 		// Get IDs that fit specific search
@@ -672,12 +653,10 @@ public class Request {
 		
 		try {
 			// Connect to rdf server
-			OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
-			
-			OntModel model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
+			InfModel model = ModelUtil.getModel();
 			
 			// Create search query
-			VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?a ?b ?c } "),(VirtGraph) data.getBaseModel().getGraph());
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { ?a ?b ?c } ", model.getRawModel());
 			ResultSet rs = vqe.execSelect();
 			
 			// Get IDs that fit specific search
@@ -713,15 +692,15 @@ public class Request {
 	
 	public String getObjectClass(String id) {
 		// Connect to rdf server
-		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+		InfModel model = ModelUtil.getModel();
 		
 		// Create search query
-		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { <"+Constants.RESOURCE_BASE_URI+id+"> <"+Constants.RDF_URI_NS+"type> ?c } "),(VirtGraph) data.getBaseModel().getGraph());
+		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { <"+Constants.RESOURCE_URI_NS+id+"> <"+Constants.RDF_URI_NS+"type> ?c } ", model);
 		ResultSet rs = vqe.execSelect();
 		
 		if (rs.hasNext()) {
 			QuerySolution r = rs.next();
-			return extractUriId(r.get("c").toString());
+			return r.get("c").asResource().getLocalName();
 		} else return null;
 	}
 	
@@ -729,41 +708,40 @@ public class Request {
 		List<String> result = new ArrayList<String>();
 		List<String> tmp = new ArrayList<String>();
 		
-		OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF);
-		ont.read("file:OntologiaArtsCombinatories.owl"); // TODO: get ontology file path from global config
-		OntClass ontClass = ont.getOntClass(Constants.AC_URI_NS + className);
-		ExtendedIterator<OntClass> it = ontClass.listSuperClasses(true);
+		OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, ModelUtil.getOntology());
+		OntClass ontClass = ont.getOntClass(Constants.ONTOLOGY_URI_NS + className);
 		
-		while(it.hasNext())	{
-			OntClass cls = it.next();
-			result.add(extractUriId(cls.toString()));
-			tmp.add(extractUriId(cls.toString()));
+		if (ontClass!=null) {
+			ExtendedIterator<OntClass> it = ontClass.listSuperClasses(true);
+			
+			while(it.hasNext())	{
+				OntClass cls = it.next();
+				result.add(cls.getLocalName());
+				tmp.add(cls.getLocalName());
+			}
+			
+			for(String c : tmp) result.addAll(listSuperClasses(c));
 		}
-		
-		for(String c : tmp) result.addAll(listSuperClasses(c));
 			
 		return result;
 	}
 	
 	private String[] resolveModelPathPart(String className, String property, String id, boolean includeId, boolean anyLanguage) {
 		if ("class".equals(property)) return new String[]{ getObjectClass(id) }; // 'class' is reserved word
+		
 		List<String> result = new ArrayList<String>();
 		
 		// Connect to rdf server
-		OntModel data = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, getVirtModel());
+		InfModel model = ModelUtil.getModel();
 		
 		String classClause = "";
 		String idClause = " ?a ";
-		String propertyClause = " <"+Constants.AC_URI_NS+property+"> ";
-		
-		if (id!=null) {
-			idClause = " <"+Constants.RESOURCE_BASE_URI+id+"> ";
-		} else if (className!=null && !"*".equals(className)) {
-			classClause = ". ?a <"+Constants.RDF_URI_NS+"type> <"+Constants.AC_URI_NS+className+"> "; // TODO: We need reasoning to include subclasses
-		}
+		String propertyClause = " <"+Constants.ONTOLOGY_URI_NS+property+"> ";
+		if (id!=null) idClause = " <"+Constants.RESOURCE_URI_NS+id+"> "; 
+		if (className!=null && !"*".equals(className)) classClause = ". "+ idClause +" <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+className+"> ";
 		
 		// Create search query
-		VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(QueryFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { " + idClause + propertyClause + " ?c "+ classClause +" } "),(VirtGraph) data.getBaseModel().getGraph());
+		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { " + idClause + propertyClause + " ?c "+ classClause +" } ", model);
 		ResultSet rs = vqe.execSelect();
 		while(rs.hasNext()) {
 			QuerySolution s = rs.next();
@@ -776,7 +754,7 @@ public class Request {
 				}
 				result.add(node.asLiteral().getString() + (includeId?"@"+id:""));
 			} else {
-				result.add(extractUriId(node.toString()));
+				result.add(node.asResource().getLocalName());
 			}
 		}
 		
@@ -814,12 +792,12 @@ public class Request {
 	private Template getObjectTemplate(String id) throws Exception {
 		
 		String className = getObjectClass(id);
-		File f = new File(Constants.JSON_PATH+"mapping/"+className+".json");
+		File f = new File(Constants.CONFIGURATIONS_PATH+"mapping/"+className+".json");
 		
 		if (!f.exists()) {
 			List<String> superClasses = listSuperClasses(className);
 			for (String superClassName : superClasses) {
-				f = new File(Constants.JSON_PATH+"mapping/"+superClassName+".json");
+				f = new File(Constants.CONFIGURATIONS_PATH+"mapping/"+superClassName+".json");
 				if (f.exists()) break;
 			}
 		}
@@ -844,7 +822,7 @@ public class Request {
 			} else if ("linkedObjects".equals(type)) {
 				for (String path : dm.getPath()) {
 					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
-					dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id, true)));
+					dm.getValue().addAll(Arrays.asList(resolveModelPath(path, id, true, false)));
 				}
 			}
 			
@@ -871,7 +849,7 @@ public class Request {
 	private boolean downloadImage(String path) throws Exception {
 		boolean downloaded = false;
 		
-		File f = new File(Constants.FILE_DIR+"tmp.jpg");
+		File f = new File(Constants.MEDIA_PATH+"tmp.jpg");
 		if (f.exists()) f.delete();
 		
 		URL url = new URL(path);
@@ -880,7 +858,7 @@ public class Request {
 		conn.setDoInput(true);
 	    conn.setRequestMethod("GET");
 	    
-	    OutputStream os = new FileOutputStream(Constants.FILE_DIR+"tmp.jpg");
+	    OutputStream os = new FileOutputStream(Constants.MEDIA_PATH+"tmp.jpg");
 	    
 	    InputStream is = conn.getInputStream();
 	    byte[] buffer = new byte[1024];
@@ -971,24 +949,24 @@ public class Request {
 		gResult.dispose();
 		gCut.dispose();
 		
-		File f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
+		File f = new File(Constants.MEDIA_PATH + "thumbnails/" + id + ".jpg");
 		ImageIO.write(resizedImage, "jpg", f);
 	}
 
 	
 	public File getClassThumbnail(String className) {
 		try {
-			File f = new File(Constants.FILE_DIR + "thumbnails/classes/" + className + ".jpg");
+			File f = new File(Constants.MEDIA_PATH + "thumbnails/classes/" + className + ".jpg");
 			
 			if (!f.exists()) {
 				List<String> superClasses = listSuperClasses(className);
 				for (String superClassName : superClasses) {
-					f = new File(Constants.FILE_DIR + "thumbnails/classes/"+superClassName+".jpg");
+					f = new File(Constants.MEDIA_PATH + "thumbnails/classes/"+superClassName+".jpg");
 					if (f.exists()) break;
 				}
 			}
 			
-			if (!f.exists()) f = new File(Constants.FILE_DIR + "thumbnails/classes/default.jpg");
+			if (!f.exists()) f = new File(Constants.MEDIA_PATH + "thumbnails/classes/default.jpg");
 			
 			return f;
 		} catch (Throwable e) {
@@ -1000,7 +978,7 @@ public class Request {
 	
 	public InputStream getObjectThumbnail(String id) {
 		try {
-			File f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
+			File f = new File(Constants.MEDIA_PATH + "thumbnails/" + id + ".jpg");
 			
 			List<String> medias = new ArrayList<String>();
 			List<String> subobjects = new ArrayList<String>();
@@ -1028,7 +1006,7 @@ public class Request {
 				if (medias.size()>0) {
 					for (String m : medias) {
 						if (downloadImage(m)) {
-							il.add(ImageIO.read(new File(Constants.FILE_DIR+"tmp.jpg")));
+							il.add(ImageIO.read(new File(Constants.MEDIA_PATH+"tmp.jpg")));
 							count++;
 						}
 						
@@ -1047,7 +1025,7 @@ public class Request {
 				}
 				
 				resizeImage(il.size()>0?il.get(0):null, il.size()>1?il.get(1):null, il.size()>2?il.get(2):null, il.size()>3?il.get(3):null, id);
-				f = new File(Constants.FILE_DIR + "thumbnails/" + id + ".jpg");
+				f = new File(Constants.MEDIA_PATH + "thumbnails/" + id + ".jpg");
 			}
 
 			if (!f.exists()) {

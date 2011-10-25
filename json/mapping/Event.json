@@ -1,0 +1,18 @@
+{
+	"className":"Event",
+	
+	"sections":
+	[
+		{
+			"name":"header",
+			"data":[
+		
+		    	{
+					"name":"Title",
+					"type":"text",
+					"path":["Event.isReferencedBy"]
+				}
+			]
+		}
+	]
+}
