@@ -19,11 +19,11 @@ import org.fundaciotapies.ac.model.Request;
 public class GetClassesTree {
 	
 	@GET
-	@Produces("text/plain")
+	@Produces("application/json")
 	public String getClassesTree(@QueryParam("c") String rootClass) {
-		if (rootClass == null) return null;
-		
 		String json = "\""+rootClass+"\"";
+		if (rootClass==null) json = "\"Thing\"";
+		
 		List<String> classesList = new Request().listSubclasses(rootClass, true);
 		String json2 = "";
 		for (String c : classesList)

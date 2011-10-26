@@ -19,13 +19,16 @@ public class Reset {
 	@Produces("application/json")
 	public String clear(@QueryParam("confirm") String confirm) {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy kk:mm");
+		String dateStr = sdf.format(Calendar.getInstance().getTime());
 		
-		if (sdf.format(Calendar.getInstance().getTime()).equals(confirm)) {
+		if (dateStr.equals(confirm)) {
 			try {
 				new Upload().reset();
 			} catch (Exception e) {
 				return new Gson().toJson("error");
 			}
+		} else {
+			return new Gson().toJson("Wrong confirmation date. Server date is: " + dateStr);
 		}
 		
 		return new Gson().toJson("success");
