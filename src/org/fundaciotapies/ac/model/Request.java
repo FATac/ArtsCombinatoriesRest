@@ -172,7 +172,7 @@ public class Request {
 			// Connect to rdf server
 			InfModel model = ModelUtil.getModel();
 			
-			String query = "SELECT ?s FROM <http://localhost:8890/ACData> WHERE { { ?s <"+Constants.ONTOLOGY_URI_NS+"FatacId> \""+id+"\" } " + qc + " } ";
+			String query = "SELECT ?s FROM <" + Constants.RESOURCE_URI_NS + "> WHERE { { ?s <"+Constants.ONTOLOGY_URI_NS+"FatacId> \""+id+"\" } " + qc + " } ";
 			Query sparql = QueryFactory.create(query); 
 		    QueryExecution qexec = VirtuosoQueryExecutionFactory.create(sparql, model) ;
 			ResultSet rs = qexec.execSelect();
@@ -343,21 +343,28 @@ public class Request {
 	
 	public List<String> listSubclasses(String className, Boolean direct) {
 		List<String> result = new ArrayList<String>();
-
+		String classURI = Constants.ONTOLOGY_URI_NS + className;
+		
 		try {
-			if (className == null) return null;
-			String classURI = Constants.ONTOLOGY_URI_NS + className;
 			// Load ontology
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, ModelUtil.getOntology());
-			OntClass ontClass = ont.getOntClass(classURI);
+			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ModelUtil.getOntology());
+			
+			ExtendedIterator<OntClass> it = null;
+			if (className != null) {
+				OntClass ontClass = ont.getOntClass(classURI);
+				it = ontClass.listSubClasses(direct);
+			} else {
+				it = ont.listHierarchyRootClasses();
+			}
 			
 			// Use recursive calls to navigate through the class tree starting form given root class
-			for (ExtendedIterator<OntClass> it = ontClass.listSubClasses(direct);it.hasNext();) {
+			while (it.hasNext()) {
 				OntClass cls = it.next();
 				result.add(cls.getLocalName());
 			}	
 			
 		} catch (Throwable e) {
+			System.out.println(classURI);
 			log.error("Error ", e);
 		}
 
@@ -372,7 +379,7 @@ public class Request {
 			InfModel model = ModelUtil.getModel();
 			
 			// Create search query
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { ?s <"+Constants.ONTOLOGY_URI_NS+"isAssignedTo> <"+Constants.RESOURCE_URI_NS+referredObjectId+"> . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+"Rights> } } ORDER BY ?s ", model);
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT ?s FROM <" + Constants.RESOURCE_URI_NS + "> WHERE { ?s <"+Constants.ONTOLOGY_URI_NS+"isAssignedTo> <"+Constants.RESOURCE_URI_NS+referredObjectId+"> . { ?s <"+Constants.RDF_URI_NS+"type> <"+Constants.ONTOLOGY_URI_NS+"Rights> } } ORDER BY ?s ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			while (rs.hasNext()) {
@@ -417,7 +424,7 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + " } ", model);
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Constants.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + qc + " } ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -482,7 +489,7 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT ?s FROM <http://localhost:8890/ACData> WHERE { " + qc + " } ", model);
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT ?s FROM <" + Constants.RESOURCE_URI_NS + "> WHERE { " + qc + " } ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -535,7 +542,7 @@ public class Request {
 
 			// Create search query
 			String filter = "FILTER (regex(?o,\""+word+"\",\"i\") && !regex(?o, \""+Constants.RESOURCE_URI_NS+"\",\"i\") && !regex(?o, \""+Constants.ONTOLOGY_URI_NS+"\",\"i\")) ";
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s ?p ?o " + qc + filter + " } ", model);
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Constants.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + qc + filter + " } ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -599,7 +606,7 @@ public class Request {
 			// Create search query
 			field = Constants.ONTOLOGY_URI_NS + field;
 			className = Constants.ONTOLOGY_URI_NS + className;
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <http://localhost:8890/ACData> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s <"+Constants.RDF_URI_NS+"type> <"+className+"> } ORDER BY ?s ", model);
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Constants.RESOURCE_URI_NS + "> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s <"+Constants.RDF_URI_NS+"type> <"+className+"> } ORDER BY ?s ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -708,7 +715,7 @@ public class Request {
 		List<String> result = new ArrayList<String>();
 		List<String> tmp = new ArrayList<String>();
 		
-		OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, ModelUtil.getOntology());
+		OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ModelUtil.getOntology());
 		OntClass ontClass = ont.getOntClass(Constants.ONTOLOGY_URI_NS + className);
 		
 		if (ontClass!=null) {

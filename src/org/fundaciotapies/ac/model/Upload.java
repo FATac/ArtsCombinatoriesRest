@@ -22,19 +22,12 @@ import org.fundaciotapies.ac.rest.client.Transco;
 import org.fundaciotapies.ac.rest.client.TranscoEntity;
 
 import virtuoso.jena.driver.VirtGraph;
-import virtuoso.jena.driver.VirtInfGraph;
 import virtuoso.jena.driver.VirtTransactionHandler;
-import virtuoso.jena.driver.VirtuosoQueryExecutionFactory;
 import virtuoso.jena.driver.VirtuosoUpdateFactory;
 
 import com.hp.hpl.jena.ontology.ObjectProperty;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
@@ -42,7 +35,6 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
-import com.hp.hpl.jena.reasoner.InfGraph;
 import com.hp.hpl.jena.shared.Command;
 
 public class Upload {
@@ -160,7 +152,7 @@ public class Upload {
 		
 		try {
 			model = ModelUtil.getModel();
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, ModelUtil.getOntology());
+			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ModelUtil.getOntology());
 			
 			String[] cls = className.split(",");
 			String id = generateObjectId(about);
@@ -171,7 +163,7 @@ public class Upload {
 			
 			script = new ArrayList<String>();
 			for (String classNameElement : cls) 
-				script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> rdf:type <"+Constants.ONTOLOGY_URI_NS+classNameElement+"> } ");
+				script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+fullId+"> rdf:type <"+Constants.ONTOLOGY_URI_NS+classNameElement+"> } ");
 			
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			
@@ -189,7 +181,7 @@ public class Upload {
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) 
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i].trim()+"> <"+Constants.RESOURCE_URI_NS+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+fullId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i].trim()+"> <"+Constants.RESOURCE_URI_NS+propertyValues[i]+"> }");
 					else {
 						String lang = null;
 						
@@ -203,7 +195,7 @@ public class Upload {
 						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
 						
 						propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+fullId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
+						script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+fullId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
 					}
 				}
 				
@@ -251,7 +243,7 @@ public class Upload {
 			model = ModelUtil.getModel();
 			
 			script = new ArrayList<String>();
-			script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Constants.RESOURCE_URI_NS+objectId+"> or ?c = <"+Constants.RESOURCE_URI_NS+objectId+">) . ?a ?b ?c }");
+			script.add("DELETE FROM <" + Constants.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Constants.RESOURCE_URI_NS+objectId+"> or ?c = <"+Constants.RESOURCE_URI_NS+objectId+">) . ?a ?b ?c }");
 			
 			Command c = new Command() {
 				@Override
@@ -288,7 +280,7 @@ public class Upload {
 		
 		try {
 			model = ModelUtil.getModel();
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, ModelUtil.getOntology());
+			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ModelUtil.getOntology());
 			int i = 0;
 			
 			script = new ArrayList<String>();
@@ -309,15 +301,15 @@ public class Upload {
 				}
 				
 				if ((!"filePath".equals(properties[i]) || "filePath".equals(properties[i]) && !"".equals(propertyValues[i])) && (!alreadyDeleted.contains(properties[i]))) {
-					script.add("DELETE FROM <http://localhost:8890/ACData> { ?a ?b ?c } WHERE { ?a <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.RESOURCE_URI_NS+uniqueId+">) . ?a ?b ?c }");
+					script.add("DELETE FROM <" + Constants.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.RESOURCE_URI_NS+uniqueId+">) . ?a ?b ?c }");
 					alreadyDeleted.add(properties[i]);
 				}
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.RESOURCE_URI_NS+uniqueId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> <"+Constants.RESOURCE_URI_NS+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+Constants.RESOURCE_URI_NS+uniqueId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> <"+Constants.RESOURCE_URI_NS+propertyValues[i]+"> }");
 					} else {
-						script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+Constants.RESOURCE_URI_NS+uniqueId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
+						script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+Constants.RESOURCE_URI_NS+uniqueId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
 					}
 				}
 				i++;
@@ -363,10 +355,10 @@ public class Upload {
 			    RDFNode   object    = stmt.getObject();      // get the object
 			    
 			    if (!object.isLiteral())
-			    	script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+subject.toString()+"> <"+predicate.toString()+"> <"+object.toString()+"> } ");
+			    	script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+subject.toString()+"> <"+predicate.toString()+"> <"+object.toString()+"> } ");
 			    else {
 			    	String value = object.toString().replaceAll("\\n", "\\s");
-			    	script.add("INSERT INTO GRAPH <http://localhost:8890/ACData> { <"+subject.toString()+"> <"+predicate.toString()+"> \""+value+"\" } ");
+			    	script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+subject.toString()+"> <"+predicate.toString()+"> \""+value+"\" } ");
 			    }
 			}
 			

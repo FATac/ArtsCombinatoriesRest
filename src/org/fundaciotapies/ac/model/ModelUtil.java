@@ -1,9 +1,5 @@
 package org.fundaciotapies.ac.model;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
-
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Constants;
 
@@ -39,12 +35,13 @@ public class ModelUtil {
 	
 	public static void reset() {
 		try {
-			new VirtGraph(Constants.RESOURCE_URI_NS, Constants.RDFDB_URL, Constants.RDFDB_USER, Constants.RDFDB_PASS).clear();
-			Connection conn = DriverManager.getConnection(Constants.RDFDB_URL, Constants.RDFDB_USER, Constants.RDFDB_PASS);
-			Statement stmt = conn.createStatement();
-			stmt.execute("DB.DBA.RDF_LOAD_RDFXML (http_get('"+Constants.ONTOLOGY_URI_NS+"'), '', '"+Constants.ONTOLOGY_URI_NS+"'); ");
-			stmt.close();
-			conn.close();
+			VirtGraph res = new VirtGraph(Constants.RESOURCE_URI_NS, Constants.RDFDB_URL, Constants.RDFDB_USER, Constants.RDFDB_PASS);
+			res.clear();
+			VirtGraph ont = new VirtGraph(Constants.ONTOLOGY_URI_NS, Constants.RDFDB_URL, Constants.RDFDB_USER, Constants.RDFDB_PASS);
+			ont.clear();
+			ont.read(Constants.ONTOLOGY_URI_NS, null);
+			res.close();
+			ont.close();
 		} catch (Exception e) {
 			log.error("Error ", e);
 		}
