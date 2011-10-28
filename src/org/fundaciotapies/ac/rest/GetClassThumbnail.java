@@ -13,7 +13,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
-import org.fundaciotapies.ac.model.Request;
+import org.fundaciotapies.ac.view.ViewGenerator;
 
 /**
  * Call: http://{host:port}/classes/{class}/thumbnail
@@ -31,7 +31,7 @@ public class GetClassThumbnail {
 		byte[] content = null;
 		
 		try {
-			InputStream in = new FileInputStream(new Request().getClassThumbnail(className));
+			InputStream in = new FileInputStream(new ViewGenerator().getClassThumbnail(className));
 			response.setContentType("image/jpg");
 			
 			DataInputStream dis = new DataInputStream(in);

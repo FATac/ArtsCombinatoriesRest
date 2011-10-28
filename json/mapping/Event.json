@@ -9,7 +9,7 @@
 		
 		    	{
 					"name":"Title",
-					"type":"text",
+					"type":"linkedObjects",
 					"path":["Event.isReferencedBy"]
 				}
 			]

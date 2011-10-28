@@ -12,7 +12,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
-import org.fundaciotapies.ac.model.Request;
+import org.fundaciotapies.ac.view.ViewGenerator;
 
 @Path("/resource/{id}/thumbnail")
 public class GetObjectThumbnail {
@@ -23,7 +23,7 @@ public class GetObjectThumbnail {
 		byte[] content = null;
 		
 		try {
-			InputStream in = new Request().getObjectThumbnail(id);
+			InputStream in = new ViewGenerator().getObjectThumbnail(id);
 			if (in==null) throw new Exception("There is no media file");
 			response.setContentType("image/jpg");
 			

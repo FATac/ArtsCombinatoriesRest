@@ -9,6 +9,8 @@ public class DataMapping {
 	private List<String> path;
 	private List<String> value;
 	private String category;
+	private String multilingual;
+	private String sort;
 	
 	private String sortBy;
 	
@@ -47,6 +49,18 @@ public class DataMapping {
 	}
 	public String getSortBy() {
 		return sortBy;
+	}
+	public void setMultilingual(String multilingual) {
+		this.multilingual = multilingual;
+	}
+	public String getMultilingual() {
+		return multilingual;
+	}
+	public void setSort(String sort) {
+		this.sort = sort;
+	}
+	public String getSort() {
+		return sort;
 	}
 	
 }

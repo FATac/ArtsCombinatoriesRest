@@ -20,15 +20,19 @@
 			"data":[
 			
 			 	{
-			        "name":"CV",
+			        "name":"Biography",
 			        "type":"text",
-			        "path":["Person.CV"]
+			        "path":["Person.Bio"]
 			    },
 			    
 			    {
-			        "name":"Role",
-			        "type":"text",
-			        "path":["Person.performsRole:*.class"]
+			        "name":"Author",
+			        "type":"linkedObjects",
+			        "path":[
+			         	"Person.performsRole:Artist.appliesOn:*.Title",
+			        	"Person.performsRole:Writer.appliesOn:*.Title",
+			        	"Person.performsRole:Author.appliesOn:*.Title"
+			        ]
 			    }
 			]  
 		}

@@ -10,7 +10,7 @@
 		    	{
 					"name":"Title",
 					"type":"text",
-					"path":["Case-Files.references:Event.Title"]
+					"path":["Case-File.references:Event.Title"]
 				}
 			]
 		},
@@ -22,7 +22,13 @@
 			 	{
 			        "name":"Description",
 			        "type":"text",
-			        "path":["Case-Files.references:Event.Description"]
+			        "path":["Case-File.Description"]
+			    },
+			    
+			 	{
+			        "name":"Event",
+			        "type":"text",
+			        "path":["Case-File.references:Event.Description"]
 			    }
 			]
 		},
@@ -33,7 +39,7 @@
 			
 			 	{   
 			        "type":"objects",
-			        "path":["Case-Files.hasMedia","Case-Files.references"]
+			        "path":["Case-File.hasMedia","Case-File.references"]
 			    }
 			] 
 		}

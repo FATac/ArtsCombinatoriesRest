@@ -47,7 +47,7 @@ public class Upload {
 	private String normalizeId(String about) throws Exception {
 		String temp = Normalizer.normalize(about.trim(), Normalizer.Form.NFD);
 	    Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-	    String result = pattern.matcher(temp).replaceAll("").replaceAll("\\<.*?>","").replaceAll("[^A-Za-z0-9()_\\s\\-\\']", "").replaceAll("[\\s+\\n+\\t+]", "_");
+	    String result = pattern.matcher(temp).replaceAll("").replaceAll("\\<.*?>","").replaceAll("[^A-Za-z0-9_\\s\\-]", "").replaceAll("[\\s+\\n+\\t+]", "_");
 	    if (result.length()>140) result = result.substring(0, 140);
 	    return result;
 	}
@@ -157,7 +157,7 @@ public class Upload {
 			String[] cls = className.split(",");
 			String id = generateObjectId(about);
 			
-			String fullId = Constants.RESOURCE_URI_NS + id;
+			String fullId = Constants.RESOURCE_URI_NS  + id;
 			
 			int i = 0;
 			
@@ -171,7 +171,7 @@ public class Upload {
 			while(i<properties.length) {
 				boolean isObjectProperty = false;
 				
-				if (!lcp.contains(properties[i]) && !"FatacId".equals(properties[i])) { i++; continue; }
+				if (!lcp.contains(properties[i]) && !"FatacId".equals(properties[i]) || "type".equals(properties[i])) { i++; continue; }
 				for(ObjectProperty op : lop) {
 					if (op.getLocalName().equals(properties[i])) {
 						isObjectProperty = true;
@@ -205,9 +205,9 @@ public class Upload {
 			Command c = new Command() {
 				@Override
 				public Object execute() {
-					//System.out.println(script);
-					for (String s : script)
+					for (String s : script) {
 						VirtuosoUpdateFactory.create(s, ((VirtGraph)(model.getGraph()))).exec();
+					}
 					return null;
 				}
 			};
@@ -386,19 +386,24 @@ public class Upload {
 		return "success";
 	}
 	
-	public void reset() throws Exception {
+	public void reset(boolean all) throws Exception {
 		
 		try {
-			// removes db stored data
-			ModelUtil.reset();
-			Media.clear();
-			IdentifierCounter.clear();
-			
-			// removes all media files 
-			File f = new File(Constants.MEDIA_PATH);
-			for(String x : f.list()) {
-				File fx = new File(Constants.MEDIA_PATH+x);
-				if (fx.isFile()) fx.delete();
+			// reloads ontology
+			ModelUtil.resetOntology();
+
+			if (all) {
+				// removes model stored data
+				ModelUtil.resetModel();
+				Media.clear();
+				IdentifierCounter.clear();
+				
+				// removes all media files 
+				File f = new File(Constants.MEDIA_PATH);
+				for(String x : f.list()) {
+					File fx = new File(Constants.MEDIA_PATH+x);
+					if (fx.isFile()) fx.delete();
+				}
 			}
 		} catch (Exception e) {
 			log.error("Error ", e);

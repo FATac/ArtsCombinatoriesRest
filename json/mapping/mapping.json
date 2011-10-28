@@ -5,25 +5,25 @@
 	[
 	    {
 	        "name":"ObjectType",
-	        "type":"text",
+	        "type":"string",
 	        "path":["*.class"]
 	    },
 	    
 		{
 			"name":"Title",
-		    "type":"text",
-		    "path":["Case-Files.references:*.Title"]
+		    "type":"string",
+		    "path":["Case-File.references:*.Title"]
 		},
 
 		{
 			"name":"Description",
 		    "type":"text",
-		    "path":["Case-Files.references:*.Description"]
+		    "path":["Case-File.references:*.Description"]
 		},
 		
 		{
 			"name":"CaseFile",
-			"type":"text",
+			"type":"string",
 			"path":["Art_Work.isReferencedBy", "Event.isReferencedBy", "SpecialObject.isReferencedBy"]
 		},
 
@@ -31,56 +31,58 @@
 		    "name":"Year",
 		    "type":"date.year",
 		    "path":[
-		        "Case-Files.references:*.StartDate",
-		        "Case-Files.references:*.EndDate"
+		        "Case-File.references:*.StartDate",
+		        "Case-File.references:*.EndDate"
 		    ],
-		    "category":"yes"
+		    "category":"yes",
+		    "sort":"value"
 		},
 
 		{
 		    "name":"Country",
-		    "type":"text",
+		    "type":"string",
 		    "path":[
-		    	"Case-Files.references:*.tookPlaceAT:City.isLocatedIn:Country.Name",
-		    	"Case-Files.references:*.tookPlaceAT:Country.Name",
-		    	"Case-Files.references:*.isAuthoredBy:*.bornIn:Country.Name",
-		    	"Case-Files.references:*.isAuthoredBy:*.bornIn:City.isLocatedIn:Country.Name"
+		    	"Case-File.references:*.tookPlaceAT:City.isLocatedIn:Country.Name",
+		    	"Case-File.references:*.tookPlaceAT:Country.Name",
+		    	"Case-File.references:*.isAuthoredBy:*.bornIn:Country.Name",
+		    	"Case-File.references:*.isAuthoredBy:*.bornIn:City.isLocatedIn:Country.Name"
 		    ],
-		    "category":"yes"
+		    "category":"yes",
+		    "multilingual":"yes"
 		},
 		
 		{
 		    "name":"Media",
-		    "type":"text",
+		    "type":"string",
 		    "path":[
-		    	"Case-Files.hasMedia:*.class"
+		    	"Case-File.hasMedia:*.class"
 		    ],
 		    "category":"yes"
 		},
 		
 		{
 		    "name":"License",
-		    "type":"text",
+		    "type":"string",
 		    "path":[
-		        "Case-Files.references:*.hasLicense:License.name"
+		        "Case-File.references:*.hasLicense:License.name"
 		    ],
 		    "category":"yes"
 		},
 		
 		{
 		    "name":"Role",
-		    "type":"text",
+		    "type":"string",
 		    "path":[
-		        "Case-Files.references:*.applicationOf:Role.class"
+		        "Case-File.references:*.applicationOf:Role.class"
 		    ],
 		    "category":"yes"
 		},
 		
 		{
 		    "name":"Person",
-		    "type":"text",
+		    "type":"string",
 		    "path":[
-		        "Case-Files.references:Art_Work.applicationOf:Role.performedBy:Person.Name",
+		        "Case-File.references:Art_Work.applicationOf:Role.performedBy:Person.Name",
 		        "Person.Name"
 		    ],
 		    "category":"yes"
@@ -88,12 +90,13 @@
 		
 		{
 		    "name":"ArtWork",
-		    "type":"text",
+		    "type":"string",
 		    "path":[
-		        "Case-Files.references:Art_Work.Title",
+		        "Case-File.references:Art_Work.Title",
 		        "Art_Work.Title"
 		    ],
-		    "category":"yes"
+		    "category":"yes",
+		    "multilingual":"yes"
 		}
 		
 	]
