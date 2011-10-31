@@ -3,6 +3,12 @@
 {
 	"data":
 	[
+		{
+			"name":"CaseFile",
+			"type":"string",
+			"path":["Art_Work.isReferencedBy", "Event.isReferencedBy", "SpecialObject.isReferencedBy"]
+		},
+	
 	    {
 	        "name":"ObjectType",
 	        "type":"string",
@@ -20,12 +26,6 @@
 		    "type":"text",
 		    "path":["Case-File.references:*.Description"]
 		},
-		
-		{
-			"name":"CaseFile",
-			"type":"string",
-			"path":["Art_Work.isReferencedBy", "Event.isReferencedBy", "SpecialObject.isReferencedBy"]
-		},
 
 		{
 		    "name":"Year",
@@ -42,13 +42,21 @@
 		    "name":"Country",
 		    "type":"string",
 		    "path":[
-		    	"Case-File.references:*.tookPlaceAT:City.isLocatedIn:Country.Name",
-		    	"Case-File.references:*.tookPlaceAT:Country.Name",
-		    	"Case-File.references:*.isAuthoredBy:*.bornIn:Country.Name",
-		    	"Case-File.references:*.isAuthoredBy:*.bornIn:City.isLocatedIn:Country.Name"
+		    	"Case-File.references:*.tookPlaceAt:City.isLocatedIn:Country.Name",
+		    	"Case-File.references:*.tookPlaceAt:Country.Name"
 		    ],
 		    "category":"yes",
 		    "multilingual":"yes"
+		},
+		
+		{
+			"name":"Translation",
+			"type":"string",
+			"path":[
+			    "Case-File.hasMedia:*.hasLanguage:Language.Label"
+			],
+			"category":"yes",
+			"multilingual":"yes"
 		},
 		
 		{
@@ -82,8 +90,26 @@
 		    "name":"Person",
 		    "type":"string",
 		    "path":[
-		        "Case-File.references:Art_Work.applicationOf:Role.performedBy:Person.Name",
-		        "Person.Name"
+		        "Case-File.references:Event.applicationOf:Role.performedBy:Person.givenName"
+		    ],
+		    "category":"yes"
+		},
+		
+		{
+		    "name":"Organisation",
+		    "type":"string",
+		    "path":[
+		        "Case-File.references:Event.applicationOf:Role.performedBy:Organisation.Name",
+		        "Organisation.Name"
+		    ],
+		    "category":"yes"
+		},
+		
+		{
+		    "name":"Collection",
+		    "type":"string",
+		    "path":[
+		        "Case-File.hasMedia:*.isCollectedIn:Collection.class"
 		    ],
 		    "category":"yes"
 		},

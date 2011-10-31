@@ -9,8 +9,14 @@
 		
 		    	{
 					"name":"Title",
-					"type":"linkedObjects",
-					"path":["Event.isReferencedBy"]
+					"type":"text",
+					"path":["Event.Title"]
+				},
+				
+				{
+					"name":"Description",
+					"type":"text",
+					"path":["Event.Description"]
 				}
 			]
 		}

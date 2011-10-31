@@ -38,8 +38,10 @@
 			"data":[
 			
 			 	{   
-			        "type":"objects",
-			        "path":["Case-File.hasMedia","Case-File.references"]
+			        "type":"search",
+			        "value":["CaseFile:"],
+			        "path":["Case-File.id"],
+			        "categories":["Year", "Media", "Person", "ArtWork", "License", "ObjectType"]
 			    }
 			] 
 		}

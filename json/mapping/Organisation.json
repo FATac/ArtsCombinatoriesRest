@@ -27,7 +27,7 @@
 			    
 			    {
 					"name":"Home",
-					"type":"text",
+					"type":"url",
 					"path":["Organisation.Homepage"]
 			    },
 			    

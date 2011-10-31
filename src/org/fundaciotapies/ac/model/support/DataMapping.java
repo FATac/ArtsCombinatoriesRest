@@ -8,6 +8,7 @@ public class DataMapping {
 	private String type;
 	private List<String> path;
 	private List<String> value;
+	private List<String> categories;
 	private String category;
 	private String multilingual;
 	private String sort;
@@ -61,6 +62,12 @@ public class DataMapping {
 	}
 	public String getSort() {
 		return sort;
+	}
+	public void setCategories(List<String> categories) {
+		this.categories = categories;
+	}
+	public List<String> getCategories() {
+		return categories;
 	}
 	
 }

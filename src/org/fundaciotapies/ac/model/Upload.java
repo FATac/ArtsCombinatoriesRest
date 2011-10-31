@@ -47,7 +47,7 @@ public class Upload {
 	private String normalizeId(String about) throws Exception {
 		String temp = Normalizer.normalize(about.trim(), Normalizer.Form.NFD);
 	    Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-	    String result = pattern.matcher(temp).replaceAll("").replaceAll("\\<.*?>","").replaceAll("[^A-Za-z0-9_\\s\\-]", "").replaceAll("[\\s+\\n+\\t+]", "_");
+	    String result = pattern.matcher(temp).replaceAll("").replaceAll("\\<.*?>","").replaceAll("[^A-Za-z0-9_\\s]", "").replaceAll("[\\s+\\n+\\t+]", "_");
 	    if (result.length()>140) result = result.substring(0, 140);
 	    return result;
 	}

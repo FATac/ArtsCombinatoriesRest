@@ -14,7 +14,7 @@ import com.google.gson.Gson;
 public class Solar {
 	@GET
 	@Produces("application/json")
-	public String solarize(@PathParam("option") String option, @QueryParam("s") String searchText) {
+	public String solarize(@PathParam("option") String option, @QueryParam("s") String searchText, @QueryParam("start") String start, @QueryParam("rows") String rows) {
 		try {
 			SolrManager solr = new SolrManager();
 			
@@ -30,7 +30,7 @@ public class Solar {
 				solr.deleteAll();
 				solr.indexate();
 			} else if ("search".equals(option)) {
-				return solr.search(searchText);
+				return solr.search(searchText, start, rows);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

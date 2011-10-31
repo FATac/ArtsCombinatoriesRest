@@ -719,8 +719,8 @@ public class Request {
 	}
 	
 	private String[] resolveModelPathPart(String className, String property, String id, boolean includeId, boolean anyLanguage, boolean showLang) {
-		if ("class".equals(property)) 
-			return new String[]{ getObjectClass(id) }; // 'class' is reserved word
+		if ("class".equals(property)) return new String[]{ getObjectClass(id) }; // 'class' is reserved word
+		if ("id".equals(property)) return new String[]{ id };  
 		
 		List<String> result = new ArrayList<String>();
 		
@@ -745,7 +745,7 @@ public class Request {
 				if (!anyLanguage) {
 					if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
 				}
-				result.add((showLang && lang!=null?"1LANG"+lang+"1":"") + node.asLiteral().getString() + (includeId?"@"+id:""));
+				result.add((showLang && lang!=null?"":"") + node.asLiteral().getString() + (includeId?"@"+id:""));
 			} else {
 				result.add(node.asResource().getLocalName());
 			}

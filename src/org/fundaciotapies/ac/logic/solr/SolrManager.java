@@ -199,8 +199,11 @@ public class SolrManager {
 	    rd.close();
 	}
 	
-	public String search(String searchText) throws Exception {
+	public String search(String searchText, String start, String rows) throws Exception {
 		String solrQuery = "?q="+URLEncoder.encode(searchText,"UTF-8")+"&fl=id&facet=true&wt=json";
+		
+		if (start!=null) solrQuery += "&start="+start;
+		if (rows!=null) solrQuery += "&rows="+rows;
 	
 		BufferedReader fin = new BufferedReader(new FileReader(Constants.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
@@ -211,13 +214,12 @@ public class SolrManager {
 				if ("yes".equals(m.getMultilingual())) {
 					String lang = new Request().getCurrentLanguage();
 					if (lang==null || "".equals(lang)) lang = Constants.LANG_LIST[0];
-					solrQuery += "&f."+m.getName()+".facet.prefix=1LANG"+lang+"1";
+					solrQuery += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";
 				}
 				if ("value".equals(m.getSort())) solrQuery += "&f."+m.getName()+".facet.sort=index";
 			}
 		}
 		
-		System.out.println(solrQuery);
 		URL url = new URL(Constants.SOLR_URL + "select/" + solrQuery);
 		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 	    conn.setRequestMethod("GET");
