@@ -1,7 +1,6 @@
 package org.fundaciotapies.ac;
 
-
-public class Constants {
+public class Cfg {
 	
 	// Various
 	public static final Integer THUMBNAIL_WIDTH = 250;
@@ -31,5 +30,5 @@ public class Constants {
 	public static final String SOLR_PATH = "/home/jordi.roig.prieto/solr/";
 	public static final String MEDIA_PATH = "./ac_media/";
 	public static final String ONTOLOGY_PATH = "./OntologiaArtsCombinatories.owl";
-
+	
 }
