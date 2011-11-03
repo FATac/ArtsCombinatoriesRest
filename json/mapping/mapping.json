@@ -6,13 +6,19 @@
 		{
 			"name":"CaseFile",
 			"type":"string",
-			"path":["Art_Work.isReferencedBy", "Event.isReferencedBy", "SpecialObject.isReferencedBy"]
+			"path":["Event.isReferencedBy", "SpecialObject.isReferencedBy"]
 		},
 	
 	    {
 	        "name":"ObjectType",
 	        "type":"string",
 	        "path":["*.class"]
+	    },
+	    
+	    {
+	        "name":"ObjectSuperType",
+	        "type":"string",
+	        "path":["*.superclass"]
 	    },
 	    
 		{
@@ -42,7 +48,7 @@
 		    "name":"Country",
 		    "type":"string",
 		    "path":[
-		    	"Case-File.references:*.tookPlaceAt:City.isLocatedIn:Country.Name",
+		    	"Case-File.references:*.tookPlaceAt:City.IsLocatedIn:Country.Name",
 		    	"Case-File.references:*.tookPlaceAt:Country.Name"
 		    ],
 		    "category":"yes",
@@ -72,7 +78,7 @@
 		    "name":"License",
 		    "type":"string",
 		    "path":[
-		        "Case-File.references:*.hasLicense:License.name"
+		        "Case-File.references:*.hasLicense:License.Label"
 		    ],
 		    "category":"yes"
 		},
@@ -90,7 +96,7 @@
 		    "name":"Person",
 		    "type":"string",
 		    "path":[
-		        "Case-File.references:Event.applicationOf:Role.performedBy:Person.givenName"
+		        "Case-File.references:Event.applicationOf:Role.performedBy:Person.Name"
 		    ],
 		    "category":"yes"
 		},
@@ -118,7 +124,6 @@
 		    "name":"ArtWork",
 		    "type":"string",
 		    "path":[
-		        "Case-File.references:Art_Work.Title",
 		        "Art_Work.Title"
 		    ],
 		    "category":"yes",

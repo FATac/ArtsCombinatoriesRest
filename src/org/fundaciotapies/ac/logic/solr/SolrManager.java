@@ -9,13 +9,16 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Constants;
 import org.fundaciotapies.ac.model.Request;
+import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.DataMapping;
 import org.fundaciotapies.ac.model.support.Mapping;
 
@@ -23,6 +26,8 @@ import com.google.gson.Gson;
 
 public class SolrManager {
 	private static Logger log = Logger.getLogger(SolrManager.class);
+	
+	public Map<String, CustomMap> documents = null;
 		
 	public void generateSchema() throws Exception {
 		// TODO: set deafaultSearchField in Schema.xml
@@ -58,7 +63,7 @@ public class SolrManager {
 		fout.close();
 	}
 	
-	public String createDocumentEntry(String id, String className, Mapping mapping) {
+	public String createDocumentEntry_(String id, String className, Mapping mapping) {
 		String xml = "	<doc>\n";
 		xml += "		<field name='id'>"+id+"</field>\n";
 		
@@ -71,7 +76,7 @@ public class SolrManager {
 					if (className.equals(currentClassName) || "*".equals(currentClassName)) {
 						String[] result = new Request().resolveModelPath(path, id, false, true, isMultilingual);
 						for (String r : result) {
-							xml += "		<field name='"+m.getName()+"'><![CDATA["+r+"]]></field>\n";
+							if (r!=null) xml += "		<field name='"+m.getName()+"'><![CDATA["+r+"]]></field>\n";
 						}
 					}
 				}
@@ -83,15 +88,39 @@ public class SolrManager {
 		return xml;
 	}
 	
+	public void createDocumentEntry(String id, String className, Mapping mapping) {
+		CustomMap doc = documents.get(id);
+		if (doc==null) doc = new CustomMap();
+		
+		for(DataMapping m : mapping.getData()) {
+			Boolean isMultilingual = "yes".equals(m.getMultilingual());
+			if (doc.get(m.getName())==null) {
+				if (m.getPath()!=null) {
+					for (String path : m.getPath()) {
+						String currentClassName = path.split("\\.")[0].trim();
+						
+						if (className.equals(currentClassName) || "*".equals(currentClassName)) {
+							String[] result = new Request().resolveModelPath(path, id, false, true, isMultilingual);
+							for (String r : result) {
+								if (r!=null) doc.put(m.getName(), r);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		documents.put(id, doc);
+	}
+	
 	public void indexate() throws Exception {
+		documents = new HashMap<String, CustomMap>();
 		BufferedReader fin = new BufferedReader(new FileReader(Constants.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		fin.close();
 		
 		Request request = new Request();
 		Set<String> objectTypesIndexed = new TreeSet<String>();
-		
-		String xml = "<add>\n";
 		
 		for(DataMapping m : mapping.getData()) {
 			if (m.getPath()!=null) {
@@ -104,10 +133,27 @@ public class SolrManager {
 		
 		for(String className : objectTypesIndexed) {
 			List<String> list = request.listObjectsId(className);
-			for(String id : list) 
-				xml += createDocumentEntry(id, className, mapping);
+			for(String id : list) createDocumentEntry(id, className, mapping);
 		}
 		
+		String xml = "<add>\n";
+		for(Map.Entry<String, CustomMap> ent1 : documents.entrySet()) {
+			String id = ent1.getKey();
+			CustomMap doc = ent1.getValue();
+			xml += "	<doc>\n";
+			xml += "		<field name='id'>" + id +"</field>\n";
+			for(Map.Entry<String, Object> ent2 : doc.entrySet()) {
+				String name = ent2.getKey();
+				Object val = ent2.getValue();
+				if (val instanceof String) {
+					xml +=	"		<field name='"+name+"'><![CDATA["+val+"]]></field>\n";
+				} else if (val instanceof String[]) {
+					String[] vals = (String[])val;
+					for (String v : vals) xml +=	"		<field name='"+name+"'><![CDATA["+v+"]]></field>\n";
+				}
+			}
+			xml += "	</doc>\n";
+		}
 		xml += "</add>";
 		
 		try {
@@ -208,17 +254,18 @@ public class SolrManager {
 		BufferedReader fin = new BufferedReader(new FileReader(Constants.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
+		String lang = new Request().getCurrentLanguage();
+		if (lang==null || "".equals(lang)) lang = Constants.LANG_LIST[0];
+		
 		for (DataMapping m : mapping.getData()) {
 			if ("yes".equals(m.getCategory())) {
 				solrQuery += "&facet.field="+m.getName();
-				if ("yes".equals(m.getMultilingual())) {
-					String lang = new Request().getCurrentLanguage();
-					if (lang==null || "".equals(lang)) lang = Constants.LANG_LIST[0];
-					solrQuery += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";
-				}
+				if ("yes".equals(m.getMultilingual())) solrQuery += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";
 				if ("value".equals(m.getSort())) solrQuery += "&f."+m.getName()+".facet.sort=index";
 			}
 		}
+		
+		solrQuery += "&facet.mincount=1";
 		
 		URL url = new URL(Constants.SOLR_URL + "select/" + solrQuery);
 		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
@@ -233,7 +280,7 @@ public class SolrManager {
 	    	sb.append("\n");
 	    }
 	    
-	    return sb.toString();
+	    return sb.toString().replaceAll("LANG"+lang+"__", "");
 	}
 
 }
