@@ -9,7 +9,7 @@ import java.net.URLConnection;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.fundaciotapies.ac.Constants;
+import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.rest.serializer.TranscoDeserializer;
 
 import com.google.gson.Gson;
@@ -24,7 +24,7 @@ public class Transco {
 		    String data = new Gson().toJson(transco);
 
 		    // Send data
-		    URL url = new URL(Constants.VIDEO_SERVICES_URL + "add");
+		    URL url = new URL(Cfg.VIDEO_SERVICES_URL + "add");
 		    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 		    conn.setRequestProperty("Content-Type", "application/json");
 		    conn.setRequestMethod("POST");
@@ -57,7 +57,7 @@ public class Transco {
 	public String getStatusQueue() {
 		try {
 		    // Send data
-		    URL url = new URL(Constants.VIDEO_SERVICES_URL + "status");
+		    URL url = new URL(Cfg.VIDEO_SERVICES_URL + "status");
 		    URLConnection conn = url.openConnection();
 		    
 		    // Get the response
@@ -77,7 +77,7 @@ public class Transco {
 	public List<TranscoEntity> getAllTransco() {
 		try {
 			// Send data
-		    URL url = new URL(Constants.VIDEO_SERVICES_URL);
+		    URL url = new URL(Cfg.VIDEO_SERVICES_URL);
 		    URLConnection conn = url.openConnection();
 		    
 		    // Get the response
@@ -99,7 +99,7 @@ public class Transco {
 	public TranscoEntity getTransco(String id) {
 		try {
 		    // Send data
-		    URL url = new URL(Constants.VIDEO_SERVICES_URL + id);
+		    URL url = new URL(Cfg.VIDEO_SERVICES_URL + id);
 		    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 		    conn.setRequestProperty("Content-Type", "application/json");
 		    conn.setRequestMethod("GET");

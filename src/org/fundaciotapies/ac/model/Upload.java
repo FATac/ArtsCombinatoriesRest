@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 
 import org.apache.log4j.Logger;
-import org.fundaciotapies.ac.Constants;
+import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.IdentifierCounter;
 import org.fundaciotapies.ac.model.bo.Right;
@@ -111,7 +111,7 @@ public class Upload {
 			id = id + oc.getCounter();
 			
 			filePath = id + "." + ext;
-			File f = new File(Constants.MEDIA_PATH+filePath);
+			File f = new File(Cfg.MEDIA_PATH+filePath);
 			
 			OutputStream fout = new FileOutputStream(f);
 			   
@@ -125,11 +125,11 @@ public class Upload {
 			fout.close();
 			
 			Media media = new Media();
-			media.setPath(Constants.MEDIA_PATH+filePath);
+			media.setPath(Cfg.MEDIA_PATH+filePath);
 			media.setMediaId(id);
 			media.saveUpdate();
 			
-			for (String s : Constants.VIDEO_FILE_EXTENSIONS) {
+			for (String s : Cfg.VIDEO_FILE_EXTENSIONS) {
 				if (s.equals(ext)) {
 					addVideoFile(id);
 					break;
@@ -141,7 +141,7 @@ public class Upload {
 			return "error";
 		}
 		
-		return Constants.REST_URL+"media/"+id;
+		return Cfg.REST_URL+"media/"+id;
 	}
 	
 	public String uploadObject(String className, String about, String[] properties, String[] propertyValues) {
@@ -157,13 +157,13 @@ public class Upload {
 			String[] cls = className.split(",");
 			String id = generateObjectId(about);
 			
-			String fullId = Constants.RESOURCE_URI_NS  + id;
+			String fullId = Cfg.RESOURCE_URI_NS  + id;
 			
 			int i = 0;
 			
 			script = new ArrayList<String>();
 			for (String classNameElement : cls) 
-				script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+fullId+"> rdf:type <"+Constants.ONTOLOGY_URI_NS+classNameElement+"> } ");
+				script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> rdf:type <"+Cfg.ONTOLOGY_URI_NS+classNameElement+"> } ");
 			
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			
@@ -181,11 +181,11 @@ public class Upload {
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) 
-						script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+fullId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i].trim()+"> <"+Constants.RESOURCE_URI_NS+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> <"+Cfg.ONTOLOGY_URI_NS+properties[i].trim()+"> <"+Cfg.RESOURCE_URI_NS+propertyValues[i]+"> }");
 					else {
 						String lang = null;
 						
-						for (String l : Constants.LANG_LIST) {
+						for (String l : Cfg.LANG_LIST) {
 							if (propertyValues[i].endsWith("@"+l)) {
 								lang = "@"+l;
 								break;
@@ -195,7 +195,7 @@ public class Upload {
 						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
 						
 						propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
-						script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+fullId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> <"+Cfg.ONTOLOGY_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
 					}
 				}
 				
@@ -243,7 +243,7 @@ public class Upload {
 			model = ModelUtil.getModel();
 			
 			script = new ArrayList<String>();
-			script.add("DELETE FROM <" + Constants.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Constants.RESOURCE_URI_NS+objectId+"> or ?c = <"+Constants.RESOURCE_URI_NS+objectId+">) . ?a ?b ?c }");
+			script.add("DELETE FROM <" + Cfg.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <"+Cfg.RESOURCE_URI_NS+objectId+"> or ?c = <"+Cfg.RESOURCE_URI_NS+objectId+">) . ?a ?b ?c }");
 			
 			Command c = new Command() {
 				@Override
@@ -301,15 +301,15 @@ public class Upload {
 				}
 				
 				if ((!"filePath".equals(properties[i]) || "filePath".equals(properties[i]) && !"".equals(propertyValues[i])) && (!alreadyDeleted.contains(properties[i]))) {
-					script.add("DELETE FROM <" + Constants.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Constants.RESOURCE_URI_NS+uniqueId+">) . ?a ?b ?c }");
+					script.add("DELETE FROM <" + Cfg.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a <"+Cfg.ONTOLOGY_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Cfg.RESOURCE_URI_NS+uniqueId+">) . ?a ?b ?c }");
 					alreadyDeleted.add(properties[i]);
 				}
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
-						script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+Constants.RESOURCE_URI_NS+uniqueId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> <"+Constants.RESOURCE_URI_NS+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> <"+Cfg.ONTOLOGY_URI_NS+properties[i]+"> <"+Cfg.RESOURCE_URI_NS+propertyValues[i]+"> }");
 					} else {
-						script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+Constants.RESOURCE_URI_NS+uniqueId+"> <"+Constants.ONTOLOGY_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> <"+Cfg.ONTOLOGY_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
 					}
 				}
 				i++;
@@ -355,10 +355,10 @@ public class Upload {
 			    RDFNode   object    = stmt.getObject();      // get the object
 			    
 			    if (!object.isLiteral())
-			    	script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+subject.toString()+"> <"+predicate.toString()+"> <"+object.toString()+"> } ");
+			    	script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+subject.toString()+"> <"+predicate.toString()+"> <"+object.toString()+"> } ");
 			    else {
 			    	String value = object.toString().replaceAll("\\n", "\\s");
-			    	script.add("INSERT INTO GRAPH <" + Constants.RESOURCE_URI_NS + "> { <"+subject.toString()+"> <"+predicate.toString()+"> \""+value+"\" } ");
+			    	script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+subject.toString()+"> <"+predicate.toString()+"> \""+value+"\" } ");
 			    }
 			}
 			
@@ -399,9 +399,9 @@ public class Upload {
 				IdentifierCounter.clear();
 				
 				// removes all media files 
-				File f = new File(Constants.MEDIA_PATH);
+				File f = new File(Cfg.MEDIA_PATH);
 				for(String x : f.list()) {
-					File fx = new File(Constants.MEDIA_PATH+x);
+					File fx = new File(Cfg.MEDIA_PATH+x);
 					if (fx.isFile()) fx.delete();
 				}
 			}

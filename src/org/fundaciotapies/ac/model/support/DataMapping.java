@@ -12,6 +12,8 @@ public class DataMapping {
 	private String category;
 	private String multilingual;
 	private String sort;
+	private String search;
+	private String autocomplete;
 	
 	private String sortBy;
 	
@@ -68,6 +70,18 @@ public class DataMapping {
 	}
 	public List<String> getCategories() {
 		return categories;
+	}
+	public void setSearch(String search) {
+		this.search = search;
+	}
+	public String getSearch() {
+		return search;
+	}
+	public void setAutocomplete(String autocomplete) {
+		this.autocomplete = autocomplete;
+	}
+	public String getAutocomplete() {
+		return autocomplete;
 	}
 	
 }

@@ -24,13 +24,18 @@
 		{
 			"name":"Title",
 		    "type":"string",
-		    "path":["Case-File.references:*.Title"]
+		    "path":["Case-File.references:*.Title"],
+		    "search":"yes",
+		    "autocomplete":"yes",
+		    "multilingual":"yes"
 		},
 
 		{
 			"name":"Description",
 		    "type":"text",
-		    "path":["Case-File.references:*.Description"]
+		    "path":["Case-File.references:*.Description"],
+		    "search":"yes",
+		    "multilingual":"yes"
 		},
 
 		{
@@ -52,7 +57,8 @@
 		    	"Case-File.references:*.tookPlaceAt:Country.Name"
 		    ],
 		    "category":"yes",
-		    "multilingual":"yes"
+		    "multilingual":"yes",
+		    "search":"yes"
 		},
 		
 		{
@@ -62,7 +68,8 @@
 			    "Case-File.hasMedia:*.hasLanguage:Language.Label"
 			],
 			"category":"yes",
-			"multilingual":"yes"
+			"multilingual":"yes",
+		    "search":"yes"
 		},
 		
 		{
@@ -71,7 +78,8 @@
 		    "path":[
 		    	"Case-File.hasMedia:*.class"
 		    ],
-		    "category":"yes"
+		    "category":"yes",
+		    "search":"yes"
 		},
 		
 		{
@@ -80,7 +88,8 @@
 		    "path":[
 		        "Case-File.references:*.hasLicense:License.Label"
 		    ],
-		    "category":"yes"
+		    "category":"yes",
+		    "search":"yes"
 		},
 		
 		{
@@ -89,7 +98,9 @@
 		    "path":[
 		        "Case-File.references:*.applicationOf:Role.class"
 		    ],
-		    "category":"yes"
+		    "category":"yes",
+		    "search":"yes",
+		    "autocomplete":"yes"
 		},
 		
 		{
@@ -98,7 +109,9 @@
 		    "path":[
 		        "Case-File.references:Event.applicationOf:Role.performedBy:Person.Name"
 		    ],
-		    "category":"yes"
+		    "category":"yes",
+		    "search":"yes",
+		    "autocomplete":"yes"
 		},
 		
 		{
@@ -108,7 +121,9 @@
 		        "Case-File.references:Event.applicationOf:Role.performedBy:Organisation.Name",
 		        "Organisation.Name"
 		    ],
-		    "category":"yes"
+		    "category":"yes",
+		    "search":"yes",
+		    "autocomplete":"yes"
 		},
 		
 		{
@@ -117,7 +132,9 @@
 		    "path":[
 		        "Case-File.hasMedia:*.isCollectedIn:Collection.class"
 		    ],
-		    "category":"yes"
+		    "category":"yes",
+		    "search":"yes",
+		    "autocomplete":"yes"
 		},
 		
 		{
@@ -127,7 +144,9 @@
 		        "Art_Work.Title"
 		    ],
 		    "category":"yes",
-		    "multilingual":"yes"
+		    "multilingual":"yes",
+		    "search":"yes",
+		    "autocomplete":"yes"
 		}
 		
 	]

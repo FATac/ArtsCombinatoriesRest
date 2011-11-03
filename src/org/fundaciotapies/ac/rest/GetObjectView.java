@@ -1,11 +1,14 @@
 package org.fundaciotapies.ac.rest;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 
+import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.support.Template;
 import org.fundaciotapies.ac.view.ViewGenerator;
 
@@ -25,8 +28,9 @@ public class GetObjectView {
 
 	@GET
 	@Produces("application/json")
-	public String getObjectView(@PathParam("id") String id, @QueryParam("u") String uid) {
-		Template result = new ViewGenerator().getObjectView(id);
+	public String getObjectView(@Context HttpServletRequest request, @PathParam("id") String id, @QueryParam("u") String uid) {
+		String lang = new Request().getCurrentLanguage(request);
+		Template result = new ViewGenerator().getObjectView(id, lang);
 		if (result==null) return new Gson().toJson("Error: Object class has no template");
 		return new Gson().toJson(result);
 	}
