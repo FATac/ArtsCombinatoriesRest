@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -18,7 +18,7 @@ import org.fundaciotapies.ac.model.Upload;
 
 
 /**
- * Call: http://{host:port}/objects/{class}/{id}/upload
+ * Call: http://{host:port}/resource/upload
  * <br>
  * Uploads object. Class must be specified and data must be provided as field-value list in JSON
  * <br>
@@ -29,7 +29,7 @@ public class UploadObject {
 	
 	private static Logger log = Logger.getLogger(UploadObject.class);
 	
-	@POST
+	@PUT
 	@Produces("text/plain")
 	@Consumes("application/json")
 	public String uploadObject(@Context HttpServletRequest httpRequest, String request) {
@@ -40,14 +40,14 @@ public class UploadObject {
 			ObjectMapper m = new ObjectMapper();
 			JsonNode jsonRequest = m.readValue(request, JsonNode.class);
 			
-			String className = jsonRequest.path("className").getTextValue();
+			String className = jsonRequest.path("type").getTextValue();
 			String about = jsonRequest.path("about").getTextValue();
 			List<String> propertiesList = new ArrayList<String>();
 			List<String> propertyValuesList = new ArrayList<String>();
 			
 			for (Iterator<String> it = jsonRequest.getFieldNames();it.hasNext();) {
 				String s = it.next();
-				if (!"className".equals(s)) {
+				if (!"type".equals(s)) {
 					if (!jsonRequest.path(s).isArray()) {
 						if (!"".equals(jsonRequest.path(s).getTextValue())) {
 							propertyValuesList.add(jsonRequest.path(s).getTextValue());

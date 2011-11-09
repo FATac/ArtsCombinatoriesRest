@@ -19,7 +19,6 @@ import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.Right;
-import org.fundaciotapies.ac.model.bo.User;
 import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
@@ -77,16 +76,6 @@ public class Request {
 		return lang;
 	}
 	
-	public Integer getRoleLevel(String roleName) {
-		if (roleName==null) return 1;
-		int roleLevel = 1;
-		for (String r : Cfg.userRoles) {
-			if (roleName.equals(r)) return roleLevel;
-			roleLevel++;
-		}
-		
-		return 1;
-	}
 	
 	public String getObjectLegalColor(String id) {
 		
@@ -108,17 +97,6 @@ public class Request {
 			return null;
 		}
 	}
-	
-	public String getRdf() {
-		
-		try {
-			saveBackup();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
 
 	public CustomMap getObject(String id, String userId) {
 		CustomMap result = null;
@@ -129,14 +107,6 @@ public class Request {
 			right.load(id);
 			
 			int userLegalLevel = 1;
-			
-			// userId = "" is internal code to allow full access, can only be used by internal calls!
-			if (userId != null && !"".equals(userId)) {
-				User user = new User();
-				user.load(userId);
-				userLegalLevel = getRoleLevel(user.getUserRole());
-			}
-			
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) {
 				throw new Exception("Access to object denied due to legal restrictions");
 			}
@@ -225,11 +195,6 @@ public class Request {
 			right.load(id);
 
 			int userLegalLevel = 1;
-			if (userId != null && !"".equals(userId)) {
-				User user = new User();
-				user.load(userId);
-				userLegalLevel = getRoleLevel(user.getUserRole());
-			}
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) {
 				throw new Exception("Access to object denied due to legal restrictions");
 			}
@@ -531,6 +496,7 @@ public class Request {
 		try {
 			// Connect to rdf server
 			InfModel model = ModelUtil.getModel();
+			int userLegalLevel = 1;
 			
 			String qc = null;
 			
@@ -565,12 +531,12 @@ public class Request {
 			CustomMap currentObject = null;
 			
 			// Get user role level
-			int userLegalLevel = 1;
+			/*int userLegalLevel = 1;
 			if (userId != null && !"".equals(userId)) {
 				User user = new User();
 				user.load(userId);
 				userLegalLevel = getRoleLevel(user.getUserRole());
-			}
+			}*/
 			
 			// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
 			Right right = null;
@@ -678,7 +644,7 @@ public class Request {
 			InfModel model = ModelUtil.getModel();
 			
 			// Create search query
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { ?a ?b ?c } ", model.getRawModel());
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <"+Cfg.RESOURCE_URI_NS+"> WHERE { ?a ?b ?c } ", model.getRawModel());
 			ResultSet rs = vqe.execSelect();
 			
 			// Get IDs that fit specific search
