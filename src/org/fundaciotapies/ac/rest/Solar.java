@@ -18,7 +18,7 @@ public class Solar {
 	
 	@GET
 	@Produces("application/json")
-	public String solarize(@Context HttpServletRequest request, @PathParam("option") String option, @QueryParam("s") String searchText, @QueryParam("f") String filter, @QueryParam("start") String start, @QueryParam("rows") String rows) {
+	public String solarize(@Context HttpServletRequest request, @PathParam("option") String option, @QueryParam("s") String searchText, @QueryParam("f") String filter, @QueryParam("start") String start, @QueryParam("rows") String rows, @QueryParam("conf") String searchConfig) {
 		try {
 			SolrManager solr = new SolrManager();
 			
@@ -36,9 +36,9 @@ public class Solar {
 				solr.deleteAll();
 				solr.indexate();
 			} else if ("search".equals(option)) {
-				return solr.search(searchText, filter, start, rows, lang);
+				return solr.search(searchText, filter, start, rows, lang, searchConfig);
 			} else if ("autocomplete".equals(option)) {
-				return solr.autocomplete(searchText, start, rows, lang);
+				return solr.autocomplete(searchText, start, rows, lang, searchConfig);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

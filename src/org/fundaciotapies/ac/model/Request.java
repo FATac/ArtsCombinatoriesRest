@@ -683,7 +683,7 @@ public class Request {
 		InfModel model = ModelUtil.getModel();
 		
 		// Create search query
-		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { <"+Cfg.RESOURCE_URI_NS+id+"> <"+Cfg.RDF_URI_NS+"type> ?c } ", model);
+		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { <"+Cfg.RESOURCE_URI_NS+id+"> rdf:type ?c } ", model);
 		ResultSet rs = vqe.execSelect();
 		
 		if (rs.hasNext()) {
@@ -780,7 +780,9 @@ public class Request {
 		
 		return values;
 	}
-	
-	
+
+	public void getRdf() throws Exception {
+		ModelUtil.a();
+	}
 	
 }

@@ -12,13 +12,7 @@
 	    {
 	        "name":"ObjectType",
 	        "type":"string",
-	        "path":["*.class"]
-	    },
-	    
-	    {
-	        "name":"ObjectSuperType",
-	        "type":"string",
-	        "path":["*.superclass"]
+	        "path":["*.class", "*.superclass"]
 	    },
 	    
 		{

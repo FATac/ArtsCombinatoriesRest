@@ -59,7 +59,8 @@ public class Cfg {
 			
 			ONTOLOGY_URI_NS = prop.get("ONTOLOGY_URI_NS")+"";
 			ONTOLOGY_PREFIX = prop.get("ONTOLOGY_PREFIX")+"";
-			RDF_URI_NS = prop.get("RDFS_URI_NS")+"";
+			RDF_URI_NS = prop.get("RDF_URI_NS")+"";
+			RDFS_URI_NS = prop.get("RDFS_URI_NS")+"";
 			RESOURCE_URI_NS = prop.get("RESOURCE_URI_NS")+"";
 			RESOURCE_PREFIX = prop.get("RESOURCE_PREFIX")+"";
 			

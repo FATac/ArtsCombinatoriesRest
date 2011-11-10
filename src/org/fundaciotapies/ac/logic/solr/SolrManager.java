@@ -23,7 +23,7 @@ import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.DataMapping;
 import org.fundaciotapies.ac.model.support.Mapping;
-import org.fundaciotapies.ac.model.support.Template;
+import org.fundaciotapies.ac.model.support.TemplateSection;
 
 import com.google.gson.Gson;
 
@@ -277,19 +277,28 @@ public class SolrManager {
 	}
 
 	
-	public String search(String searchText, String filter, String start, String rows, String lang) throws Exception {
+	public String search(String searchText, String filter, String start, String rows, String lang, String searchConfig) throws Exception {
 		if (searchText==null) searchText = "";
 		String solrQuery1 = "";
 		
 		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/search.json"));
-		Template searchTemp = new Gson().fromJson(fin, Template.class);
+		TemplateSection searchConfigurations = new Gson().fromJson(fin, TemplateSection.class);
 		
 		fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
-		List<String> searchValues = searchTemp.getSections().get(0).getData().get(0).getValue();
+		List<String> searchValues = null;
+		
+		if (searchConfig==null || "".equals(searchConfig)) searchConfig = "default";
+		for (DataMapping searchConf : searchConfigurations.getData()) {
+			if (searchConf.getName().equals(searchConfig)) {
+				searchValues = searchConf.getValue();
+				break;
+			}
+		}
 		
 		if (searchValues==null) searchValues = new ArrayList<String>();
+		
 		if (filter!=null) {
 			String tmp[] = filter.split(",");
 			for (String f : tmp) searchValues.add(f.trim());
@@ -325,6 +334,7 @@ public class SolrManager {
 		if (firstTime == false) solrQuery1 += ")";
 		solrQuery2 += "&facet.mincount=1";
 		
+		if (solrQuery1 == null || "".equals(solrQuery1)) solrQuery1 = "*:*";
 		URL url = new URL(Cfg.SOLR_URL + "select/?q=" + URLEncoder.encode(solrQuery1, "UTF-8") + solrQuery2);
 		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 	    conn.setRequestMethod("GET");
@@ -341,17 +351,26 @@ public class SolrManager {
 	    return sb.toString().replaceAll("LANG"+lang+"__", "");
 	}
 	
-	public String autocomplete(String searchText, String start, String rows, String lang) throws Exception {
-		if (searchText==null) return null;
+	public String autocomplete(String searchText, String start, String rows, String lang, String searchConfig) throws Exception {
+		if (searchText==null || searchText.length()==0) return null;
 		String solrQuery1 = "";
 		
 		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/search.json"));
-		Template searchTemp = new Gson().fromJson(fin, Template.class);
+		TemplateSection searchConfigurations = new Gson().fromJson(fin, TemplateSection.class);
 		
 		fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
-		List<String> searchValues = searchTemp.getSections().get(0).getData().get(0).getValue();
+		List<String> searchValues = null;
+		
+		if (searchConfig==null || "".equals(searchConfig)) searchConfig = "default";
+		for (DataMapping searchConf : searchConfigurations.getData()) {
+			if (searchConf.getName().equals(searchConfig)) {
+				searchValues = searchConf.getValue();
+				break;
+			}
+		}
+		
 		if (searchValues==null) searchValues = new ArrayList<String>();
 		solrQuery1 += getQueryFilter(searchValues, lang);
 		
