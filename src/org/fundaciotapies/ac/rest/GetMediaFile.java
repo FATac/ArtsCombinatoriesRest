@@ -23,8 +23,8 @@ import org.fundaciotapies.ac.model.support.ObjectFile;
  * Returns: Binary file object by streaming
  */
 @Path("/media/{id}")
-public class GetObjectFile {
-	private static Logger log = Logger.getLogger(GetObjectFile.class);
+public class GetMediaFile {
+	private static Logger log = Logger.getLogger(GetMediaFile.class);
 	
 	@GET
 	public String getObjectFile(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("u") String uid) {

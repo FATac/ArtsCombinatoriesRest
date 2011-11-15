@@ -23,7 +23,7 @@ import com.google.gson.reflect.TypeToken;
  * Return: "success" or "error"
  */
 @Path("/legal/start")
-public class StartLegal {
+public class LegalStart {
 	
 	/**
 	 * Starts a legal process. It returns the user code that must be provided in every call to LegalNext function.
@@ -31,7 +31,7 @@ public class StartLegal {
 	 */
 	@POST
 	@Produces("application/json")
-	public String startLegal(@Context HttpServletRequest httpRequest,  String request) {
+	public String startLegal(@Context HttpServletRequest httpRequest, String request) {
 		Type listType = new TypeToken<List<String>>() {}.getType();
 		List<String> idList = new Gson().fromJson(request, listType);
 		

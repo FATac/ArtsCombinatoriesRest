@@ -13,8 +13,7 @@ public class SaveBackup {
 	@GET
 	@Produces("application/json")
 	public String saveBackup() throws Exception {
-		//new Request().saveBackup();
-		new Request().getRdf();
+		new Request().saveBackup();
 		return "success";
 	}
 

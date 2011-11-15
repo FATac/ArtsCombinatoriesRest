@@ -9,6 +9,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
@@ -32,9 +33,12 @@ public class UploadObject {
 	@PUT
 	@Produces("text/plain")
 	@Consumes("application/json")
-	public String uploadObject(@Context HttpServletRequest httpRequest, String request) {
+	public String uploadObject(@Context HttpServletRequest httpRequest, String request, @QueryParam("u") String uid) {
 		String result = "error";
 		if (request==null || "".equals(request.trim())) return result;
+		
+		//int userLevel = new Request().getUserLegalLevel(uid);
+		//if (userLevel < 4) return "unauthorised";
 		
 		try {
 			ObjectMapper m = new ObjectMapper();

@@ -8,6 +8,7 @@ import org.fundaciotapies.ac.view.fields.FileInput;
 import org.fundaciotapies.ac.view.fields.GenericInput;
 import org.fundaciotapies.ac.view.fields.NumericInput;
 import org.fundaciotapies.ac.view.fields.ObjectInput;
+import org.fundaciotapies.ac.view.fields.TextAreaInput;
 import org.fundaciotapies.ac.view.fields.TextInput;
 import org.fundaciotapies.ac.view.fields.TimeInput;
 
@@ -36,6 +37,8 @@ public class GenericInputSerializer implements JsonSerializer<GenericInput> {
 			return new Gson().toJsonTree(arg0, TextInput.class);
 		} else if (arg0 instanceof TimeInput) {
 			return new Gson().toJsonTree(arg0, TimeInput.class);
+		} else if (arg0 instanceof TextAreaInput) {
+			return new Gson().toJsonTree(arg0, TextAreaInput.class);
 		} else return null;
 	}
 

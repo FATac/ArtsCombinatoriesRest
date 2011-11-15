@@ -30,7 +30,7 @@ public class GetObjectView {
 	@Produces("application/json")
 	public String getObjectView(@Context HttpServletRequest request, @PathParam("id") String id, @QueryParam("u") String uid) {
 		String lang = new Request().getCurrentLanguage(request);
-		Template result = new ViewGenerator().getObjectView(id, lang);
+		Template result = new ViewGenerator().getObjectView(id, uid, lang);
 		if (result==null) return new Gson().toJson("Error: Object class has no template");
 		return new Gson().toJson(result);
 	}

@@ -23,7 +23,7 @@ public class GetObjectThumbnail {
 		byte[] content = null;
 		
 		try {
-			InputStream in = new ViewGenerator().getObjectThumbnail(id);
+			InputStream in = new ViewGenerator().getObjectThumbnail(id, uid);
 			if (in==null) throw new Exception("There is no media file");
 			response.setContentType("image/jpg");
 			

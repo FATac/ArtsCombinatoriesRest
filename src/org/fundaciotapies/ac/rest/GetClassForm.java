@@ -17,6 +17,7 @@ import org.fundaciotapies.ac.view.fields.FileInput;
 import org.fundaciotapies.ac.view.fields.GenericInput;
 import org.fundaciotapies.ac.view.fields.NumericInput;
 import org.fundaciotapies.ac.view.fields.ObjectInput;
+import org.fundaciotapies.ac.view.fields.TextAreaInput;
 import org.fundaciotapies.ac.view.fields.TextInput;
 import org.fundaciotapies.ac.view.fields.TimeInput;
 
@@ -29,7 +30,7 @@ import com.google.gson.GsonBuilder;
  * Params class: Class name
  */
 @Path("/classes/{class}/form")
-public class GetInsertObjectForm {
+public class GetClassForm {
 
 	@GET
 	@Produces("application/json")
@@ -37,36 +38,41 @@ public class GetInsertObjectForm {
 		List<String[]> fieldList = new Request().listClassProperties(className);
 		List<GenericInput> inputList = new ArrayList<GenericInput>();
 		
-		// TODO: Base class/es that should be considered as Media class/es should be taken from properties file  
-		boolean isMediaObject = new Request().listSubclasses("Media", false).contains(className);
-		
 		for (String[] f: fieldList) {
 			String prop = f[0];
 			String range = f[1];
 			String dType = f[2];
 			
+			GenericInput input = null;
+			
 			if (range==null || dType==null) {
-				inputList.add(new TextInput(prop));				
-			} else if ("ObjectProperty".equals(dType)){
-				inputList.add(new ObjectInput(prop, range));
-			} else if ("DatatypeProperty".equals(dType)) {
-				range = range.substring(0, range.length()-1);
-				if ("boolean".equals(range)) {
-					inputList.add(new CheckInput(prop));
-				} else if ("float".equals(range) || "Integer".equals(range) || "nonNegativeInteger".equals(range)) {
-					inputList.add(new NumericInput(prop));
-				} else if ("date".equals(range) || "dateTime".equals(range)) {
-					inputList.add(new DateInput(prop));
-				} else if ("time".equals(range)) {
-					inputList.add(new TimeInput(prop));
+				input = new TextInput(prop);				
+			} else if (dType.contains("ObjectProperty")) {
+				input = new ObjectInput(prop, range);
+			} else if (dType.contains("DatatypeProperty")) {
+				range = range.substring(0, range.length());
+				if (range.contains("boolean")) {
+					input = new CheckInput(prop);
+				} else if (range.contains("float") || range.contains("Integer") || range.contains("nonNegativeInteger")) {
+					input = new NumericInput(prop);
+				} else if (range.contains("date") || range.contains("dateTime")) {
+					input = new DateInput(prop);
+				} else if (range.contains("time")) {
+					input = new TimeInput(prop);
+				} else if (range.contains("string")) {
+					input = new TextAreaInput(prop); 
+				} else if (range.contains("anyURI")) {
+					input = new FileInput(prop);
 				} else {
-					inputList.add(new TextInput(prop));
+					input = new TextInput(prop);
 				}
 			}
+			
+			if (input != null) {
+				if (!dType.contains("FunctionalProperty")) input.setMultiValue(true); else input.setMultiValue(false);
+				inputList.add(input);
+			}
 		}
-		
-		if (isMediaObject)
-			inputList.add(new FileInput("filePath"));
 		
 		GsonBuilder gson = new GsonBuilder();
 		gson.registerTypeAdapter(GenericInput.class, new GenericInputSerializer());
