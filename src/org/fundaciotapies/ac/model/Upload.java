@@ -48,7 +48,8 @@ public class Upload {
 		String temp = Normalizer.normalize(about.trim(), Normalizer.Form.NFD);
 	    Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
 	    String result = pattern.matcher(temp).replaceAll("").replaceAll("\\<.*?>","").replaceAll("[^A-Za-z0-9_\\s]", "").replaceAll("[\\s+\\n+\\t+]", "_");
-	    if (result.length()>140) result = result.substring(0, 140);
+	    if ("0123456789".contains(result.charAt(0)+"")) result += "_" + result;
+	    if (result.length()>180) result = result.substring(0, 180);
 	    return result;
 	}
 	
@@ -151,6 +152,7 @@ public class Upload {
 		if (about==null) about = className;
 		
 		try {
+			
 			model = ModelUtil.getModel();
 			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ModelUtil.getOntology());
 			

@@ -1,7 +1,5 @@
 package org.fundaciotapies.ac.model;
 
-import java.io.FileWriter;
-
 import org.fundaciotapies.ac.Cfg;
 
 import virtuoso.jena.driver.VirtGraph;
@@ -48,9 +46,5 @@ public class ModelUtil {
 		res.clear();
 		res.close();
 		if (model!=null) model.close();
-	}
-	
-	public static void a() throws Exception {
-		VirtModel.openDatabaseModel(Cfg.RESOURCE_URI_NS, Cfg.RDFDB_URL, Cfg.RDFDB_USER, Cfg.RDFDB_PASS).write(new FileWriter("my.rdf"));
 	}
 }

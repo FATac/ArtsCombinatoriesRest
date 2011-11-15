@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.Right;
+import org.fundaciotapies.ac.model.bo.User;
 import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
@@ -46,6 +47,23 @@ public class Request {
 	private static Logger log = Logger.getLogger(Request.class);
 	
 	private String currentLanguage = Cfg.LANG_LIST[0];
+	
+	public int getUserLegalLevel(String userId) throws Exception {
+		if (userId == null) return 1;
+		int userLegalLevel = 1;
+		User user = new User();
+		user.load(userId);
+		if (user.getUserRole()!=null) {
+			for (int l=0;l<Cfg.USER_LEVEL.length;l++) {
+				if (Cfg.USER_LEVEL[l].contains(user.getUserRole())) {
+					userLegalLevel = l+1;
+					break;
+				}
+			}
+		}
+		
+		return userLegalLevel;
+	}
 	
 	public void setCurrentLanguage(String currentLanguage) {
 		this.currentLanguage = currentLanguage;
@@ -106,7 +124,7 @@ public class Request {
 			Right right = new Right();
 			right.load(id);
 			
-			int userLegalLevel = 1;
+			int userLegalLevel = getUserLegalLevel(userId);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) {
 				throw new Exception("Access to object denied due to legal restrictions");
 			}
@@ -188,16 +206,16 @@ public class Request {
 		}
 	}
 	
-	public ObjectFile getObjectFile(String id, String userId) {
+	public ObjectFile getObjectFile(String id, String uid) {
 		try {
 			// Checks whether user can view object or not
-			Right right = new Right();
+			/*Right right = new Right();
 			right.load(id);
-
-			int userLegalLevel = 1;
-			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) {
+			
+			int userLegalLevel = getUserLegalLevel(uid);
+			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(uid)) {
 				throw new Exception("Access to object denied due to legal restrictions");
-			}
+			}*/
 			
 			Media media = new Media();
 			media.load(id);
@@ -264,20 +282,21 @@ public class Request {
 			if (className == null) return null;
 			String classURI = Cfg.ONTOLOGY_URI_NS + className;
 			
-			QueryExecution qe = VirtuosoQueryExecutionFactory.create("select * where { ?prop <http://www.w3.org/2000/01/rdf-schema#domain> <"+classURI+"> . ?prop <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type . OPTIONAL { ?prop <http://www.w3.org/2000/01/rdf-schema#range> ?range } } ", ModelUtil.getOntology());
+			QueryExecution qe = VirtuosoQueryExecutionFactory.create("select * where { ?prop <http://www.w3.org/2000/01/rdf-schema#domain> <"+classURI+"> . ?prop <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type . OPTIONAL { ?prop <http://www.w3.org/2000/01/rdf-schema#range> ?range } } ORDER BY ?prop ", ModelUtil.getOntology());
 			ResultSet rs = qe.execSelect();
 			String lastPropName = null;
 			String range = "";
-			String propType = null;
+			String propType = "";
 			while(rs.hasNext()) {
 				QuerySolution qs = rs.next();
 				String propName = qs.get("prop").asResource().getLocalName();
 				if (!propName.equals(lastPropName) && lastPropName != null) {
 					result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(2):"_"),  propType } );
 					range = "";
+					propType = "";
 				}
 				
-				propType = qs.get("type").asResource().getLocalName();
+				if (qs.get("type")!=null) propType += ", "+qs.get("type").asResource().getLocalName();
 				if (qs.get("range")!=null) range += ", "+qs.get("range").asResource().getLocalName();
 				lastPropName = propName;
 			}
@@ -779,10 +798,6 @@ public class Request {
 		} 
 		
 		return values;
-	}
-
-	public void getRdf() throws Exception {
-		ModelUtil.a();
 	}
 	
 }
