@@ -258,10 +258,13 @@ public class SolrManager {
 		String lastField = null;
 		for (String f : filterValues) {
 			for (DataMapping d : mapping.getData()) {
+				String[] fp = f.split(":");
 				if ("yes".equals(d.getMultilingual()))	{
-					String[] fp = f.split(":");
-					if (d.getName().equals(fp[0].trim())) f = fp[0] + ":LANG"+lang+"__" + fp[1];
+					if (d.getName().equals(fp[0].trim())) f = fp[0] + ":\"LANG"+lang+"__" + fp[1]+"\"";
+				} else {
+					if (d.getName().equals(fp[0].trim())) f = fp[0] + ":\"" + fp[1] + "\"";
 				}
+				
 			}
 			
 			if (lastField!=null && f.startsWith(lastField+":")) {
@@ -319,9 +322,9 @@ public class SolrManager {
 					firstTime = false;
 				}
 				if ("yes".equals(m.getMultilingual())) {  
-					solrQuery1 += m.getName() + ":LANG" + lang + "__" + searchText;
+					solrQuery1 += m.getName() + ":\"LANG" + lang + "__" + searchText+"\"";
 				} else {
-					solrQuery1 += m.getName() + ":" + searchText;
+					solrQuery1 += m.getName() + ":\"" + searchText + "\"";
 				}
 			}
 			if ("yes".equals(m.getCategory())) {
