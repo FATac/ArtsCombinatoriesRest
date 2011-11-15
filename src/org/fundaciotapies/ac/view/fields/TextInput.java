@@ -3,7 +3,6 @@ package org.fundaciotapies.ac.view.fields;
 public class TextInput extends GenericInput {
 	
 	private String controlType = "textInput";
-	private String name;
 	private String defaultValue;
 	
 	public void setControlType(String controlType) {
@@ -18,13 +17,7 @@ public class TextInput extends GenericInput {
 	public String getDefaultValue() {
 		return defaultValue;
 	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getName() {
-		return name;
-	}
-	
+
 	public TextInput(String name) {
 		setName(name);
 	}

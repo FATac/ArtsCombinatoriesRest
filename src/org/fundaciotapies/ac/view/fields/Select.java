@@ -5,7 +5,6 @@ import java.util.List;
 public class Select extends GenericInput {
 	
 	private String controlType = "select";
-	private String name;
 	private List<String> values;
 	private String defaultValue;
 
@@ -20,12 +19,6 @@ public class Select extends GenericInput {
 	}
 	public String getDefaultValue() {
 		return defaultValue;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getName() {
-		return name;
 	}
 	
 	public Select(String name, List<String> values, String defaultValue) {

@@ -3,7 +3,6 @@ package org.fundaciotapies.ac.view.fields;
 public class TimeInput extends GenericInput {
 	
 	private String controlType = "timeInput";
-	private String name;
 	private String defaultValue;
 	
 	public void setControlType(String controlType) {
@@ -17,12 +16,6 @@ public class TimeInput extends GenericInput {
 	}
 	public String getDefaultValue() {
 		return defaultValue;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getName() {
-		return name;
 	}
 	public TimeInput(String name) {
 		setName(name);

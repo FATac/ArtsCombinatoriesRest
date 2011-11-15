@@ -4,7 +4,6 @@ public class ObjectInput extends GenericInput {
 	
 	private String controlType = "objectInput";
 	private String objectClass = "";
-	private String name;
 
 	public void setControlType(String controlType) {
 		this.controlType = controlType;
@@ -12,14 +11,6 @@ public class ObjectInput extends GenericInput {
 
 	public String getControlType() {
 		return controlType;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getName() {
-		return name;
 	}
 	
 	public ObjectInput(String name, String objectClass) {

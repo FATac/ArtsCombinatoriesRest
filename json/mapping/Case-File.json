@@ -10,7 +10,7 @@
 		    	{
 					"name":"Title",
 					"type":"text",
-					"path":["Case-File.references:Event.Title"]
+					"path":["Case-File.references:Event.Title", "Case-File.references:SpecialObject.Title"]
 				}
 			]
 		},
@@ -18,17 +18,11 @@
 		{
 			"name":"body",
 			"data":[
-			
+			    
 			 	{
 			        "name":"Description",
 			        "type":"text",
-			        "path":["Case-File.Description"]
-			    },
-			    
-			 	{
-			        "name":"Event",
-			        "type":"text",
-			        "path":["Case-File.references:Event.Description"]
+			        "path":["Case-File.references:*.Description"]
 			    }
 			]
 		},
