@@ -84,7 +84,7 @@ public class LegalProcess {
 	}
 	
 	private String abortLegal(String user) {
-		new File(user + ".properties").delete();
+		new File(Cfg.CONFIGURATIONS_PATH + "legal/" + user + ".properties").delete();
 		return null;
 	}
 	
@@ -132,7 +132,7 @@ public class LegalProcess {
 		try {
 			// load current legal process data
 			Properties prop = new Properties();
-			prop.load(new FileInputStream(user + ".properties"));
+			prop.load(new FileInputStream(Cfg.CONFIGURATIONS_PATH + "legal/" + user + ".properties"));
 			
 			// load data and rules from JSON specification
 			FileReader f = new FileReader(new File(Cfg.CONFIGURATIONS_PATH + "legal/legal.json"));
@@ -145,7 +145,7 @@ public class LegalProcess {
 			if ("".equals(lastBlock) || lastBlock == null) {
 				LegalBlock b = def.getBlock(def.getStartBlock());
 				prop.setProperty("___lastBlock", b.getName());
-				prop.store(new FileOutputStream(user + ".properties"), null);
+				prop.store(new FileOutputStream(Cfg.CONFIGURATIONS_PATH + "legal/" + user + ".properties"), null);
 				return restoreData(b, prop);
 			}
 			
@@ -175,7 +175,7 @@ public class LegalProcess {
 						LegalBlock b2 = def.getBlock(r.getResult().getBlock());
 						if (b2==null) throw new Exception("Cannot fin block " + r.getResult().getBlock());
 						prop.setProperty("___lastBlock", b2.getName());
-						prop.store(new FileOutputStream(user + ".properties"), null);
+						prop.store(new FileOutputStream(Cfg.CONFIGURATIONS_PATH + "legal/" + user + ".properties"), null);
 						return restoreData(b2, prop);
 					} else {
 						saveLegalData(prop);
@@ -183,7 +183,7 @@ public class LegalProcess {
 						String objectIds = prop.getProperty("___objects");
 						setObjectsRight(Arrays.asList(objectIds.split(",")), color);
 						
-						new File(user + ".properties").delete();
+						new File(Cfg.CONFIGURATIONS_PATH + "legal/" + user + ".properties").delete();
 						
 						return null;
 					}
@@ -270,13 +270,6 @@ public class LegalProcess {
 		List<LegalBlockData> result = null;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-		
-		/*try {
-			Properties prop = new Properties();
-			prop.load(new FileInputStream(user + ".properties"));
-		} catch (FileNotFoundException e) {
-			return null;
-		}*/
 		
 		try {
 			pstmt = sqlConnector.prepareStatement("SELECT name, defaultValue FROM autodata_table WHERE keyName = ? AND keyValue = ? ");
