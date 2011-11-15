@@ -1,0 +1,37 @@
+{
+	"className":"SpecialObject",
+	
+	"sections":
+	[
+		{
+			"name":"header",
+			"data":[
+		
+		    	{
+					"name":"Title",
+					"type":"text",
+					"path":["SpecialObject.Title"]
+				}
+			]
+		},
+		
+		{
+			"name":"body",
+			"data":[
+			
+			 	{
+			        "name":"Authors",
+			        "type":"linkedObjects",
+			        "path":["SpecialObject.applicationOf:Author.performedBy",
+			        		"SpecialObject.applicationOf:Artist.performedBy"]
+			    },
+			    
+			    {
+			        "name":"Editors",
+			        "type":"linkedObjects",
+			        "path":["SpecialObject.applicationOf:Editor.performedBy:Agent.Name"]
+			    }
+			]  
+		}
+	]
+}

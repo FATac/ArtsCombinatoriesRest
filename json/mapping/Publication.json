@@ -1,0 +1,37 @@
+{
+	"className":"Publication",
+	
+	"sections":
+	[
+		{
+			"name":"header",
+			"data":[
+		
+		    	{
+					"name":"Title",
+					"type":"text",
+					"path":["Publication.Title"]
+				}
+			]
+		},
+		
+		{
+			"name":"body",
+			"data":[
+			
+			 	{
+			        "name":"Authors",
+			        "type":"linkedObjects",
+			        "path":["Publication.applicationOf:Author.performedBy",
+			        		"Publication.applicationOf:Artist.performedBy"]
+			    },
+			    
+			    {
+			        "name":"Editors",
+			        "type":"linkedObjects",
+			        "path":["Publication.applicationOf:Editor.performedBy:Agent.Name"]
+			    }
+			]  
+		}
+	]
+}

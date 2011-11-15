@@ -1,0 +1,9 @@
+{
+	"data":[
+	    {   
+	        "name":"default",
+			"type":"search",
+			"value":["ObjectType:Case-File", "ObjectType:Publication"]
+		}
+	]
+}
