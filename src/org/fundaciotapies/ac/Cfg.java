@@ -13,6 +13,7 @@ public class Cfg {
 	public static Integer THUMBNAIL_HEIGHT = 180;
 	public static String[] VIDEO_FILE_EXTENSIONS = {"dv", "mpg", "avi"};
 	public static String[] LANG_LIST = { "ca", "en", "es", "fr", "it", "de" };							// First language on the list is set as default
+	public static String[] USER_LEVEL = { "*", "Member", "Manager Reviewer", "Site Administrator" };	// From level 1 to level 4 of authorization level
 	
 	// Services base URLs and connection strings
 	public static String RDFDB_URL = "jdbc:virtuoso://localhost:1111";
@@ -49,6 +50,8 @@ public class Cfg {
 			
 			LANG_LIST = (prop.get("LANG_LIST")+"").split(",");
 			for (int i=0;i<LANG_LIST.length;i++) LANG_LIST[i] = LANG_LIST[i].trim();
+			
+			if (prop.get("USER_LEVEL")!=null) USER_LEVEL = (prop.get("LANG_LIST")+"").split(",");
 			
 			RDFDB_URL = prop.get("RDFDB_URL")+"";
 			RDFDB_USER = prop.get("RDFDB_USER")+"";
