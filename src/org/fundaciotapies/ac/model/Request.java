@@ -139,9 +139,8 @@ public class Request {
 			while(it.hasNext()) {
 				Statement stmt = it.next();
 				if (stmt.getObject().isLiteral()) {
-					String lang = stmt.getObject().asLiteral().getLanguage();
-					if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
-					
+					//String lang = stmt.getObject().asLiteral().getLanguage();
+					//if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
 					result.put(stmt.getPredicate().getLocalName(), stmt.getObject().asLiteral().getString());
 				} else {
 					result.put(stmt.getPredicate().getLocalName(), stmt.getObject().asResource().getLocalName());

@@ -44,7 +44,7 @@ public class ViewGenerator {
 		}
 		
 		if (!f.exists()) { 
-			log.warn("Trying to obtain template from no-template object class");
+			log.warn("Trying to obtain template from no-template object class " + className + "(id " + id + ")");
 			return null;
 		}
 		

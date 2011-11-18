@@ -38,6 +38,17 @@
 			        "categories":["Year", "Media", "Person", "ArtWork", "License", "ObjectType"]
 			    }
 			] 
+		},
+		
+		{
+			"name":"thumbnail",
+			"data":[
+			
+			 	{   
+			        "type":"objects",
+			        "path":["Case-File.hasMedia", "Case-File.references"]
+			    }
+			] 
 		}
 	]
 }

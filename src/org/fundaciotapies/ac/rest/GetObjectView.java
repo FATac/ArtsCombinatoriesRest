@@ -1,5 +1,8 @@
 package org.fundaciotapies.ac.rest;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -30,9 +33,19 @@ public class GetObjectView {
 	@Produces("application/json")
 	public String getObjectView(@Context HttpServletRequest request, @PathParam("id") String id, @QueryParam("u") String uid) {
 		String lang = new Request().getCurrentLanguage(request);
-		Template result = new ViewGenerator().getObjectView(id, uid, lang);
-		if (result==null) return new Gson().toJson("Error: Object class has no template");
-		return new Gson().toJson(result);
+		String[] ids = id.split(",");
+		if (ids.length==1) {
+			Template result = new ViewGenerator().getObjectView(id, uid, lang);
+			if (result==null) return new Gson().toJson("Error: Object class has no template");
+			return new Gson().toJson(result);
+		} else {
+			List<Template> result = new ArrayList<Template>();
+			for (String oid : ids) {
+				Template tmp = new ViewGenerator().getObjectView(oid, uid, lang);
+				result.add(tmp);
+			}
+			return new Gson().toJson(result);
+		}
 	}
 
 }

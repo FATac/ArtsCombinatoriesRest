@@ -327,7 +327,7 @@ public class SolrManager {
 					solrQuery1 += m.getName() + ":\"" + searchText + "\"";
 				}
 			}
-			if ("yes".equals(m.getCategory())) {
+			if ("yes".equals(m.getCategory())) {	// TODO: Intersect with search configuration categories
 				solrQuery2 += "&facet.field="+m.getName();
 				if ("yes".equals(m.getMultilingual())) solrQuery2 += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";
 				if ("value".equals(m.getSort())) solrQuery2 += "&f."+m.getName()+".facet.sort=index";

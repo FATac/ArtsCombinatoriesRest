@@ -30,5 +30,13 @@ CREATE TABLE db.dba._identifier_counter (
 	counter INT
 )
 
+DROP TABLE db.dba.autodata_table;
+CREATE TABLE db.dba.autodata_table (
+	keyName VARCHAR(100),
+	keyValue VARCHAR(100),
+	name VARCHAR(100),
+	defaultValue VARCHAR(100)
+)
+
 --GRANT EXECUTE ON DB.DBA.SPARQL_DELETE_DICT_CONTENT TO "SPARQL";
 GRANT ALL PRIVILEGES TO "SPARQL";
