@@ -1,0 +1,36 @@
+{	
+    "__comment_0":"Mixed config",
+
+	"THUMBNAIL_WIDTH":250,
+	"THUMBNAIL_HEIGHT":180,
+	"VIDEO_FILE_EXTENSIONS":["dv", "mpg", "avi"],
+	"LANGUAGE_LIST":["ca", "en", "es", "fr", "it", "de"],							
+	"USER_LEVEL":["*", "Member", "Manager Reviewer", "Site Administrator"],	    
+	
+	"__comment_1":"Services base URLs and connection strings",
+
+	"RDFDB_URL":"jdbc:virtuoso://localhost:1111",
+	"RDFDB_USER":"dba",
+	"RDFDB_PASS":"dba",
+	"REST_URL":"http://stress.upc.es:8080/ArtsCombinatoriesRest/",
+	"SOLR_URL":"http://localhost:8080/solr/",
+	"VIDEO_SERVICES_URL":"http://tapies.aur.i2cat.net:8080/TapiesWebServices/rest/",
+	
+    "__comment_2":"Ontology namespaces (After any change, all existing triples must be fixed)",
+
+	"RESOURCE_URI_NS":"http://localhost:8080/ArtsCombinatoriesRest/resource/",		
+	"RESOURCE_PREFIX":"ac_res",
+	"ONTOLOGY_NAMESPACES":[
+		"http://localhost:8080/ArtsCombinatoriesRest/ontology/ac#", "ac",
+		"http://www.w3.org/1999/02/22-rdf-syntax-ns#", "rdf",
+		"http://www.w3.org/2000/01/rdf-schema#", "rdfs",
+		"http://dublincore.org/2010/10/11/dcterms.rdf#", "dcterms"
+	],
+	
+	"__comment_3":"File system paths",
+
+	"CONFIGURATIONS_PATH":"/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/",
+	"SOLR_PATH":"/home/jordi.roig.prieto/solr/",
+	"MEDIA_PATH":"./ac_media/",
+	"ONTOLOGY_PATH":"./OntologiaArtsCombinatories.owl"
+}
