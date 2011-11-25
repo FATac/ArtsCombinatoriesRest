@@ -18,8 +18,8 @@ public class GetOntology {
 	@Produces("application/xml")
 	public String getOntology(@PathParam("prefix") String p) {
 		try {
-			if (p.equals(Cfg.ONTOLOGY_PREFIX+"#") 
-					|| p.equals(Cfg.ONTOLOGY_PREFIX)) {
+			if (p.equals(Cfg.ONTOLOGY_NAMESPACES[1]+"#") 
+					|| p.equals(Cfg.ONTOLOGY_NAMESPACES[1])) {
 				StringBuffer sb = new StringBuffer();
 				FileReader in = new FileReader(Cfg.ONTOLOGY_PATH);
 				char[] buf = new char[1024];

@@ -1,6 +1,6 @@
 package org.fundaciotapies.ac.rest;
 
-import java.io.DataInputStream;
+import java.io.FileInputStream;
 import java.io.OutputStream;
 
 import javax.servlet.http.HttpServletResponse;
@@ -28,21 +28,22 @@ public class GetMediaFile {
 	
 	@GET
 	public String getObjectFile(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("u") String uid) {
-		byte[] content = null;
+		System.out.println("Trying to obtain media id " + id);
 		
 		try {
-			ObjectFile objectFile = new Request().getObjectFile(id, uid);
+			ObjectFile objectFile = new Request().getMediaFile(id, uid);
 			if (objectFile==null) throw new Exception("There is no media file");
 			response.setContentType(objectFile.getContentType());
 			
-			DataInputStream dis = new DataInputStream(objectFile.getInputStream());
-	        content = new byte[dis.available()];
-	        dis.read(content, 0, dis.available());
-	        dis.close();
-	        
-	        OutputStream out = response.getOutputStream();
-	        out.write(content);
-	        out.flush();
+			// Get the response
+		    FileInputStream rd = (FileInputStream)objectFile.getInputStream();
+		    int len;
+		    byte[] buffer = new byte[512];
+		    OutputStream out = response.getOutputStream();
+		    while ((len = rd.read(buffer)) > 0) {
+		    	out.write(buffer, 0, len);
+		    }
+		    
 	        out.close();
 		} catch (Exception e) {
 			log.error("Error ",e);

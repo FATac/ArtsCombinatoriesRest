@@ -39,14 +39,25 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 public class Request {
 	private static Logger log = Logger.getLogger(Request.class);
 	
-	private String currentLanguage = Cfg.LANG_LIST[0];
+	private String currentLanguage = Cfg.LANGUAGE_LIST[0];
+	
+	public String fromClassNameToURI(String className) {
+		String classURI = null;
+		if (className!=null) {
+			String[] classNameParts = className.split(":");
+			if (classNameParts.length>1)
+				classURI = Cfg.fromPrefixToNamespace(classNameParts[0]) + classNameParts[1];
+			else
+				classURI = className;
+		}
+		
+		return classURI;
+	}
 	
 	public int getUserLegalLevel(String userId) throws Exception {
 		if (userId == null) return 1;
@@ -74,20 +85,20 @@ public class Request {
 	}
 	
 	public String getCurrentLanguage(HttpServletRequest request) {
-		String lang = Cfg.LANG_LIST[0];
+		String lang = Cfg.LANGUAGE_LIST[0];
 		Cookie[] ckl = request.getCookies();
 		if (ckl!=null) {
 			for (Cookie k : ckl) {
 				if (k.getName()=="Language") {
 					lang = k.getValue();
 					boolean valid = false;
-					for (String l :Cfg.LANG_LIST) {
+					for (String l :Cfg.LANGUAGE_LIST) {
 						if (l.equals(lang)) {
 							valid = true;
 							break;
 						}
 					}
-					if (!valid) lang = Cfg.LANG_LIST[0];
+					if (!valid) lang = Cfg.LANGUAGE_LIST[0];
 				}
 			}
 		}
@@ -133,18 +144,24 @@ public class Request {
 			InfModel model = ModelUtil.getModel();
 			
 			// Get object by Id
-			Resource res = model.getResource(Cfg.RESOURCE_URI_NS+id);
-			StmtIterator it = res.listProperties();
+			QueryExecution qexec = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { <"+ Cfg.RESOURCE_URI_NS+id +"> ?prop ?val } ", model) ;
+			ResultSet rs = qexec.execSelect();
+			
 			result = new CustomMap();
-			while(it.hasNext()) {
-				Statement stmt = it.next();
-				if (stmt.getObject().isLiteral()) {
-					//String lang = stmt.getObject().asLiteral().getLanguage();
-					//if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
-					result.put(stmt.getPredicate().getLocalName(), stmt.getObject().asLiteral().getString());
+			while (rs.hasNext()) {
+				QuerySolution qs = rs.next();
+				Resource prop = qs.get("prop").asResource();
+				RDFNode val = qs.get("val");
+				
+				String property = Cfg.fromNamespaceToPrefix(prop.getNameSpace())+prop.getLocalName();
+				String value = null;
+				if (val.isLiteral()) {
+					value = val.asLiteral().toString();
 				} else {
-					result.put(stmt.getPredicate().getLocalName(), stmt.getObject().asResource().getLocalName());
+					value = Cfg.fromNamespaceToPrefix(val.asResource().getNameSpace())+val.asResource().getLocalName();
 				}
+				
+				result.put(property, value);
 			}
 			
 		} catch (Throwable e) {
@@ -160,11 +177,11 @@ public class Request {
 		try {
 			String qc = "";
 			if (cls!=null && !"".equals(cls)) {
-				qc = " . { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+cls+"> } ";
+				qc = " . { ?s rdf:type "+cls+" } ";
 					
 				List<String> subClassesList = listSubclasses(cls, false);
 				for (String sc : subClassesList)
-					qc += " UNION { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+sc+"> } ";
+					qc += " UNION { ?s rdf:type "+sc+" } ";
 			}
 			
 			// Checks whether user can view object or not
@@ -174,9 +191,8 @@ public class Request {
 			// Connect to rdf server
 			InfModel model = ModelUtil.getModel();
 			
-			String query = "SELECT ?s FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { { ?s <"+Cfg.ONTOLOGY_URI_NS+"FatacId> \""+id+"\" } " + qc + " } ";
-			Query sparql = QueryFactory.create(query); 
-		    QueryExecution qexec = VirtuosoQueryExecutionFactory.create(sparql, model) ;
+			String query = "SELECT ?s FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { { ?s ac:FatacId \""+id+"\" } " + qc + " } ";
+			QueryExecution qexec = VirtuosoQueryExecutionFactory.create(query, model) ;
 			ResultSet rs = qexec.execSelect();
 			
 			if (rs.hasNext()) {
@@ -205,7 +221,7 @@ public class Request {
 		}
 	}
 	
-	public ObjectFile getObjectFile(String id, String uid) {
+	public ObjectFile getMediaFile(String id, String uid) {
 		try {
 			// Checks whether user can view object or not
 			/*Right right = new Right();
@@ -265,7 +281,7 @@ public class Request {
 			while(rs.hasNext()) {
 				QuerySolution qs = rs.next();
 				RDFNode node = qs.get("a");
-				result.add(node.asResource().getNameSpace());
+				result.add(Cfg.fromNamespaceToPrefix(node.asResource().getNameSpace())+node.asResource().getLocalName());
 			}
 		} catch (Throwable e) {
 			log.error("Error ", e);
@@ -279,16 +295,15 @@ public class Request {
 
 		try {
 			if (className == null) return null;
-			String classURI = Cfg.ONTOLOGY_URI_NS + className;
 			
-			QueryExecution qe = VirtuosoQueryExecutionFactory.create("select * where { ?prop <http://www.w3.org/2000/01/rdf-schema#domain> <"+classURI+"> . ?prop <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?type . OPTIONAL { ?prop <http://www.w3.org/2000/01/rdf-schema#range> ?range } } ORDER BY ?prop ", ModelUtil.getOntology());
+			QueryExecution qe = VirtuosoQueryExecutionFactory.create("select * where { ?prop rdfs:domain "+className+" . ?prop rdf:type ?type . OPTIONAL { ?prop rdfs:range ?range } } ORDER BY ?prop ", ModelUtil.getOntology());
 			ResultSet rs = qe.execSelect();
 			String lastPropName = null;
 			String range = "";
 			String propType = "";
 			while(rs.hasNext()) {
 				QuerySolution qs = rs.next();
-				String propName = qs.get("prop").asResource().getLocalName();
+				String propName = Cfg.fromNamespaceToPrefix(qs.get("prop").asResource().getNameSpace()) +  qs.get("prop").asResource().getLocalName();
 				if (!propName.equals(lastPropName) && lastPropName != null) {
 					result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(2):"_"),  propType } );
 					range = "";
@@ -319,14 +334,13 @@ public class Request {
 
 		try {
 			if (className == null) return null;
-			String classURI = Cfg.ONTOLOGY_URI_NS + className;
 			
-			QueryExecution qe = VirtuosoQueryExecutionFactory.create("select * where { ?prop <http://www.w3.org/2000/01/rdf-schema#domain> <"+classURI+"> } ", ModelUtil.getOntology());
+			QueryExecution qe = VirtuosoQueryExecutionFactory.create("select * where { ?prop rdfs:domain "+className+" } ORDER BY ?prop ", ModelUtil.getOntology());
 			ResultSet rs = qe.execSelect();
 			
 			while(rs.hasNext()) {
 				QuerySolution qs = rs.next();
-				String propName = qs.get("prop").asResource().getLocalName();
+				String propName = Cfg.fromNamespaceToPrefix(qs.get("prop").asResource().getNameSpace()) +  qs.get("prop").asResource().getLocalName();
 				result.add(propName);
 			}
 			
@@ -341,7 +355,7 @@ public class Request {
 	
 	public List<String> listSubclasses(String className, Boolean direct) {
 		List<String> result = new ArrayList<String>();
-		String classURI = Cfg.ONTOLOGY_URI_NS + className;
+		String classURI = fromClassNameToURI(className);
 		
 		try {
 			// Load ontology
@@ -358,7 +372,7 @@ public class Request {
 			// Use recursive calls to navigate through the class tree starting form given root class
 			while (it.hasNext()) {
 				OntClass cls = it.next();
-				result.add(cls.getLocalName());
+				result.add(Cfg.fromNamespaceToPrefix(cls.getNameSpace())+cls.getLocalName());
 			}	
 			
 		} catch (Throwable e) {
@@ -369,7 +383,7 @@ public class Request {
 		return result; 
 	}
 	
-	public String getLegalObjectId(String referredObjectId) {
+	/*public String getLegalObjectId(String referredObjectId) {
 		String result = null;
 		
 		try {
@@ -389,7 +403,7 @@ public class Request {
 		}
 		
 		return result;	
-	}
+	}*/
 	
 	public Map<String, CustomMap> listObjects(String className) {
 		Map<String, CustomMap> result = new TreeMap<String, CustomMap>();
@@ -407,14 +421,14 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " . { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+cls+"> } "; 
+							qc = " . { ?s rdf:type "+cls+" } "; 
 						} else {
-							qc += " UNION { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+cls+"> } ";
+							qc += " UNION { ?s rdf:type "+cls+" } ";
 						}
 						
 						List<String> subClassesList = listSubclasses(cls, false);
 						for (String sc : subClassesList)
-							qc += " UNION { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+sc+"> } ";
+							qc += " UNION { ?s rdf:type "+sc+" } ";
 					}
 				}
 			}
@@ -440,11 +454,12 @@ public class Request {
 				}
 				
 				lastId = currentId;
+				String propertyName = Cfg.fromNamespaceToPrefix(r.get("p").asResource().getNameSpace()) +  r.get("p").asResource().getLocalName();
 				
 				if (r.get("o").isResource()) {
-					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asResource().getLocalName());
+					currentObject.put(propertyName, Cfg.fromNamespaceToPrefix(r.get("o").asResource().getNameSpace()) + r.get("o").asResource().getLocalName());
 				} else {
-					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asLiteral().getString());
+					currentObject.put(propertyName, r.get("o").asLiteral().getString());
 				}
 			}
 
@@ -472,14 +487,14 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+cls+"> } "; 
+							qc = " . { ?s rdf:type "+cls+" } "; 
 						} else {
-							qc += " UNION { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+cls+"> } ";
+							qc += " UNION { ?s rdf:type "+cls+" } ";
 						}
 						
 						List<String> subClassesList = listSubclasses(cls, false);
 						for (String sc : subClassesList)
-							qc += " UNION { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+sc+"> } ";
+							qc += " UNION { ?s rdf:type "+sc+" } ";
 					}
 				}
 			}
@@ -525,14 +540,13 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " . { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+cls+"> } "; 
+							qc = " . { ?s rdf:type "+cls+" } "; 
 						} else {
-							qc += " UNION { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+cls+"> } ";
+							qc += " UNION { ?s rdf:type "+cls+" } ";
 						}
 						
 						List<String> subClassesList = listSubclasses(cls, false);
-						for (String sc : subClassesList)
-							qc += " UNION { ?s <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+sc+"> } ";
+						for (String sc : subClassesList) qc += " UNION { ?s rdf:type "+sc+" } ";
 					}
 				}
 			}
@@ -540,7 +554,9 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			String filter = "FILTER (regex(?o,\""+word+"\",\"i\") && !regex(?o, \""+Cfg.RESOURCE_URI_NS+"\",\"i\") && !regex(?o, \""+Cfg.ONTOLOGY_URI_NS+"\",\"i\")) ";
+			String filter = " FILTER (regex(?o,\""+word+"\",\"i\")";
+			for (String ns : Cfg.ONTOLOGY_NAMESPACES) filter += " && !regex(?o, \""+ns+"\",\"i\") ";
+			
 			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + qc + filter + " } ", model);
 			ResultSet rs = vqe.execSelect();
 			
@@ -577,13 +593,11 @@ public class Request {
 				
 				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) continue;
 				
+				String propertyName = Cfg.fromNamespaceToPrefix(r.get("p").asResource().getNameSpace()) + r.get("p").asResource().getLocalName();
 				if (r.get("o").isResource()) {
-					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asResource().getLocalName());
+					currentObject.put(propertyName, Cfg.fromNamespaceToPrefix(r.get("o").asResource().getNameSpace()) + r.get("o").asResource().getLocalName());
 				} else {
-					String lang = r.get("o").asLiteral().getLanguage();
-					if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
-					
-					currentObject.put(r.get("p").asResource().getLocalName(), r.get("o").asLiteral().getString());
+					currentObject.put(propertyName, r.get("o").asLiteral().getString());
 				}
 			}
 
@@ -603,9 +617,7 @@ public class Request {
 			InfModel model = ModelUtil.getModel();
 			
 			// Create search query
-			field = Cfg.ONTOLOGY_URI_NS + field;
-			className = Cfg.ONTOLOGY_URI_NS + className;
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s <"+Cfg.RDF_URI_NS+"type> <"+className+"> } ORDER BY ?s ", model);
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s rdf:type <"+className+"> } ORDER BY ?s ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -621,38 +633,6 @@ public class Request {
 		}
 		
 		return idList; 
-	}
-	
-	
-	public List<String[]> query(String sparql) {
-		List<String[]> result = new ArrayList<String[]>();
-		
-		// Connect to rdf server
-		InfModel model = ModelUtil.getModel();
-		
-		// Create search query
-		QueryExecution vqe = VirtuosoQueryExecutionFactory.create(sparql, model);
-		ResultSet rs = vqe.execSelect();
-		
-		// Get IDs that fit specific search
-		while (rs.hasNext()) {
-			QuerySolution r = rs.next();
-			
-			RDFNode na = r.get("a");
-			RDFNode nb = r.get("b");
-			RDFNode nc = r.get("c");
-			String a = "&lt;"+na.toString()+"&gt;";
-			String b = "&lt;"+nb.toString()+"&gt;";
-			String c = "";
-
-			if (nc.isResource()) c = "&lt;"+nc.toString()+"&gt;"; else c = "\""+nc.toString()+"\"";
-			
-			String[] insert = {a,b,c};
-			
-			result.add(insert);
-		}
-		
-		return result;
 	}
 
 	public void saveBackup() {
@@ -706,7 +686,7 @@ public class Request {
 		
 		if (rs.hasNext()) {
 			QuerySolution r = rs.next();
-			return r.get("c").asResource().getLocalName();
+			return Cfg.fromNamespaceToPrefix(r.get("c").asResource().getNameSpace()) + r.get("c").asResource().getLocalName();
 		} else return null;
 	}
 	
@@ -715,15 +695,18 @@ public class Request {
 		List<String> tmp = new ArrayList<String>();
 		
 		OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ModelUtil.getOntology());
-		OntClass ontClass = ont.getOntClass(Cfg.ONTOLOGY_URI_NS + className);
+
+		String classURI = fromClassNameToURI(className);
+		OntClass ontClass = ont.getOntClass(classURI);
 		
 		if (ontClass!=null) {
 			ExtendedIterator<OntClass> it = ontClass.listSuperClasses(true);
 			
 			while(it.hasNext())	{
 				OntClass cls = it.next();
-				result.add(cls.getLocalName());
-				tmp.add(cls.getLocalName());
+				String superclassURI = Cfg.fromNamespaceToPrefix(cls.getNameSpace())+cls.getLocalName();
+				result.add(superclassURI);
+				tmp.add(superclassURI);
 			}
 			
 			for(String c : tmp) result.addAll(listSuperClasses(c));
@@ -750,9 +733,9 @@ public class Request {
 		
 		String classClause = "";
 		String idClause = " ?a ";
-		String propertyClause = " <"+Cfg.ONTOLOGY_URI_NS+property+"> ";
+		String propertyClause = " "+property+" ";
 		if (id!=null) idClause = " <"+Cfg.RESOURCE_URI_NS+id+"> "; 
-		if (className!=null && !"*".equals(className)) classClause = ". "+ idClause +" <"+Cfg.RDF_URI_NS+"type> <"+Cfg.ONTOLOGY_URI_NS+className+"> ";
+		if (className!=null && !"*".equals(className)) classClause = ". "+ idClause +" rdf:type " + className + " ";
 		
 		// Create search query
 		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { " + idClause + propertyClause + " ?c "+ classClause +" } ", model);
@@ -780,7 +763,7 @@ public class Request {
 	public String[] resolveModelPath(String path, String id, boolean includeId, boolean anyLang, boolean showLang) {
 		if (path==null) return new String[]{};
 		
-		int idx = path.indexOf(":");
+		int idx = path.indexOf("=");
 		String part = path;
 		if (idx!=-1) part = path.substring(0, idx);
 		

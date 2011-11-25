@@ -22,7 +22,7 @@ public class GetClassesTree {
 	@Produces("application/json")
 	public String getClassesTree(@QueryParam("c") String rootClass) {
 		String json = "\""+rootClass+"\"";
-		if (rootClass==null) json = "\"Thing\"";
+		if (rootClass==null) json = "\"owl:Thing\"";
 		
 		List<String> classesList = new Request().listSubclasses(rootClass, true);
 		String json2 = "";

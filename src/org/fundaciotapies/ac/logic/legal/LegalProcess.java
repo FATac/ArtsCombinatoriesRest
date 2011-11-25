@@ -22,8 +22,6 @@ import org.fundaciotapies.ac.logic.legal.support.LegalBlockData;
 import org.fundaciotapies.ac.logic.legal.support.LegalBlockRules;
 import org.fundaciotapies.ac.logic.legal.support.LegalDefinition;
 import org.fundaciotapies.ac.logic.legal.support.LegalExpressionCompiler;
-import org.fundaciotapies.ac.model.Request;
-import org.fundaciotapies.ac.model.Upload;
 import org.fundaciotapies.ac.model.bo.Right;
 
 
@@ -116,8 +114,8 @@ public class LegalProcess {
 				plist.add("isAssignedTo");
 				vlist.add(x.trim());
 				
-				String legalId = new Request().getLegalObjectId(x.trim());
-				if (legalId!=null) new Upload().deleteObject(legalId);
+				//String legalId = new Request().getLegalObjectId(x.trim());
+				//if (legalId!=null) new Upload().deleteObject(legalId);
 				// TODO: Reference to existing valid License and allow configurability
 				//new Upload().uploadObject("Rights", plist.toArray(new String[plist.size()]), vlist.toArray(new String[vlist.size()]));
 				

@@ -10,13 +10,13 @@
 		    	{
 					"name":"Title",
 					"type":"text",
-					"path":["Event.Title"]
+					"path":["ac:Event.ac:Title"]
 				},
 				
 				{
 					"name":"Description",
 					"type":"text",
-					"path":["Event.Description"]
+					"path":["ac:Event.ac:Description"]
 				}
 			]
 		}

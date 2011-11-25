@@ -10,7 +10,7 @@
 		    	{
 					"name":"Name",
 					"type":"text",
-					"path":["Organisation.name"]
+					"path":["ac:Organisation.ac:name"]
 				}
 			]
 		},
@@ -22,19 +22,19 @@
 			 	{
 					"name":"Description",
 					"type":"text",
-					"path":["Organisation.Description"]
+					"path":["ac:Organisation.ac:Description"]
 			    },
 			    
 			    {
 					"name":"Home",
 					"type":"url",
-					"path":["Organisation.Homepage"]
+					"path":["ac:Organisation.ac:Homepage"]
 			    },
 			    
 			    {
 					"name":"Publications",
 					"type":"linkedObjects",
-					"path":["Organisation.performsRole:*.appliesOn:SpecialObjects.Title"]
+					"path":["ac:Organisation.ac:performsRole=*.ac:appliesOn=ac:SpecialObjects.ac:Title"]
 			    }
 			]  
 		}

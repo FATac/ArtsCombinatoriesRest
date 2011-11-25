@@ -1,5 +1,5 @@
 {
-	"className":"SpecialObject",
+	"className":"Publication",
 	
 	"sections":
 	[
@@ -10,7 +10,7 @@
 		    	{
 					"name":"Title",
 					"type":"text",
-					"path":["SpecialObject.Title"]
+					"path":["ac:Publication.ac:Title"]
 				}
 			]
 		},
@@ -22,14 +22,14 @@
 			 	{
 			        "name":"Authors",
 			        "type":"linkedObjects",
-			        "path":["SpecialObject.applicationOf:Author.performedBy",
-			        		"SpecialObject.applicationOf:Artist.performedBy"]
+			        "path":["ac:Publication.ac:applicationOf=ac:Author.ac:performedBy",
+			        		"ac:Publication.ac:applicationOf=ac:Artist.ac:performedBy"]
 			    },
 			    
 			    {
 			        "name":"Editors",
 			        "type":"linkedObjects",
-			        "path":["SpecialObject.applicationOf:Editor.performedBy:Agent.Name"]
+			        "path":["ac:Publication.ac:applicationOf=ac:Editor.ac:performedBy=ac:Agent.ac:Name"]
 			    }
 			]  
 		}

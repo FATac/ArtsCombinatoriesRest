@@ -10,7 +10,7 @@
 		    	{
 					"name":"Title",
 					"type":"text",
-					"path":["Media.Title"]
+					"path":["ac:Media.ac:Title"]
 				}
 			]
 		},
@@ -22,13 +22,13 @@
 			 	{
 			        "name":"Format",
 			        "type":"text",
-			        "path":["Media.format"]
+			        "path":["ac:Media.ac:format"]
 			    },
 			    
 			    {
 			        "name":"OriginalSource",
 			        "type":"text",
-			        "path":["Media.OriginalSource"]
+			        "path":["ac:Media.ac:OriginalSource"]
 			    }
 			]  
 		},
@@ -38,7 +38,7 @@
 			"data":[
 			 	{
 			        "type":"media",
-			        "path":["Media.Uri"]
+			        "path":["ac:Media.ac:Uri"]
 			    }
 			]  
 		}

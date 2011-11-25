@@ -6,19 +6,20 @@
 		{
 			"name":"CaseFile",
 			"type":"string",
-			"path":["Event.isReferencedBy", "SpecialObject.isReferencedBy"]
+			"path":["ac:Event=ac:isReferencedBy", "ac:SpecialObject=ac:isReferencedBy"]
 		},
 	
 	    {
 	        "name":"ObjectType",
 	        "type":"string",
-	        "path":["*.class", "*.superclass"]
+	        "path":["*.class", "*.superclass"],
+	        "category":"yes"
 	    },
 	    
 		{
 			"name":"Title",
 		    "type":"string",
-		    "path":["Case-File.references:*.Title"],
+		    "path":["ac:Case-File.ac:references=*.ac:Title"],
 		    "search":"yes",
 		    "autocomplete":"yes",
 		    "multilingual":"yes"
@@ -27,7 +28,7 @@
 		{
 			"name":"Description",
 		    "type":"text",
-		    "path":["Case-File.references:*.Description"],
+		    "path":["ac:Case-File.ac:references=*.Description"],
 		    "search":"yes",
 		    "multilingual":"yes"
 		},
@@ -36,8 +37,8 @@
 		    "name":"Year",
 		    "type":"date.year",
 		    "path":[
-		        "Case-File.references:*.StartDate",
-		        "Case-File.references:*.EndDate"
+		        "ac:Case-File.ac:references=*.ac:StartDate",
+		        "ac:Case-File.ac:references=*.ac:EndDate"
 		    ],
 		    "category":"yes",
 		    "sort":"value"
@@ -47,8 +48,8 @@
 		    "name":"Country",
 		    "type":"string",
 		    "path":[
-		    	"Case-File.references:*.tookPlaceAt:City.IsLocatedIn:Country.Name",
-		    	"Case-File.references:*.tookPlaceAt:Country.Name"
+		    	"ac:Case-File.ac:references=*.ac:tookPlaceAt=ac:City.ac:IsLocatedIn=ac:Country.ac:Name",
+		    	"ac:Case-File.ac:references=*.ac:tookPlaceAt=ac:Country.ac:Name"
 		    ],
 		    "category":"yes",
 		    "multilingual":"yes",
@@ -59,7 +60,7 @@
 			"name":"Translation",
 			"type":"string",
 			"path":[
-			    "Case-File.hasMedia:*.hasLanguage:Language.Label"
+			    "ac:Case-File.ac:hasMedia=*.ac:hasLanguage=ac:Language.ac:Label"
 			],
 			"category":"yes",
 			"multilingual":"yes",
@@ -70,7 +71,7 @@
 		    "name":"Media",
 		    "type":"string",
 		    "path":[
-		    	"Case-File.hasMedia:*.class"
+		    	"ac:Case-File.ac:hasMedia=*.class"
 		    ],
 		    "category":"yes",
 		    "search":"yes"
@@ -80,7 +81,7 @@
 		    "name":"License",
 		    "type":"string",
 		    "path":[
-		        "Case-File.references:*.hasLicense:License.Label"
+		        "ac:Case-File.ac:references=*.ac:hasLicense=ac:License.ac:Label"
 		    ],
 		    "category":"yes",
 		    "search":"yes"
@@ -90,7 +91,7 @@
 		    "name":"Role",
 		    "type":"string",
 		    "path":[
-		        "Case-File.references:*.applicationOf:Role.class"
+		        "ac:Case-File.ac:references=*.ac:applicationOf=ac:Role.class"
 		    ],
 		    "category":"yes",
 		    "search":"yes",
@@ -101,7 +102,7 @@
 		    "name":"Person",
 		    "type":"string",
 		    "path":[
-		        "Case-File.references:Event.applicationOf:Role.performedBy:Person.Name"
+		        "ac:Case-File.ac:references=ac:Event.ac:applicationOf=ac:Role.ac:performedBy=ac:Person.ac:Name"
 		    ],
 		    "category":"yes",
 		    "search":"yes",
@@ -112,8 +113,8 @@
 		    "name":"Organisation",
 		    "type":"string",
 		    "path":[
-		        "Case-File.references:Event.applicationOf:Role.performedBy:Organisation.Name",
-		        "Organisation.Name"
+		        "ac:Case-File.ac:references=ac:Event.ac:applicationOf=ac:Role.ac:performedBy=ac:Organisation.ac:Name",
+		        "ac:Organisation.ac:Name"
 		    ],
 		    "category":"yes",
 		    "search":"yes",
@@ -124,7 +125,7 @@
 		    "name":"Collection",
 		    "type":"string",
 		    "path":[
-		        "Case-File.hasMedia:*.isCollectedIn:Collection.class"
+		        "ac:Case-File.ac:hasMedia=*.ac:isCollectedIn=ac:Collection.class"
 		    ],
 		    "category":"yes",
 		    "search":"yes",
@@ -135,7 +136,7 @@
 		    "name":"ArtWork",
 		    "type":"string",
 		    "path":[
-		        "Art_Work.Title"
+		        "ac:Art_Work.ac:Title"
 		    ],
 		    "category":"yes",
 		    "multilingual":"yes",

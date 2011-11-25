@@ -10,7 +10,7 @@
 		    	{
 					"name":"Name",
 					"type":"text",
-					"path":["Person.givenName", "Person.lastName"]
+					"path":["ac:Person.ac:givenName", "ac:Person.ac:lastName"]
 				}
 			]
 		},
@@ -22,16 +22,16 @@
 			 	{
 			        "name":"Biography",
 			        "type":"text",
-			        "path":["Person.Bio"]
+			        "path":["ac:Person.ac:Bio"]
 			    },
 			    
 			    {
 			        "name":"Author",
 			        "type":"linkedObjects",
 			        "path":[
-			         	"Person.performsRole:Artist.appliesOn:*.Title",
-			        	"Person.performsRole:Writer.appliesOn:*.Title",
-			        	"Person.performsRole:Author.appliesOn:*.Title"
+			         	"ac:Person.ac:performsRole=ac:Artist.ac:appliesOn=*.ac:Title",
+			        	"ac:Person.ac:performsRole=ac:Writer.ac:appliesOn=*.ac:Title",
+			        	"ac:Person.ac:performsRole=ac:Author.ac:appliesOn=*.ac:Title"
 			        ]
 			    }
 			]  

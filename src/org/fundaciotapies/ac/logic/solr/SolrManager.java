@@ -271,7 +271,9 @@ public class SolrManager {
 				resp += " OR "  + f;
 			} else {
 				if (lastField!=null) resp += ") AND (" + f; else resp += "(" + f;
-				lastField = f.substring(0, f.indexOf(":"));
+				if (f.indexOf(":")>0)
+					lastField = f.substring(0, f.indexOf(":"));
+				else lastField = f;
 			}
 		}
 		if (filterValues.size()>0)	resp += ")";
@@ -381,7 +383,7 @@ public class SolrManager {
 		if (start!=null) solrQuery2 += "&start="+start;
 		if (rows!=null) solrQuery2 += "&rows="+rows;
 
-		if (lang==null || "".equals(lang)) lang = Cfg.LANG_LIST[0];
+		if (lang==null || "".equals(lang)) lang = Cfg.LANGUAGE_LIST[0];
 		
 		for (DataMapping m : mapping.getData()) {
 			if ("yes".equals(m.getSearch()) && "yes".equals(m.getAutocomplete())) {

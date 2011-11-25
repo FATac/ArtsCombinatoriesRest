@@ -153,7 +153,7 @@ public class Upload {
 		String result = "error";
 		VirtTransactionHandler vth = null;
 		if (className==null) return "error";
-		if (about==null) about = className;
+		if (about==null) about = className.substring(className.indexOf(":")+1);
 		
 		try {
 			
@@ -169,7 +169,7 @@ public class Upload {
 			
 			script = new ArrayList<String>();
 			for (String classNameElement : cls) 
-				script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> rdf:type <"+Cfg.ONTOLOGY_URI_NS+classNameElement+"> } ");
+				script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> rdf:type "+classNameElement+" } ");
 			
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			
@@ -177,7 +177,7 @@ public class Upload {
 			while(i<properties.length) {
 				boolean isObjectProperty = false;
 				
-				if (!lcp.contains(properties[i]) && !"FatacId".equals(properties[i]) || "type".equals(properties[i])) { i++; continue; }
+				if (!lcp.contains(properties[i]) && !"ac:FatacId".equals(properties[i]) || "type".equals(properties[i])) { i++; continue; }
 				for(ObjectProperty op : lop) {
 					if (op.getLocalName().equals(properties[i])) {
 						isObjectProperty = true;
@@ -187,11 +187,11 @@ public class Upload {
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) 
-						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> <"+Cfg.ONTOLOGY_URI_NS+properties[i].trim()+"> <"+Cfg.RESOURCE_URI_NS+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> "+properties[i].trim()+" <"+Cfg.RESOURCE_URI_NS+propertyValues[i]+"> }");
 					else {
 						String lang = null;
 						
-						for (String l : Cfg.LANG_LIST) {
+						for (String l : Cfg.LANGUAGE_LIST) {
 							if (propertyValues[i].endsWith("@"+l)) {
 								lang = "@"+l;
 								break;
@@ -201,7 +201,7 @@ public class Upload {
 						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
 						
 						propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
-						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> <"+Cfg.ONTOLOGY_URI_NS+properties[i].trim()+"> \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> "+properties[i].trim()+" \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
 					}
 				}
 				
@@ -293,7 +293,7 @@ public class Upload {
 
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			while(i<properties.length) {
-				if ("class".equalsIgnoreCase(properties[i])) {
+				if ("rdf:type".equalsIgnoreCase(properties[i])) {
 					i++;
 					continue;
 				}
@@ -306,16 +306,16 @@ public class Upload {
 					}
 				}
 				
-				if ((!"filePath".equals(properties[i]) || "filePath".equals(properties[i]) && !"".equals(propertyValues[i])) && (!alreadyDeleted.contains(properties[i]))) {
-					script.add("DELETE FROM <" + Cfg.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a <"+Cfg.ONTOLOGY_URI_NS+properties[i]+"> ?c FILTER (?a = <"+Cfg.RESOURCE_URI_NS+uniqueId+">) . ?a ?b ?c }");
+				if (!"".equals(propertyValues[i]) && !alreadyDeleted.contains(properties[i])) {
+					script.add("DELETE FROM <" + Cfg.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a "+properties[i]+" ?c FILTER (?a = <" + Cfg.RESOURCE_URI_NS+uniqueId + "> ) . ?a ?b ?c }");
 					alreadyDeleted.add(properties[i]);
 				}
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
-						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> <"+Cfg.ONTOLOGY_URI_NS+properties[i]+"> <"+Cfg.RESOURCE_URI_NS+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" <"+Cfg.RESOURCE_URI_NS+propertyValues[i]+"> }");
 					} else {
-						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> <"+Cfg.ONTOLOGY_URI_NS+properties[i]+"> \"" + propertyValues[i] + "\" }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" \"" + propertyValues[i] + "\" }");
 					}
 				}
 				i++;

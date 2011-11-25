@@ -1,5 +1,5 @@
 {
-	"className":"Case-File",
+	"className":"ac:Case-File",
 	
 	"sections":
 	[
@@ -10,7 +10,7 @@
 		    	{
 					"name":"Title",
 					"type":"text",
-					"path":["Case-File.references:Event.Title", "Case-File.references:SpecialObject.Title"]
+					"path":["ac:Case-File.ac:references=ac:Event.ac:Title", "ac:Case-File.ac:references=ac:SpecialObject.ac:Title"]
 				}
 			]
 		},
@@ -22,7 +22,7 @@
 			 	{
 			        "name":"Description",
 			        "type":"text",
-			        "path":["Case-File.references:*.Description"]
+			        "path":["ac:Case-File.ac:references=*.ac:Description"]
 			    }
 			]
 		},
@@ -34,7 +34,7 @@
 			 	{   
 			        "type":"search",
 			        "value":["CaseFile:"],
-			        "path":["Case-File.id"],
+			        "path":["ac:Case-File.id"],
 			        "categories":["Year", "Media", "Person", "ArtWork", "License", "ObjectType"]
 			    }
 			] 
@@ -46,7 +46,7 @@
 			
 			 	{   
 			        "type":"objects",
-			        "path":["Case-File.hasMedia", "Case-File.references"]
+			        "path":["ac:Case-File.ac:hasMedia", "ac:Case-File.ac:references"]
 			    }
 			] 
 		}

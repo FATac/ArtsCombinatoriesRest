@@ -1,9 +1,13 @@
 package org.fundaciotapies.ac;
 
-import java.io.FileReader;
-import java.util.Properties;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 
 public class Cfg {
 	private final static Logger log = Logger.getLogger(Cfg.class);
@@ -12,7 +16,7 @@ public class Cfg {
 	public static Integer THUMBNAIL_WIDTH = 250;
 	public static Integer THUMBNAIL_HEIGHT = 180;
 	public static String[] VIDEO_FILE_EXTENSIONS = {"dv", "mpg", "avi"};
-	public static String[] LANG_LIST = { "ca", "en", "es", "fr", "it", "de" };							// First language on the list is set as default
+	public static String[] LANGUAGE_LIST = { "ca", "en", "es", "fr", "it", "de" };							// First language on the list is set as default
 	public static String[] USER_LEVEL = { "*", "Member", "Manager Reviewer", "Site Administrator" };	// From level 1 to level 4 of authorization level
 	
 	// Services base URLs and connection strings
@@ -24,12 +28,15 @@ public class Cfg {
 	public static String VIDEO_SERVICES_URL = "http://tapies.aur.i2cat.net:8080/TapiesWebServices/rest/";
 	
 	// Ontology namespaces (After any change, all existing triples must be fixed)
-	public static String ONTOLOGY_URI_NS = "http://localhost:8080/ArtsCombinatoriesRest/ontology/ac#";
-	public static String ONTOLOGY_PREFIX = "ac";
-	public static String RDF_URI_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-	public static String RDFS_URI_NS = "http://www.w3.org/2000/01/rdf-schema#";
 	public static String RESOURCE_URI_NS = "http://localhost:8080/ArtsCombinatoriesRest/resource/";		
 	public static String RESOURCE_PREFIX = "ac_res";
+	
+	public static String[] ONTOLOGY_NAMESPACES = {
+		"http://localhost:8080/ArtsCombinatoriesRest/ontology/ac#", "ac",
+		"http://www.w3.org/1999/02/22-rdf-syntax-ns#", "rdf",
+		"http://www.w3.org/2000/01/rdf-schema#", "rdfs",
+		"http://dublincore.org/2010/10/11/dcterms.rdf#", "dcterms"
+	};
 	
 	// File system paths
 	public static String CONFIGURATIONS_PATH = "/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/";
@@ -37,40 +44,65 @@ public class Cfg {
 	public static String MEDIA_PATH = "./ac_media/";
 	public static String ONTOLOGY_PATH = "./OntologiaArtsCombinatories.owl";
 	
+	
+	public static String fromNamespaceToPrefix(String namespace) {
+		for(int i=0;i<ONTOLOGY_NAMESPACES.length;i+=2) {
+			if (ONTOLOGY_NAMESPACES[i].equals(namespace)) return ONTOLOGY_NAMESPACES[i+1] + ":"; 
+		}
+		return "";
+	}
+	
+	public static String fromPrefixToNamespace(String prefix) {
+		if (prefix.startsWith(":")) prefix = prefix.substring(1);
+		for(int i=0;i<ONTOLOGY_NAMESPACES.length;i+=2) {
+			if (ONTOLOGY_NAMESPACES[i+1].equals(prefix)) return ONTOLOGY_NAMESPACES[i]; 
+		}
+		return "";
+	}
+	
 	static {
-		Properties prop = new Properties();
+
 		try {
-			prop.load(new FileReader("config.properties"));
-		
-			THUMBNAIL_WIDTH = Integer.parseInt(prop.get("THUMBNAIL_WIDTH")+"");
-			THUMBNAIL_HEIGHT = Integer.parseInt(prop.get("THUMBNAIL_HEIGHT")+"");
+			ObjectMapper m = new ObjectMapper();
+			JsonNode jsonConfig = m.readValue(new File("config.json"), JsonNode.class);
 			
-			VIDEO_FILE_EXTENSIONS = (prop.get("VIDEO_FILE_EXTENSIONS")+"").split(",");
-			for (int i=0;i<VIDEO_FILE_EXTENSIONS.length;i++) VIDEO_FILE_EXTENSIONS[i] = VIDEO_FILE_EXTENSIONS[i].trim();
+			THUMBNAIL_WIDTH = jsonConfig.path("THUMBNAIL_WIDTH").getIntValue();
+			THUMBNAIL_HEIGHT = jsonConfig.path("THUMBNAIL_HEIGHT").getIntValue();
 			
-			LANG_LIST = (prop.get("LANG_LIST")+"").split(",");
-			for (int i=0;i<LANG_LIST.length;i++) LANG_LIST[i] = LANG_LIST[i].trim();
+			Iterator<JsonNode> it = jsonConfig.path("VIDEO_FILE_EXTENSIONS").getElements();
+			List<String> tmplist = new ArrayList<String>();
+			while(it.hasNext()) tmplist.add(it.next().getTextValue());
+			tmplist.toArray(VIDEO_FILE_EXTENSIONS);
 			
-			if (prop.get("USER_LEVEL")!=null) USER_LEVEL = (prop.get("LANG_LIST")+"").split(",");
+			it = jsonConfig.path("LANGUAGE_LIST").getElements();
+			tmplist = new ArrayList<String>();
+			while(it.hasNext()) tmplist.add(it.next().getTextValue());
+			tmplist.toArray(LANGUAGE_LIST);
 			
-			RDFDB_URL = prop.get("RDFDB_URL")+"";
-			RDFDB_USER = prop.get("RDFDB_USER")+"";
-			RDFDB_PASS = prop.get("RDFDB_PASS")+"";
-			REST_URL = prop.get("REST_URL")+"";
-			SOLR_URL = prop.get("SOLR_URL")+"";
-			VIDEO_SERVICES_URL = prop.get("VIDEO_SERVICES_URL")+"";
+			it = jsonConfig.path("USER_LEVEL").getElements();
+			tmplist = new ArrayList<String>();
+			while(it.hasNext()) tmplist.add(it.next().getTextValue());
+			tmplist.toArray(USER_LEVEL);
+
+			RDFDB_URL = jsonConfig.path("RDFDB_URL").getTextValue();
+			RDFDB_USER = jsonConfig.path("RDFDB_USER").getTextValue();
+			RDFDB_PASS = jsonConfig.path("RDFDB_PASS").getTextValue();
+			REST_URL = jsonConfig.path("REST_URL").getTextValue();
+			SOLR_URL = jsonConfig.path("SOLR_URL").getTextValue();
+			VIDEO_SERVICES_URL = jsonConfig.path("VIDEO_SERVICES_URL").getTextValue();
 			
-			ONTOLOGY_URI_NS = prop.get("ONTOLOGY_URI_NS")+"";
-			ONTOLOGY_PREFIX = prop.get("ONTOLOGY_PREFIX")+"";
-			RDF_URI_NS = prop.get("RDF_URI_NS")+"";
-			RDFS_URI_NS = prop.get("RDFS_URI_NS")+"";
-			RESOURCE_URI_NS = prop.get("RESOURCE_URI_NS")+"";
-			RESOURCE_PREFIX = prop.get("RESOURCE_PREFIX")+"";
+			RESOURCE_URI_NS = jsonConfig.path("RESOURCE_URI_NS").getTextValue();
+			RESOURCE_PREFIX = jsonConfig.path("RESOURCE_PREFIX").getTextValue();
 			
-			CONFIGURATIONS_PATH = prop.get("CONFIGURATIONS_PATH")+"";
-			SOLR_PATH = prop.get("SOLR_PATH")+"";
-			MEDIA_PATH = prop.get("MEDIA_PATH")+"";
-			ONTOLOGY_PATH = prop.get("ONTOLOGY_PATH")+"";
+			it = jsonConfig.path("ONTOLOGY_NAMESPACES").getElements();
+			tmplist = new ArrayList<String>();
+			while(it.hasNext()) tmplist.add(it.next().getTextValue());
+			tmplist.toArray(ONTOLOGY_NAMESPACES);
+			
+			CONFIGURATIONS_PATH = jsonConfig.path("CONFIGURATIONS_PATH").getTextValue();
+			SOLR_PATH = jsonConfig.path("SOLR_PATH").getTextValue();
+			MEDIA_PATH = jsonConfig.path("MEDIA_PATH").getTextValue();
+			ONTOLOGY_PATH = jsonConfig.path("ONTOLOGY_PATH").getTextValue();
 		
 		} catch (Exception e) {
 			log.error("Error culd not load properties", e);
