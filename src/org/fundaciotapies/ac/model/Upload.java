@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.IdentifierCounter;
+import org.fundaciotapies.ac.model.bo.ResourceStatistics;
 import org.fundaciotapies.ac.model.bo.Right;
 import org.fundaciotapies.ac.rest.client.Profile;
 import org.fundaciotapies.ac.rest.client.Transco;
@@ -224,6 +225,12 @@ public class Upload {
 			vth.commit();
 			
 			result = id;
+			
+			try {
+				if (id!=null) ResourceStatistics.creation(id);
+			} catch (Exception e) {
+				log.warn("Could not create statistics for object " + id, e);
+			}
 		} catch (Exception e) {
 			log.error("Error ", e);
 			if (vth!=null) vth.abort();
@@ -270,6 +277,8 @@ public class Upload {
 			right.delete();
 			
 			result = "success";
+			
+			ResourceStatistics.deletion(objectId);
 		} catch (Exception e) {
 			log.error("Error ", e);
 		}

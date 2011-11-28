@@ -20,6 +20,7 @@ import javax.imageio.ImageIO;
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.Request;
+import org.fundaciotapies.ac.model.bo.ResourceStatistics;
 import org.fundaciotapies.ac.model.bo.Right;
 import org.fundaciotapies.ac.model.support.DataMapping;
 import org.fundaciotapies.ac.model.support.Template;
@@ -99,6 +100,8 @@ public class ViewGenerator {
 			if (template == null) return null;
 			
 			for (TemplateSection section : template.getSections()) getObjectSectionView(section, id, lang);
+			
+			ResourceStatistics.visit(id);
 			
 		} catch (Throwable e) {
 			log.error("Error ", e);

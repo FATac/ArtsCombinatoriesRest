@@ -474,6 +474,8 @@ public class Request {
 	public List<String> listObjectsId(String className) {
 		List<String> result = new ArrayList<String>();
 		
+		QueryExecution vqe = null;
+		
 		try {
 			// Connect to rdf server
 			InfModel model = ModelUtil.getModel();
@@ -487,7 +489,7 @@ public class Request {
 				for(String cls : clsl) {
 					if (cls!=null && !"".equals(cls)) {
 						if (qc==null) {
-							qc = " . { ?s rdf:type "+cls+" } "; 
+							qc = " { ?s rdf:type "+cls+" } "; 
 						} else {
 							qc += " UNION { ?s rdf:type "+cls+" } ";
 						}
@@ -502,7 +504,7 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT ?s FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { " + qc + " } ", model);
+			vqe = VirtuosoQueryExecutionFactory.create("SELECT ?s FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s rdf:type "+className+" } ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;

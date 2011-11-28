@@ -2,6 +2,19 @@
 -- Suitable (only?) for Openlink Virtuoso sql implementation
 
 DROP TABLE db.dba._media;
+DROP TABLE db.dba._thumbnail;
+DROP TABLE db.dba._right;
+DROP TABLE db.dba._identifier_counter;
+DROP TABLE db.dba.autodata_table;
+DROP TABLE db.dba._resource_statistics;
+
+CREATE TABLE db.dba._resource_statistics (
+	identifier VARCHAR(150),
+	visitCounter BIGINT,
+	creationMoment BIGINT,
+	lastMoment BIGINT
+)
+
 CREATE TABLE db.dba._media (
 	SID INT IDENTITY,
 	mediaId VARCHAR(60),
@@ -9,7 +22,6 @@ CREATE TABLE db.dba._media (
 	moment TIMESTAMP
 )
 
-DROP TABLE db.dba._thumbnail;
 CREATE TABLE db.dba._thumbnail (
 	SID INT IDENTITY,
 	objectId VARCHAR(60),
@@ -17,20 +29,17 @@ CREATE TABLE db.dba._thumbnail (
 	moment TIMESTAMP
 )
 
-DROP TABLE db.dba._right;
 CREATE TABLE db.dba._right (
 	SID INT IDENTITY,
 	objectId VARCHAR(60),
 	rightLevel INT
 )
 
-DROP TABLE db.dba._identifier_counter;
 CREATE TABLE db.dba._identifier_counter (
 	identifier VARCHAR(150),
 	counter INT
 )
 
-DROP TABLE db.dba.autodata_table;
 CREATE TABLE db.dba.autodata_table (
 	keyName VARCHAR(100),
 	keyValue VARCHAR(100),

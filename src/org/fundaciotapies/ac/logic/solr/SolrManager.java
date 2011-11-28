@@ -20,6 +20,7 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.Request;
+import org.fundaciotapies.ac.model.bo.ResourceStatistics;
 import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.DataMapping;
 import org.fundaciotapies.ac.model.support.Mapping;
@@ -31,6 +32,7 @@ public class SolrManager {
 	private static Logger log = Logger.getLogger(SolrManager.class);
 	
 	public Map<String, CustomMap> documents = null;
+	public List<String[]> statistics = null;
 		
 	public void generateSchema() throws Exception {
 		// TODO: set deafaultSearchField in Schema.xml
@@ -42,13 +44,16 @@ public class SolrManager {
 		StringBuffer sb = new StringBuffer();
 		sb.append(" <fields> \n");
 		sb.append(" 	<field name=\"id\" type=\"identifier\" indexed=\"true\" stored=\"true\" required=\"true\" /> \n");
+		sb.append(" 	<field name=\"views\" type=\"long\" indexed=\"true\" stored=\"true\" required=\"false\" /> \n");
+		sb.append(" 	<field name=\"lastView\" type=\"long\" indexed=\"true\" stored=\"true\" required=\"false\" /> \n");
+		sb.append(" 	<field name=\"creation\" type=\"long\" indexed=\"true\" stored=\"true\" required=\"false\" /> \n");
 		
 		for(DataMapping m : mapping.getData()) {
 			String type = "string";
 			if ("date.year".equals(m.getType())) type = "int";								// TODO: add more types
 			if ("text".equals(m.getType())) type = "text_general";
 			
-			sb.append("		<field name=\""+m.getName()+"\" type=\""+type+"\" indexed=\"true\" stored=\"true\" multiValued=\"true\" /> \n");
+			sb.append("	<field name=\""+m.getName()+"\" type=\""+type+"\" indexed=\"true\" stored=\"true\" multiValued=\"true\" /> \n");
 		}
 		
 		sb.append(" </fields> \n\n\n ");
@@ -66,7 +71,8 @@ public class SolrManager {
 		fout.close();
 	}
 	
-	public String createDocumentEntry_(String id, String className, Mapping mapping) {
+	
+	/*public String createDocumentEntry(String id, String className, Mapping mapping) {
 		String xml = "	<doc>\n";
 		xml += "		<field name='id'>"+id+"</field>\n";
 		
@@ -89,7 +95,7 @@ public class SolrManager {
 		xml += "	</doc>\n";
 		
 		return xml;
-	}
+	}*/
 	
 	public void createDocumentEntry(String id, String className, Mapping mapping) {
 		CustomMap doc = documents.get(id);
@@ -109,6 +115,17 @@ public class SolrManager {
 							}
 						}
 					}
+				}
+			}
+		}
+		
+		if (statistics != null) {
+			for (String[] stat : statistics) {
+				if (id.equals(stat[0])) {
+					doc.put("views", Long.parseLong(stat[1]));
+					doc.put("creation", Long.parseLong(stat[2]));
+					if (stat[3]!=null) doc.put("lastView", Long.parseLong(stat[3]));
+					break;
 				}
 			}
 		}
@@ -134,6 +151,7 @@ public class SolrManager {
 			}
 		}
 		
+		statistics = ResourceStatistics.list();
 		for(String className : objectTypesIndexed) {
 			List<String> list = request.listObjectsId(className);
 			for(String id : list) createDocumentEntry(id, className, mapping);
@@ -153,6 +171,8 @@ public class SolrManager {
 				} else if (val instanceof String[]) {
 					String[] vals = (String[])val;
 					for (String v : vals) xml +=	"		<field name='"+name+"'><![CDATA["+v+"]]></field>\n";
+				} else {
+					xml +=	"		<field name='"+name+"'>"+val+"</field>\n";
 				}
 			}
 			xml += "	</doc>\n";
@@ -282,7 +302,7 @@ public class SolrManager {
 	}
 
 	
-	public String search(String searchText, String filter, String start, String rows, String lang, String searchConfig) throws Exception {
+	public String search(String searchText, String filter, String start, String rows, String lang, String searchConfig, String sort) throws Exception {
 		if (searchText==null) searchText = "";
 		String solrQuery1 = "";
 		
@@ -340,7 +360,7 @@ public class SolrManager {
 		solrQuery2 += "&facet.mincount=1";
 		
 		if (solrQuery1 == null || "".equals(solrQuery1)) solrQuery1 = "*:*";
-		URL url = new URL(Cfg.SOLR_URL + "select/?q=" + URLEncoder.encode(solrQuery1, "UTF-8") + solrQuery2);
+		URL url = new URL(Cfg.SOLR_URL + "select/?q=" + URLEncoder.encode(solrQuery1, "UTF-8") + (sort!=null?"&sort="+URLEncoder.encode(sort, "UTF-8"):"") + solrQuery2);
 		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 	    conn.setRequestMethod("GET");
 	    
