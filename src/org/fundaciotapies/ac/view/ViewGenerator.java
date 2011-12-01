@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -217,20 +218,32 @@ public class ViewGenerator {
 		ImageIO.write(resizedImage, "jpg", f);
 	}
 
-	
 	public File getClassThumbnail(String className) {
+		return getClassThumbnail(className, false);
+	}
+	
+	public File getClassThumbnail(String className, Boolean resize) {
 		try {
-			File f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/" + className + ".jpg");
+			File f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/" + className + (resize?"_resized":"") + ".jpg");
 			
 			if (!f.exists()) {
 				List<String> superClasses = new Request().listSuperClasses(className);
 				for (String superClassName : superClasses) {
-					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/"+superClassName+".jpg");
+					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/"+superClassName + (resize?"_resized":"") + ".jpg");
 					if (f.exists()) break;
 				}
 			}
 			
-			if (!f.exists()) f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/default.jpg");
+			if (!f.exists()) {
+				if (resize) {
+					File tmp = getClassThumbnail(className);
+					BufferedImage img = ImageIO.read(tmp);
+					resizeImage(img, null, null, null, "classes/"+className+"_resized");
+					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/" + className + "_resized.jpg");
+				} else {
+					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/default.jpg");
+				}
+			}
 			
 			return f;
 		} catch (Throwable e) {
@@ -240,7 +253,18 @@ public class ViewGenerator {
 		return null;
 	}
 	
-	public InputStream getObjectThumbnail(String id, String uid) {
+	
+	
+	private BufferedImage loadImage(InputStream in) throws Exception {
+		try {
+			return ImageIO.read(in);
+		} catch (IOException e) {
+			return null;
+		}
+	}
+	
+	public InputStream getObjectThumbnail(String id, String uid, Boolean firstCall) {
+
 		Request req = new Request();
 		try {
 			Right right = new Right();
@@ -278,21 +302,28 @@ public class ViewGenerator {
 					if (medias.size()>0) {
 						for (String m : medias) {
 							if (downloadImage(m)) {
-								il.add(ImageIO.read(new File(Cfg.MEDIA_PATH+"tmp.jpg")));
-								count++;
+								BufferedImage in = loadImage(new FileInputStream(Cfg.MEDIA_PATH+"tmp.jpg"));
+								if (in!=null) {
+									il.add(in);
+									count++;
+								}
 							}
 							
 							if (count>=4) break;
 						}
-					} else if (subobjects.size()>0) {					
-						for (String o : subobjects) {
-							InputStream in = getObjectThumbnail(o, "");
-							if (in!=null) {
-								il.add(ImageIO.read(in));
-								count++;
+					}
+					
+					if (count<4) {
+						if (subobjects.size()>0) {					
+							for (String o : subobjects) {
+								InputStream in = getObjectThumbnail(o, "", false);
+								if (in!=null) {
+									il.add(loadImage(in));
+									count++;
+								}
+								
+								if (count>=4) break;
 							}
-							
-							if (count>=4) break;
 						}
 					}
 					
@@ -303,7 +334,7 @@ public class ViewGenerator {
 
 			if (!f.exists()) {
 				String className = new Request().getObjectClass(id);
-				f = getClassThumbnail(className);
+				f = getClassThumbnail(className, firstCall);
 			}
 			
 			if (f.exists())	return new FileInputStream(f);

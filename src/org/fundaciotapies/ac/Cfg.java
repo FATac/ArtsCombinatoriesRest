@@ -53,7 +53,7 @@ public class Cfg {
 	}
 	
 	public static String fromPrefixToNamespace(String prefix) {
-		if (prefix.startsWith(":")) prefix = prefix.substring(1);
+		if (prefix.endsWith(":")) prefix = prefix.substring(0, prefix.length()-1);
 		for(int i=0;i<ONTOLOGY_NAMESPACES.length;i+=2) {
 			if (ONTOLOGY_NAMESPACES[i+1].equals(prefix)) return ONTOLOGY_NAMESPACES[i]; 
 		}
@@ -61,8 +61,13 @@ public class Cfg {
 	}
 	
 	static {
+		
+		log.info(">>>>>>>>>>>>>>>> LOADING CONFIGURATION <<<<<<<<<<<<<<<");
 
 		try {
+			File f = new File("config.json");
+			if (!f.exists()) throw new Exception("Could not find confing.json in current path: " + new File(".").getCanonicalPath());
+			
 			ObjectMapper m = new ObjectMapper();
 			JsonNode jsonConfig = m.readValue(new File("config.json"), JsonNode.class);
 			

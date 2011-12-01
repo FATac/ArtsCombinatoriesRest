@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -168,6 +169,26 @@ public class ResourceStatistics implements Serializable {
 			} catch (Exception e) { throw e; }
 		}
 		
+	}
+	
+	public static void clear() throws Exception {
+		Connection conn = null;
+		Statement stmt = null;
+		
+		try {
+		    Context ctx = new InitialContext();
+		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
+		    conn = ds.getConnection();
+		      
+		    conn.createStatement().executeUpdate("DELETE FROM _resource_statistics ");
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			try {
+				if (stmt!=null) stmt.close();
+				if (conn!=null) conn.close();
+			} catch (Exception e) { throw e; }
+		}   
 	}
 
 	public void setIdentifier(String identifier) {

@@ -28,7 +28,9 @@
 		{
 			"name":"Description",
 		    "type":"text",
-		    "path":["ac:Case-File.ac:references=*.Description"],
+		    "path":["ac:Case-File.ac:references=*.ac:Description",
+		    		"ac:Person.ac:Bio"
+		    ],
 		    "search":"yes",
 		    "multilingual":"yes"
 		},

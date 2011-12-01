@@ -99,6 +99,24 @@ public class Upload {
 		}
 	}
 	
+	public String removeMediaFile(String id) {
+		
+		try {
+			Media media = new Media();
+			media.load(id);
+			
+			File f = new File(media.getPath());
+			if (f.exists()) f.delete();
+			
+			media.delete();
+		} catch (Exception e) {
+			log.error("Error ", e);
+			return "error";
+		}
+		
+		return "success";
+	}
+	
 	public String addMediaFile(InputStream in, String filePath) {
 		
 		//String id = Long.toHexString(Double.doubleToLongBits(Math.random())) + Long.toHexString(Double.doubleToLongBits(Math.random()));
@@ -143,7 +161,6 @@ public class Upload {
 			}
 		} catch (Exception e) {
 			log.error("Error ", e);
-			e.printStackTrace();
 			return "error";
 		}
 		
@@ -179,8 +196,10 @@ public class Upload {
 				boolean isObjectProperty = false;
 				
 				if (!lcp.contains(properties[i]) && !"ac:FatacId".equals(properties[i]) || "type".equals(properties[i])) { i++; continue; }
+				
+				String qualifiedProperty = Cfg.fromPrefixToNamespace(properties[i].split(":")[0])+properties[i].split(":")[1];
 				for(ObjectProperty op : lop) {
-					if (op.getLocalName().equals(properties[i])) {
+					if (op.toString().equals(qualifiedProperty)) {
 						isObjectProperty = true;
 						break;
 					}
@@ -308,8 +327,9 @@ public class Upload {
 				}
 				boolean isObjectProperty = false;
 				
+				String qualifiedProperty = Cfg.fromPrefixToNamespace(properties[i].split(":")[0])+properties[i].split(":")[1];
 				for(ObjectProperty op : lop) {
-					if (op.getLocalName().equals(properties[i])) {
+					if (op.toString().equals(qualifiedProperty)) {
 						isObjectProperty = true;
 						break;
 					}
@@ -324,7 +344,19 @@ public class Upload {
 					if (isObjectProperty) {
 						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" <"+Cfg.RESOURCE_URI_NS+propertyValues[i]+"> }");
 					} else {
-						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" \"" + propertyValues[i] + "\" }");
+						String lang = null;
+						
+						for (String l : Cfg.LANGUAGE_LIST) {
+							if (propertyValues[i].endsWith("@"+l)) {
+								lang = "@"+l;
+								break;
+							}
+						}
+						
+						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
+						
+						propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
 					}
 				}
 				i++;
@@ -412,6 +444,7 @@ public class Upload {
 				ModelUtil.resetModel();
 				Media.clear();
 				IdentifierCounter.clear();
+				ResourceStatistics.clear();
 				
 				// removes all media files 
 				File f = new File(Cfg.MEDIA_PATH);

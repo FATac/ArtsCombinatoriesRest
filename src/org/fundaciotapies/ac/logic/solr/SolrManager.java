@@ -330,6 +330,7 @@ public class SolrManager {
 		}
 		
 		solrQuery1 += getQueryFilter(searchValues, lang);
+		boolean hasFilter = !"".equals(solrQuery1);
 		
 		String solrQuery2 = "&fl=id&facet=true&wt=json";
 		
@@ -339,15 +340,19 @@ public class SolrManager {
 		boolean firstTime = true;
 		for (DataMapping m : mapping.getData()) {
 			if ("yes".equals(m.getSearch()) && !"".equals(searchText)) {
-				if (!"".equals(solrQuery1)) {
-					if (firstTime) solrQuery1 += " AND ("; else solrQuery1 += " OR ";
-					firstTime = false;
+				if (firstTime) {
+					if (hasFilter) solrQuery1 += " AND ("; 
+				} else {
+					solrQuery1 += " OR ";
 				}
+				
 				if ("yes".equals(m.getMultilingual())) {  
 					solrQuery1 += m.getName() + ":\"LANG" + lang + "__" + searchText+"\"";
 				} else {
 					solrQuery1 += m.getName() + ":\"" + searchText + "\"";
 				}
+				
+				firstTime = false;
 			}
 			if ("yes".equals(m.getCategory())) {	// TODO: Intersect with search configuration categories
 				solrQuery2 += "&facet.field="+m.getName();
@@ -356,7 +361,7 @@ public class SolrManager {
 			}
 		}
 		
-		if (firstTime == false) solrQuery1 += ")";
+		if (hasFilter == true) solrQuery1 += ")";
 		solrQuery2 += "&facet.mincount=1";
 		
 		if (solrQuery1 == null || "".equals(solrQuery1)) solrQuery1 = "*:*";

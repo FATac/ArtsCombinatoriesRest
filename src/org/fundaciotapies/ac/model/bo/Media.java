@@ -143,6 +143,7 @@ public class Media implements Serializable {
 		    } else {
 		    	String sql = "DELETE FROM _media WHERE sid = ? "; 
 		    	stmt = conn.prepareStatement(sql);
+		    	stmt.setLong(1, sid);
 		    }
 		      
 		    stmt.executeUpdate();

@@ -536,7 +536,7 @@ public class Request {
 			String qc = null;
 			
 			// If specified, filter results for given class name and for all its subclasses 
-			if (className!=null && !"".equals(className) && !"_".equals(className)) {
+			/*if (className!=null && !"".equals(className) && !"_".equals(className)) {
 				String[] clsl = className.split(",");
 				
 				for(String cls : clsl) {
@@ -551,13 +551,14 @@ public class Request {
 						for (String sc : subClassesList) qc += " UNION { ?s rdf:type "+sc+" } ";
 					}
 				}
-			}
+			}*/
 
 			if (qc==null) qc = "";
 
 			// Create search query
 			String filter = " FILTER (regex(?o,\""+word+"\",\"i\")";
-			for (String ns : Cfg.ONTOLOGY_NAMESPACES) filter += " && !regex(?o, \""+ns+"\",\"i\") ";
+			for (String ns : Cfg.ONTOLOGY_NAMESPACES) if (ns.length()>10) filter += " && !regex(?o, \""+ns+"\",\"i\") ";
+			filter += ")";
 			
 			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + qc + filter + " } ", model);
 			ResultSet rs = vqe.execSelect();
@@ -637,7 +638,7 @@ public class Request {
 		return idList; 
 	}
 
-	public void saveBackup() {
+	public void saveBackup2() {
 		
 		try {
 			// Connect to rdf server
@@ -678,6 +679,45 @@ public class Request {
 		}
 	}
 	
+	public void saveBackup() {
+		
+		InfModel model = ModelUtil.getModel();
+		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT DISTINCT ?s FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?v ?p } ", model);
+		ResultSet rs = vqe.execSelect();
+		
+		// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
+		while (rs.hasNext()) {
+			QuerySolution r = rs.next();
+			String id = r.get("s").asResource().getLocalName();
+			CustomMap map = getObject(id, "");
+			
+			List<String> propertiesList = new ArrayList<String>();
+			List<String> propertiesValuesList = new ArrayList<String>();
+			Set<Map.Entry<String, Object>> set = map.entrySet();
+			for (Map.Entry<String, Object> ent : set) {
+				String[] values = null;
+				if (ent.getValue() instanceof String) {
+					values = new String[]{ (String)ent.getValue() };
+				} else {
+					values = (String[])ent.getValue();
+				}
+				
+				for (String v : values) {
+					propertiesList.add(ent.getKey());
+					propertiesValuesList.add(v);
+				}
+				
+				String[] properties = new String[propertiesList.size()];
+				String[] propertyValues = new String[propertiesValuesList.size()];
+				
+				propertiesList.toArray(properties);
+				propertiesValuesList.toArray(propertyValues);
+				
+				new Upload().updateObject(id, properties, propertyValues);
+			}
+		}
+	}
+	
 	public String getObjectClass(String id) {
 		// Connect to rdf server
 		InfModel model = ModelUtil.getModel();
@@ -689,6 +729,20 @@ public class Request {
 		if (rs.hasNext()) {
 			QuerySolution r = rs.next();
 			return Cfg.fromNamespaceToPrefix(r.get("c").asResource().getNameSpace()) + r.get("c").asResource().getLocalName();
+		} else return null;
+	}
+	
+	public String getObjectClassName(String id) {
+		// Connect to rdf server
+		InfModel model = ModelUtil.getModel();
+		
+		// Create search query
+		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { <"+Cfg.RESOURCE_URI_NS+id+"> rdf:type ?c } ", model);
+		ResultSet rs = vqe.execSelect();
+		
+		if (rs.hasNext()) {
+			QuerySolution r = rs.next();
+			return r.get("c").asResource().getLocalName();
 		} else return null;
 	}
 	
@@ -717,10 +771,35 @@ public class Request {
 		return result;
 	}
 	
+	public List<String> listSuperClassesName(String className) {
+		List<String> result = new ArrayList<String>();
+		List<String> tmp = new ArrayList<String>();
+		
+		OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ModelUtil.getOntology());
+
+		String classURI = fromClassNameToURI(className);
+		OntClass ontClass = ont.getOntClass(classURI);
+		
+		if (ontClass!=null) {
+			ExtendedIterator<OntClass> it = ontClass.listSuperClasses(true);
+			
+			while(it.hasNext())	{
+				OntClass cls = it.next();
+				String superclassURI = Cfg.fromNamespaceToPrefix(cls.getNameSpace())+cls.getLocalName();
+				result.add(cls.getLocalName());
+				tmp.add(superclassURI);
+			}
+			
+			for(String c : tmp) result.addAll(listSuperClassesName(c));
+		}
+			
+		return result;
+	}
+	
 	private String[] resolveModelPathPart(String className, String property, String id, boolean includeId, boolean anyLanguage, boolean showLang) {
-		if ("class".equals(property)) return new String[]{ getObjectClass(id) }; // 'class' is reserved word
+		if ("class".equals(property)) return new String[]{ getObjectClassName(id) }; // 'class' is reserved word
 		if ("superclass".equals(property)) { // 'superclass' is reserved word
-			List<String> sup = listSuperClasses(getObjectClass(id));
+			List<String> sup = listSuperClassesName(getObjectClass(id));
 			String[] supList = new String[sup.size()];
 			sup.toArray(supList);
 			return supList;
