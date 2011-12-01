@@ -48,7 +48,7 @@ public class UpdateObject {
 			
 			for (Iterator<String> it = jsonRequest.getFieldNames();it.hasNext();) {
 				String s = it.next();
-				if (!"type".equals(s) && !"id".equals(s) && !"filePath".equals(s)) {
+				if (!"type".equals(s) && !"id".equals(s)) {
 					if (!jsonRequest.path(s).isArray()) {
 						if (!"".equals(jsonRequest.path(s).getTextValue())) {
 							propertyValuesList.add(jsonRequest.path(s).getTextValue());

@@ -23,12 +23,12 @@ import org.fundaciotapies.ac.model.Upload;
  *  - fn: File name<br>
  */
 @Path("/media/upload")
-public class UploadObjectFile {
-	private static Logger log = Logger.getLogger(UploadObjectFile.class);
+public class UploadMedia {
+	private static Logger log = Logger.getLogger(UploadMedia.class);
 
 	@POST
 	@Produces("application/json")
-	public String uploadObjectFile(@Context HttpServletRequest request, @QueryParam("fn") String fn) {
+	public String uploadMedia(@Context HttpServletRequest request, @QueryParam("fn") String fn) {
 		try {
 			InputStream in = request.getInputStream();
 			return new Upload().addMediaFile(in, fn);

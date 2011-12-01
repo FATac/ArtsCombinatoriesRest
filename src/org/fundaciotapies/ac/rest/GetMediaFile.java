@@ -28,7 +28,6 @@ public class GetMediaFile {
 	
 	@GET
 	public String getObjectFile(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("u") String uid) {
-		System.out.println("Trying to obtain media id " + id);
 		
 		try {
 			ObjectFile objectFile = new Request().getMediaFile(id, uid);

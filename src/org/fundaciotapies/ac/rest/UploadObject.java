@@ -45,6 +45,7 @@ public class UploadObject {
 			JsonNode jsonRequest = m.readValue(request, JsonNode.class);
 			
 			String className = jsonRequest.path("type").getTextValue();
+			if (className==null) className = jsonRequest.path("rdf:type").getTextValue();
 			String about = jsonRequest.path("about").getTextValue();
 			List<String> propertiesList = new ArrayList<String>();
 			List<String> propertyValuesList = new ArrayList<String>();
