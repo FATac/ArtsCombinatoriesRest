@@ -15,7 +15,8 @@ public class Cfg {
 	// Various
 	public static Integer THUMBNAIL_WIDTH = 250;
 	public static Integer THUMBNAIL_HEIGHT = 180;
-	public static String[] VIDEO_FILE_EXTENSIONS = {"dv", "mpg", "avi"};
+	public static String[] MEDIA_CONVERSION_PROFILES = {"---", "avi", "mov", "mp3", "aif"};
+	
 	public static String[] LANGUAGE_LIST = { "ca", "en", "es", "fr", "it", "de" };							// First language on the list is set as default
 	public static String[] USER_LEVEL = { "*", "Member", "Manager Reviewer", "Site Administrator" };	// From level 1 to level 4 of authorization level
 	
@@ -23,9 +24,9 @@ public class Cfg {
 	public static String RDFDB_URL = "jdbc:virtuoso://localhost:1111";
 	public static String RDFDB_USER = "dba";
 	public static String RDFDB_PASS = "dba";
-	public static String REST_URL = "http://stress.upc.es:8080/ArtsCombinatoriesRest/";
+	public static String REST_URL = "http://ec2-67-202-24-185.compute-1.amazonaws.com/ArtsCombinatoriesRest/";
 	public static String SOLR_URL = "http://localhost:8080/solr/";
-	public static String VIDEO_SERVICES_URL = "http://tapies.aur.i2cat.net:8080/TapiesWebServices/rest/";
+	public static String VIDEO_SERVICES_URL = "http://localhost:8080/TapiesWebServices/rest/";
 	
 	// Ontology namespaces (After any change, all existing triples must be fixed)
 	public static String RESOURCE_URI_NS = "http://localhost:8080/ArtsCombinatoriesRest/resource/";		
@@ -39,10 +40,10 @@ public class Cfg {
 	};
 	
 	// File system paths
-	public static String CONFIGURATIONS_PATH = "/home/jordi.roig.prieto/workspace/ArtsCombinatoriesRest/json/";
-	public static String SOLR_PATH = "/home/jordi.roig.prieto/solr/";
-	public static String MEDIA_PATH = "./ac_media/";
-	public static String ONTOLOGY_PATH = "./OntologiaArtsCombinatories.owl";
+	public static String CONFIGURATIONS_PATH = "/home/ubuntu/artscombinatories/config/";
+	public static String SOLR_PATH = "/home/ubuntu/artscombinatories/solr/";
+	public static String MEDIA_PATH = "/home/ubuntu/artscombinatories/media/";
+	public static String ONTOLOGY_PATH = "/home/ubuntu/artscombinatories/ac.owl";
 	
 	
 	public static String fromNamespaceToPrefix(String namespace) {
@@ -62,7 +63,7 @@ public class Cfg {
 	
 	static {
 		
-		log.info(">>>>>>>>>>>>>>>> LOADING CONFIGURATION <<<<<<<<<<<<<<<");
+		log.info(">>>>>>>>>>>>>>>> LOADING CONFIGURATION <<<<<<<<<<<<<<< ");
 
 		try {
 			File f = new File("config.json");
@@ -74,10 +75,10 @@ public class Cfg {
 			THUMBNAIL_WIDTH = jsonConfig.path("THUMBNAIL_WIDTH").getIntValue();
 			THUMBNAIL_HEIGHT = jsonConfig.path("THUMBNAIL_HEIGHT").getIntValue();
 			
-			Iterator<JsonNode> it = jsonConfig.path("VIDEO_FILE_EXTENSIONS").getElements();
+			Iterator<JsonNode> it = jsonConfig.path("MEDIA_CONVERSION_PROFILES").getElements();
 			List<String> tmplist = new ArrayList<String>();
 			while(it.hasNext()) tmplist.add(it.next().getTextValue());
-			tmplist.toArray(VIDEO_FILE_EXTENSIONS);
+			tmplist.toArray(MEDIA_CONVERSION_PROFILES);
 			
 			it = jsonConfig.path("LANGUAGE_LIST").getElements();
 			tmplist = new ArrayList<String>();

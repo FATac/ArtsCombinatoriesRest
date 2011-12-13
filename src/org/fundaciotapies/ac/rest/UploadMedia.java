@@ -30,6 +30,7 @@ public class UploadMedia {
 	@Produces("application/json")
 	public String uploadMedia(@Context HttpServletRequest request, @QueryParam("fn") String fn) {
 		try {
+			log.info(" >>>>>>>>>> ADDING MEDIA <<<<<<<<<<<<<< ");
 			InputStream in = request.getInputStream();
 			return new Upload().addMediaFile(in, fn);
 		} catch (Exception e) {

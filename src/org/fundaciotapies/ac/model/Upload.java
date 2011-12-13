@@ -2,6 +2,7 @@ package org.fundaciotapies.ac.model;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.Normalizer;
@@ -79,34 +80,59 @@ public class Upload {
 			return about;
 	}
 	
-	public void addVideoFile(String id) {
+	public String encodeMediaFile(String filePath, int profile) {
 		
 		try {
+			String ext = filePath.split("\\.")[1];
+			String name = filePath.split("\\.")[0];
+			
+			String filePathMaster = name + "_master." + ext;
+			
+			File f1 = new File(Cfg.MEDIA_PATH + filePath);
+			File f2 = new File(Cfg.MEDIA_PATH + filePathMaster);
+			f1.renameTo(f2);
+			
+			if ("mp3,aif,wma,wav,ogg,oga".contains(ext)) ext = "ogg"; else ext = "ogv";
+		
 			TranscoEntity transco = new TranscoEntity();
-			//transco.setSrc_path("http://stress:8080/ArtsCombinatoriesRest/getObjectFile?id="+id);
-			transco.setSrc_path("/tmp/test.dv"); // TODO: delete line and uncomment above
+			transco.setSrc_path(Cfg.MEDIA_PATH + filePathMaster);
 			transco.setProfiles(new ArrayList<Profile>());
 			Profile prof = new Profile();
-			prof.setType("0");
-			prof.setDst_path("/tmp/"+id+"___file.mp4");
-			//prof.setDst_path("/"+id+"___file.mp4"); TODO: uncomment
+			prof.setType(profile+"");
+			prof.setDst_path(Cfg.MEDIA_PATH + name + "." + ext);
 			transco.getProfiles().add(prof);
 			
 			String res = new Transco().addTransco(transco);
-			System.out.println(res);
+			log.info(res);
+			
+			return name + "." + ext;
 		} catch (Exception e) {
 			log.error("Error ", e);
+			return null;
 		}
 	}
 	
+	public String auxId;
 	public String removeMediaFile(String id) {
 		
 		try {
 			Media media = new Media();
 			media.load(id);
 			
-			File f = new File(media.getPath());
-			if (f.exists()) f.delete();
+			File f = new File(Cfg.MEDIA_PATH);	
+			auxId = id;
+			
+			File[] fileList = f.listFiles(new FilenameFilter() {
+				
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.startsWith(auxId+"_") || name.startsWith(auxId+".");
+				}
+			});
+			
+			for (File fileToDelete : fileList) {
+				if (fileToDelete.exists()) fileToDelete.delete();
+			}
 			
 			media.delete();
 		} catch (Exception e) {
@@ -118,8 +144,6 @@ public class Upload {
 	}
 	
 	public String addMediaFile(InputStream in, String filePath) {
-		
-		//String id = Long.toHexString(Double.doubleToLongBits(Math.random())) + Long.toHexString(Double.doubleToLongBits(Math.random()));
 		String id = "_media_file_";
 		
 		try {
@@ -149,22 +173,46 @@ public class Upload {
 			fout.close();
 			
 			Media media = new Media();
-			media.setPath(Cfg.MEDIA_PATH+filePath);
+			media.setPath(filePath);
 			media.setMediaId(id);
 			media.saveUpdate();
 			
-			for (String s : Cfg.VIDEO_FILE_EXTENSIONS) {
-				if (s.equals(ext)) {
-					addVideoFile(id);
-					break;
-				}
-			}
+			convertMediaFile(id);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";
 		}
 		
 		return Cfg.REST_URL+"media/"+id;
+	}
+	
+	
+	public void convertMediaFile(String id) throws Exception {
+		Media media = new Media();
+		media.load(id);
+		String mediaPath = media.getPath();
+		String ext = mediaPath.split("\\.")[1];
+		
+		String newMediaPath = null;
+		
+		int profile=0;
+		for (String s : Cfg.MEDIA_CONVERSION_PROFILES) {
+			if (s.equals(ext)) {
+				Media mediaMaster = new Media();
+				mediaMaster.setPath(id + "_master." + ext);
+				mediaMaster.setMediaId(id+"_master");
+				mediaMaster.saveUpdate();
+				
+				newMediaPath = encodeMediaFile(mediaPath, profile);
+				break;
+			}
+			profile++;
+		}
+		
+		if (newMediaPath !=null) {
+			media.setPath(newMediaPath);
+			media.saveUpdate();
+		}
 	}
 	
 	public String uploadObject(String className, String about, String[] properties, String[] propertyValues) {

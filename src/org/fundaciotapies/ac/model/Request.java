@@ -59,11 +59,19 @@ public class Request {
 		return classURI;
 	}
 	
-	public int getUserLegalLevel(String userId) throws Exception {
+	public int getUserLegalLevel(String userId) {
 		if (userId == null) return 1;
 		int userLegalLevel = 1;
+		
 		User user = new User();
-		user.load(userId);
+		
+		try {
+			user.load(userId);
+		} catch (Exception e) {
+			log.warn("Could not obtaing user role, please check that User database is running");
+			return userLegalLevel;
+		}
+		
 		if (user.getUserRole()!=null) {
 			for (int l=0;l<Cfg.USER_LEVEL.length;l++) {
 				if (Cfg.USER_LEVEL[l].contains(user.getUserRole())) {
@@ -221,28 +229,35 @@ public class Request {
 		}
 	}
 	
-	public ObjectFile getMediaFile(String id, String uid) {
+	public ObjectFile getMediaFile(String id, String profile, String uid) {
 		try {
 			// Checks whether user can view object or not
-			/*Right right = new Right();
+			Right right = new Right();
 			right.load(id);
 			
 			int userLegalLevel = getUserLegalLevel(uid);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(uid)) {
 				throw new Exception("Access to object denied due to legal restrictions");
-			}*/
+			} else if ("master".equals(profile) && userLegalLevel < 4) {
+				throw new Exception("Access to MASTER denied due to legal restrictions");
+			}
 			
 			Media media = new Media();
-			media.load(id);
+			if (profile!=null && !"".equals(profile)) media.load(id+"_"+profile); else media.load(id);
 			if (media.getPath()==null) return null;
+			String mediaPath = media.getPath();
 			
-			String ext = media.getPath().substring(media.getPath().length()-3);
+			String ext = mediaPath.substring(mediaPath.length()-3);
 			
 			// Assign media type
 			ext = ext.toLowerCase();
 			String mime = "application/"+ext;
 			if ("png,jpg,gif,svg,jpeg".contains(ext)) {
 				mime = "image/"+ext;
+			} else if ("ogv".equals(ext)) {
+				mime = "video/ogg";
+			} else if ("oga,ogg".contains(ext)) {
+				mime = "audio/ogg";
 			} else if ("tml".equals(ext)) {
 				mime = "text/html";
 			} else if ("txt".contains(ext)) {
@@ -255,7 +270,7 @@ public class Request {
 			
 			// Results back in a specific object containing file stream and mime type
 			ObjectFile result = new ObjectFile();
-			result.setInputStream(new FileInputStream(media.getPath()));
+			result.setInputStream(new FileInputStream(Cfg.MEDIA_PATH + mediaPath));
 			result.setContentType(mime);
 			
 			return result;
@@ -264,6 +279,7 @@ public class Request {
 			return null;
 		}
 	}
+
 	
 	public List<String> listOntologyClasses() {
 		List<String> result = null;
@@ -819,7 +835,7 @@ public class Request {
 		if (className!=null && !"*".equals(className)) classClause = ". "+ idClause +" rdf:type " + className + " ";
 		
 		// Create search query
-		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { " + idClause + propertyClause + " ?c "+ classClause +" } ", model);
+		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { " + idClause + propertyClause + " ?c "+ classClause +" } order by ?c ", model);
 		ResultSet rs = vqe.execSelect();
 		while(rs.hasNext()) {
 			QuerySolution s = rs.next();
@@ -827,10 +843,8 @@ public class Request {
 			
 			if (node.isLiteral())  {
 				String lang = node.asLiteral().getLanguage();
-				if (!anyLanguage) {
-					if (lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
-				}
-				result.add((showLang && lang!=null?"LANG"+lang+"__":"") + node.asLiteral().getString() + (includeId?"@"+id:""));
+				if (!anyLanguage && lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
+				result.add((showLang && lang!=null && !"".equals(lang)?"LANG"+lang+"__":"") + node.asLiteral().getString() + (includeId?"@"+id:""));
 			} else {
 				result.add(node.asResource().getLocalName());
 			}

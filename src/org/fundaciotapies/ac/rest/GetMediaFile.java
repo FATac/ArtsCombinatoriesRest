@@ -22,15 +22,42 @@ import org.fundaciotapies.ac.model.support.ObjectFile;
  * - id: object identifier <br>
  * Returns: Binary file object by streaming
  */
-@Path("/media/{id}")
+@Path("/")
 public class GetMediaFile {
 	private static Logger log = Logger.getLogger(GetMediaFile.class);
 	
 	@GET
-	public String getObjectFile(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("u") String uid) {
+	@Path("media/{id}/profile/{profile}")
+	public String getMediaFileProfile(@Context HttpServletResponse response, @PathParam("id") String id, @PathParam("profile") String profile, @QueryParam("u") String uid) {
 		
 		try {
-			ObjectFile objectFile = new Request().getMediaFile(id, uid);
+			ObjectFile objectFile = new Request().getMediaFile(id, profile, uid);
+			if (objectFile==null) throw new Exception("There is no media file");
+			response.setContentType(objectFile.getContentType());
+			
+			// Get the response
+		    FileInputStream rd = (FileInputStream)objectFile.getInputStream();
+		    int len;
+		    byte[] buffer = new byte[512];
+		    OutputStream out = response.getOutputStream();
+		    while ((len = rd.read(buffer)) > 0) {
+		    	out.write(buffer, 0, len);
+		    }
+		    
+	        out.close();
+		} catch (Exception e) {
+			log.error("Error ",e);
+		}
+		
+		return "";
+	}
+	
+	@GET
+	@Path("media/{id}")
+	public String getMediaFile(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("u") String uid) {
+		
+		try {
+			ObjectFile objectFile = new Request().getMediaFile(id, null, uid);
 			if (objectFile==null) throw new Exception("There is no media file");
 			response.setContentType(objectFile.getContentType());
 			

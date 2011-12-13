@@ -8,6 +8,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.rest.serializer.TranscoDeserializer;
@@ -20,18 +22,21 @@ public class Transco {
 
 	public String addTransco(TranscoEntity transco) {
 		try {
+			log.info(">>>>>>>>>>>>>>>>>>>> ADDING TRANSCO <<<<<<<<<<<<<<<<<<<<<<<<");
 		    // Construct data
 		    String data = new Gson().toJson(transco);
+		    log.info(data);
 
 		    // Send data
 		    URL url = new URL(Cfg.VIDEO_SERVICES_URL + "add");
 		    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-		    conn.setRequestProperty("Content-Type", "application/json");
+		    conn.setRequestProperty("Content-Type", MediaType.APPLICATION_JSON);
 		    conn.setRequestMethod("POST");
 		    //conn.setRequestProperty("Accept", "application/json");
 		    conn.setDoOutput(true);
+		    log.info(">>>>>>>>>>>> CONNECTING " + url);
 		    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-		    log.debug(data);
+		    log.info(">>>>>>>>>>> RESPONSE: " + data);
 		    wr.write(data);
 		    wr.flush();
 		    wr.close();

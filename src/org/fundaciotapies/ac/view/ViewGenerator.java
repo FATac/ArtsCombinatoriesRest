@@ -14,7 +14,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -74,6 +76,22 @@ public class ViewGenerator {
 						for (String r : res) dm.getValue().add(val + r);
 					}
 				}
+			} else if ("counter".equals(type)) { 
+				for (String path : dm.getPath()) {
+					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
+					dm.getValue().addAll(Arrays.asList(req.resolveModelPath(path, id, false, false, false)));
+				}
+				Map<String, Integer> counter = new HashMap<String, Integer>();
+				for (String v : dm.getValue()) {
+					Integer c = counter.get(v);
+					if (c==null) counter.put(v, 1);
+					else counter.put(v, c+1);
+				}
+				dm.setValue(new ArrayList<String>());
+				for (Map.Entry<String, Integer> elem : counter.entrySet()) {
+					dm.getValue().add(elem.getKey());
+					dm.getValue().add(elem.getValue()+"");
+				}
 			} else {
 				for (String path : dm.getPath()) {
 					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
@@ -92,10 +110,10 @@ public class ViewGenerator {
 			Right right = new Right();
 			right.load(id);
 			
-			int userLegalLevel = new Request().getUserLegalLevel(uid);
+			/*int userLegalLevel = new Request().getUserLegalLevel(uid);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(uid)) {
 				throw new Exception("Access to object denied due to legal restrictions");
-			}
+			}*/
 			
 			template = getObjectTemplate(id);
 			if (template == null) return null;
@@ -339,7 +357,7 @@ public class ViewGenerator {
 			
 			if (f.exists())	return new FileInputStream(f);
 		} catch (Throwable e) {
-			log.error("Error ", e);
+			log.warn("Error " + e);
 		}
 		
 		return null;

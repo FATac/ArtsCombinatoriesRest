@@ -37,7 +37,7 @@ public class GetObjectThumbnail {
 	        out.flush();
 	        out.close();
 		} catch (Exception e) {
-			log.error("Error ",e);
+			log.error("Error " + e);
 		}
 		
 		return "";
