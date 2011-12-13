@@ -361,8 +361,8 @@ public class SolrManager {
 			}
 		}
 		
-		if (hasFilter == true) solrQuery1 += ")";
-		solrQuery2 += "&facet.mincount=1";
+		if (hasFilter == true && !firstTime) solrQuery1 += ")";
+		//solrQuery2 += "&facet.mincount=1";
 		
 		if (solrQuery1 == null || "".equals(solrQuery1)) solrQuery1 = "*:*";
 		URL url = new URL(Cfg.SOLR_URL + "select/?q=" + URLEncoder.encode(solrQuery1, "UTF-8") + (sort!=null?"&sort="+URLEncoder.encode(sort, "UTF-8"):"") + solrQuery2);
