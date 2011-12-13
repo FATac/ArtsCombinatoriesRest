@@ -20,6 +20,11 @@
 			"data":[
 			    
 				{
+					"type":"counter",
+					"path":["ac:Case-File.ac:hasMedia=*.class"]			
+				},
+			    
+				{
 			        "name":"Description",
 			        "type":"text",
 			        "path":["ac:Case-File.ac:references=*.ac:Description"]

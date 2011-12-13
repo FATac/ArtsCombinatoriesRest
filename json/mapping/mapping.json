@@ -6,7 +6,7 @@
 		{
 			"name":"CaseFile",
 			"type":"string",
-			"path":["ac:Event.ac:isReferencedBy", "ac:SpecialObject.ac:isReferencedBy"]
+			"path":["ac:Event.ac:isReferencedBy", "ac:SpecialObject.ac:isReferencedBy", "ac:Media.ac:containedBy"]
 		},
 	
 	    {
