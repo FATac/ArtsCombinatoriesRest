@@ -237,13 +237,13 @@ public class Request {
 			
 			int userLegalLevel = getUserLegalLevel(uid);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(uid)) {
-				throw new Exception("Access to object denied due to legal restrictions");
+				throw new Exception("Access to object ("+id+") denied due to legal restrictions");
 			} else if ("master".equals(profile) && userLegalLevel < 4) {
-				throw new Exception("Access to MASTER denied due to legal restrictions");
+				throw new Exception("Access to MASTER ("+id+") denied due to legal restrictions");
 			}
 			
 			Media media = new Media();
-			if (profile!=null && !"".equals(profile)) media.load(id+"_"+profile); else media.load(id);
+			if (profile!=null && !"".equals(profile) && !"0".equals(profile)) media.load(id+"_"+profile); else media.load(id);
 			if (media.getPath()==null) return null;
 			String mediaPath = media.getPath();
 			

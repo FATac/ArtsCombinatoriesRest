@@ -80,36 +80,17 @@ public class Upload {
 			return about;
 	}
 	
-	public String encodeMediaFile(String filePath, int profile) {
-		
-		try {
-			String ext = filePath.split("\\.")[1];
-			String name = filePath.split("\\.")[0];
+	public void encodeMediaFile(String sourceFilePath, String destinationFilePath, int profile) throws Exception {
+		TranscoEntity transco = new TranscoEntity();
+		transco.setSrc_path(Cfg.MEDIA_PATH + sourceFilePath);
+		transco.setProfiles(new ArrayList<Profile>());
+		Profile prof = new Profile();
+		prof.setType(profile+"");
+		prof.setDst_path(Cfg.MEDIA_PATH + destinationFilePath);
+		transco.getProfiles().add(prof);
 			
-			String filePathMaster = name + "_master." + ext;
-			
-			File f1 = new File(Cfg.MEDIA_PATH + filePath);
-			File f2 = new File(Cfg.MEDIA_PATH + filePathMaster);
-			f1.renameTo(f2);
-			
-			if ("mp3,aif,wma,wav,ogg,oga".contains(ext)) ext = "ogg"; else ext = "ogv";
-		
-			TranscoEntity transco = new TranscoEntity();
-			transco.setSrc_path(Cfg.MEDIA_PATH + filePathMaster);
-			transco.setProfiles(new ArrayList<Profile>());
-			Profile prof = new Profile();
-			prof.setType(profile+"");
-			prof.setDst_path(Cfg.MEDIA_PATH + name + "." + ext);
-			transco.getProfiles().add(prof);
-			
-			String res = new Transco().addTransco(transco);
-			log.info(res);
-			
-			return name + "." + ext;
-		} catch (Exception e) {
-			log.error("Error ", e);
-			return null;
-		}
+		String res = new Transco().addTransco(transco);
+		log.info(res);
 	}
 	
 	public String auxId;
@@ -177,7 +158,7 @@ public class Upload {
 			media.setMediaId(id);
 			media.saveUpdate();
 			
-			convertMediaFile(id);
+		 	if (Cfg.MEDIA_AUTOCONVERT) convertMediaFile(id);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";
@@ -188,30 +169,57 @@ public class Upload {
 	
 	
 	public void convertMediaFile(String id) throws Exception {
-		Media media = new Media();
-		media.load(id);
-		String mediaPath = media.getPath();
-		String ext = mediaPath.split("\\.")[1];
+		Media mediaMaster = new Media();
+		mediaMaster.load(id+"_master");
 		
-		String newMediaPath = null;
-		
-		int profile=0;
-		for (String s : Cfg.MEDIA_CONVERSION_PROFILES) {
-			if (s.equals(ext)) {
-				Media mediaMaster = new Media();
-				mediaMaster.setPath(id + "_master." + ext);
-				mediaMaster.setMediaId(id+"_master");
-				mediaMaster.saveUpdate();
-				
-				newMediaPath = encodeMediaFile(mediaPath, profile);
-				break;
-			}
-			profile++;
+		Media mediaOriginal = mediaMaster;
+		if (mediaOriginal.getSid()==null) {
+			mediaOriginal = new Media();
+			mediaOriginal.load(id);
+			if (mediaOriginal.getSid()==null) throw new Exception("Media file does not exist");
 		}
 		
-		if (newMediaPath !=null) {
-			media.setPath(newMediaPath);
-			media.saveUpdate();
+		String mediaPath = mediaOriginal.getPath();
+		String ext1 = mediaPath.split("\\.")[1];
+		String ext2 = "ogg,oga,mp3,aif,wma,wav".equals(ext1)?"ogg":"ogv";
+		
+		int profileType=1;
+		int profileNumber=0;
+		for (String s : Cfg.MEDIA_CONVERSION_PROFILES) {
+			if (s.contains(ext1)) {
+				if (mediaMaster.getMediaId()==null && profileNumber==0) {
+					mediaMaster = new Media();
+					mediaMaster.setPath(id + "_master." + ext1);
+					mediaMaster.setMediaId(id+"_master");
+					mediaMaster.saveUpdate();
+					
+					File f1 = new File(Cfg.MEDIA_PATH + mediaOriginal.getPath());
+					File f2 = new File(Cfg.MEDIA_PATH + mediaMaster.getPath());
+					f1.renameTo(f2);
+				}
+				
+				String newMediaPath = id + (profileNumber==0?"":"_"+profileNumber)+"."+ext2;
+				
+				try {
+					encodeMediaFile(mediaMaster.getPath(), newMediaPath, profileType);
+				} catch (Exception e) {
+					log.warn("Error calling video conversion services. " + e.toString());
+				}
+				
+				Media newMedia = new Media();
+				if (profileNumber==0) {
+					newMedia.load(id); 
+				} else {
+					newMedia.load(id + "_" + profileNumber);
+					if (newMedia.getSid()==null) newMedia.setMediaId(id + "_" + profileNumber);
+				}
+					
+				newMedia.setPath(newMediaPath);
+				newMedia.saveUpdate();
+				
+				profileNumber++;
+			}
+			profileType++;
 		}
 	}
 	

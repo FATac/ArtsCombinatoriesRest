@@ -20,7 +20,7 @@ import com.google.gson.GsonBuilder;
 public class Transco {
 	private static Logger log = Logger.getLogger(Transco.class);
 
-	public String addTransco(TranscoEntity transco) {
+	public String addTransco(TranscoEntity transco) throws Exception {
 		try {
 			log.info(">>>>>>>>>>>>>>>>>>>> ADDING TRANSCO <<<<<<<<<<<<<<<<<<<<<<<<");
 		    // Construct data
@@ -54,8 +54,7 @@ public class Transco {
 		    
 		    return sb.toString();
 		} catch (Exception e) {
-			log.error("Error ", e);
-			return null;
+			throw e;
 		}
 	}
 	

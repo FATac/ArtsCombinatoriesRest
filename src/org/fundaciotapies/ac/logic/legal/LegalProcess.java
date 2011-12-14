@@ -210,14 +210,14 @@ public class LegalProcess {
 		try {
 			for (LegalBlockData d : b.getData()) {
 				if (d==null) break;
-				pstmt = sqlConnector.prepareStatement("DELETE FROM autodata_table WHERE keyName = ? AND keyValue = ? AND name = ? ");
+				pstmt = sqlConnector.prepareStatement("DELETE FROM _autodata WHERE keyName = ? AND keyValue = ? AND name = ? ");
 				pstmt.setString(1, lad.getKey());
 				pstmt.setString(2, keyVal);
 				pstmt.setString(3, d.getName());
 				pstmt.executeUpdate();
 				pstmt.close();
 				
-				pstmt = sqlConnector.prepareStatement("INSERT INTO autodata_table (keyName,keyValue,name,defaultValue) VALUES (?,?,?,?) ");
+				pstmt = sqlConnector.prepareStatement("INSERT INTO _autodata (keyName,keyValue,name,defaultValue) VALUES (?,?,?,?) ");
 				pstmt.setString(1, lad.getKey());
 				pstmt.setString(2, keyVal);
 				pstmt.setString(3, d.getName());
@@ -239,7 +239,7 @@ public class LegalProcess {
 		ResultSet rs = null;
 		PreparedStatement pstmt = null;
 		try {
-			pstmt = sqlConnector.prepareStatement("SELECT defaultValue FROM autodata_table WHERE keyName = ? AND keyValue = ? AND name = ? ");
+			pstmt = sqlConnector.prepareStatement("SELECT defaultValue FROM _autodata WHERE keyName = ? AND keyValue = ? AND name = ? ");
 			for (LegalBlockData d : b.getData()) {
 				if (d==null) break;
 				
@@ -270,7 +270,7 @@ public class LegalProcess {
 		ResultSet rs = null;
 		
 		try {
-			pstmt = sqlConnector.prepareStatement("SELECT name, defaultValue FROM autodata_table WHERE keyName = ? AND keyValue = ? ");
+			pstmt = sqlConnector.prepareStatement("SELECT name, defaultValue FROM _autodata WHERE keyName = ? AND keyValue = ? ");
 			pstmt.setString(1, key);
 			pstmt.setString(2, keyValue);
 			rs = pstmt.executeQuery();

@@ -31,17 +31,17 @@ public class GetObjectView {
 
 	@GET
 	@Produces("application/json")
-	public String getObjectView(@Context HttpServletRequest request, @PathParam("id") String id, @QueryParam("u") String uid) {
+	public String getObjectView(@Context HttpServletRequest request, @PathParam("id") String id, @QueryParam("section") String section, @QueryParam("u") String uid) {
 		String lang = new Request().getCurrentLanguage(request);
 		String[] ids = id.split(",");
 		if (ids.length==1) {
-			Template result = new ViewGenerator().getObjectView(id, uid, lang);
+			Template result = new ViewGenerator().getObjectView(id, section, uid, lang);
 			if (result==null) return new Gson().toJson("Error: Object class has no template");
 			return new Gson().toJson(result);
 		} else {
 			List<Template> result = new ArrayList<Template>();
 			for (String oid : ids) {
-				Template tmp = new ViewGenerator().getObjectView(oid, uid, lang);
+				Template tmp = new ViewGenerator().getObjectView(oid, section, uid, lang);
 				result.add(tmp);
 			}
 			return new Gson().toJson(result);

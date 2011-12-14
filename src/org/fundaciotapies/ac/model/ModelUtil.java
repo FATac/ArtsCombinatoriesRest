@@ -34,10 +34,12 @@ public class ModelUtil {
 	}
 	
 	public static void resetOntology() {
-		VirtGraph ont = new VirtGraph(Cfg.ONTOLOGY_NAMESPACES[0], Cfg.RDFDB_URL, Cfg.RDFDB_USER, Cfg.RDFDB_PASS);
-		ont.clear();
-		ont.read(Cfg.ONTOLOGY_NAMESPACES[0], null);
-		ont.close();
+		for (int i=0;i<Cfg.ONTOLOGY_NAMESPACES.length;i+=2){
+			VirtGraph ont = new VirtGraph(Cfg.ONTOLOGY_NAMESPACES[i], Cfg.RDFDB_URL, Cfg.RDFDB_USER, Cfg.RDFDB_PASS);
+			ont.clear();
+			ont.read(Cfg.ONTOLOGY_NAMESPACES[i], null);
+			ont.close();
+		}
 		if (ontology!=null) ontology.close();
 	}
 	

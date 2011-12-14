@@ -103,7 +103,7 @@ public class ViewGenerator {
 		}
 	}
 	
-	public Template getObjectView(String id, String uid, String lang) {
+	public Template getObjectView(String id, String sectionName, String uid, String lang) {
 		Template template = null;
 		
 		try {
@@ -118,10 +118,15 @@ public class ViewGenerator {
 			template = getObjectTemplate(id);
 			if (template == null) return null;
 			
-			for (TemplateSection section : template.getSections()) getObjectSectionView(section, id, lang);
+			for (TemplateSection section : template.getSections()) {
+				if (sectionName!=null && !"".equals(sectionName) && !sectionName.contains(section.getName())) {
+					section.setData(null);
+					continue;
+				}
+				getObjectSectionView(section, id, lang);
+			}
 			
-			ResourceStatistics.visit(id);
-			
+			if (sectionName==null || "".equals(sectionName)) ResourceStatistics.visit(id);
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
@@ -288,12 +293,14 @@ public class ViewGenerator {
 			Right right = new Right();
 			right.load(id);
 			
+			File f = null;
+			
 			int userLegalLevel = new Request().getUserLegalLevel(uid);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(uid)) {
-				throw new Exception("Access to object denied due to legal restrictions");
+				f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/default.jpg");
+			} else {
+				f = new File(Cfg.MEDIA_PATH + "thumbnails/" + id + ".jpg");
 			}
-			
-			File f = new File(Cfg.MEDIA_PATH + "thumbnails/" + id + ".jpg");
 			
 			List<String> medias = new ArrayList<String>();
 			List<String> subobjects = new ArrayList<String>();

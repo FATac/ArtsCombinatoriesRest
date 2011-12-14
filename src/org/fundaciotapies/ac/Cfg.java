@@ -15,7 +15,8 @@ public class Cfg {
 	// Various
 	public static Integer THUMBNAIL_WIDTH = 250;
 	public static Integer THUMBNAIL_HEIGHT = 180;
-	public static String[] MEDIA_CONVERSION_PROFILES = {"---", "avi", "mov", "mp3", "aif"};
+	public static String[] MEDIA_CONVERSION_PROFILES = {"avi mov", "mp3 aif"};
+	public static Boolean MEDIA_AUTOCONVERT = false;
 	
 	public static String[] LANGUAGE_LIST = { "ca", "en", "es", "fr", "it", "de" };							// First language on the list is set as default
 	public static String[] USER_LEVEL = { "*", "Member", "Manager Reviewer", "Site Administrator" };	// From level 1 to level 4 of authorization level
@@ -34,9 +35,9 @@ public class Cfg {
 	
 	public static String[] ONTOLOGY_NAMESPACES = {
 		"http://localhost:8080/ArtsCombinatoriesRest/ontology/ac#", "ac",
+		"http://dublincore.org/2010/10/11/dcterms.rdf#", "dcterms",
 		"http://www.w3.org/1999/02/22-rdf-syntax-ns#", "rdf",
-		"http://www.w3.org/2000/01/rdf-schema#", "rdfs",
-		"http://dublincore.org/2010/10/11/dcterms.rdf#", "dcterms"
+		"http://www.w3.org/2000/01/rdf-schema#", "rdfs"
 	};
 	
 	// File system paths
@@ -78,17 +79,19 @@ public class Cfg {
 			Iterator<JsonNode> it = jsonConfig.path("MEDIA_CONVERSION_PROFILES").getElements();
 			List<String> tmplist = new ArrayList<String>();
 			while(it.hasNext()) tmplist.add(it.next().getTextValue());
-			tmplist.toArray(MEDIA_CONVERSION_PROFILES);
+			MEDIA_CONVERSION_PROFILES = tmplist.toArray(new String[0]);
+			
+			MEDIA_AUTOCONVERT = "true".equals(jsonConfig.path("MEDIA_AUTOCONVERT").getTextValue());
 			
 			it = jsonConfig.path("LANGUAGE_LIST").getElements();
 			tmplist = new ArrayList<String>();
 			while(it.hasNext()) tmplist.add(it.next().getTextValue());
-			tmplist.toArray(LANGUAGE_LIST);
+			LANGUAGE_LIST = tmplist.toArray(new String[0]);
 			
 			it = jsonConfig.path("USER_LEVEL").getElements();
 			tmplist = new ArrayList<String>();
 			while(it.hasNext()) tmplist.add(it.next().getTextValue());
-			tmplist.toArray(USER_LEVEL);
+			USER_LEVEL = tmplist.toArray(new String[0]);
 
 			RDFDB_URL = jsonConfig.path("RDFDB_URL").getTextValue();
 			RDFDB_USER = jsonConfig.path("RDFDB_USER").getTextValue();
@@ -103,7 +106,7 @@ public class Cfg {
 			it = jsonConfig.path("ONTOLOGY_NAMESPACES").getElements();
 			tmplist = new ArrayList<String>();
 			while(it.hasNext()) tmplist.add(it.next().getTextValue());
-			tmplist.toArray(ONTOLOGY_NAMESPACES);
+			ONTOLOGY_NAMESPACES = tmplist.toArray(new String[0]);
 			
 			CONFIGURATIONS_PATH = jsonConfig.path("CONFIGURATIONS_PATH").getTextValue();
 			SOLR_PATH = jsonConfig.path("SOLR_PATH").getTextValue();

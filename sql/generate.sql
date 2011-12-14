@@ -5,7 +5,7 @@ DROP TABLE db.dba._media;
 DROP TABLE db.dba._thumbnail;
 DROP TABLE db.dba._right;
 DROP TABLE db.dba._identifier_counter;
-DROP TABLE db.dba.autodata_table;
+DROP TABLE db.dba._autodata;
 DROP TABLE db.dba._resource_statistics;
 
 CREATE TABLE db.dba._resource_statistics (
@@ -40,7 +40,7 @@ CREATE TABLE db.dba._identifier_counter (
 	counter INT
 )
 
-CREATE TABLE db.dba.autodata_table (
+CREATE TABLE db.dba._autodata (
 	keyName VARCHAR(100),
 	keyValue VARCHAR(100),
 	name VARCHAR(100),

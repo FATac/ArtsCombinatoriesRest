@@ -14,7 +14,7 @@ public class Media implements Serializable {
 	private static final long serialVersionUID = 944291245319558902L;
 	
 	private Long sid = null;
-	private String mediaId;
+	private String mediaId = null;
 	private String path;
 	private String moment;
 	
