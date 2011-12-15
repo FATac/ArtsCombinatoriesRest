@@ -45,6 +45,7 @@ public class Cfg {
 	public static String SOLR_PATH = "/home/ubuntu/artscombinatories/solr/";
 	public static String MEDIA_PATH = "/home/ubuntu/artscombinatories/media/";
 	public static String ONTOLOGY_PATH = "/home/ubuntu/artscombinatories/ac.owl";
+	public static String OAI_PATH = "/home/ubuntu/artscombinatories/oai/";
 	
 	
 	public static String fromNamespaceToPrefix(String namespace) {
@@ -112,6 +113,7 @@ public class Cfg {
 			SOLR_PATH = jsonConfig.path("SOLR_PATH").getTextValue();
 			MEDIA_PATH = jsonConfig.path("MEDIA_PATH").getTextValue();
 			ONTOLOGY_PATH = jsonConfig.path("ONTOLOGY_PATH").getTextValue();
+			if (jsonConfig.path("OAI_PATH")!=null) OAI_PATH = jsonConfig.path("OAI_PATH").getTextValue();				
 		
 		} catch (Exception e) {
 			log.error("Error culd not load properties", e);
