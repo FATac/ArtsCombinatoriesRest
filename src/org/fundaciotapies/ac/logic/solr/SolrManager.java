@@ -97,7 +97,7 @@ public class SolrManager {
 		return xml;
 	}*/
 	
-	public void createDocumentEntry(String id, String className, Mapping mapping) {
+	private void createDocumentEntry(String id, String className, Mapping mapping) {
 		CustomMap doc = documents.get(id);
 		if (doc==null) doc = new CustomMap();
 		

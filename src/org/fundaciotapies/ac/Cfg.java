@@ -25,7 +25,7 @@ public class Cfg {
 	public static String RDFDB_URL = "jdbc:virtuoso://localhost:1111";
 	public static String RDFDB_USER = "dba";
 	public static String RDFDB_PASS = "dba";
-	public static String REST_URL = "http://ec2-67-202-24-185.compute-1.amazonaws.com/ArtsCombinatoriesRest/";
+	public static String REST_URL = "http://ec2-50-17-94-196.compute-1.amazonaws.com:8080/ArtsCombinatoriesRest/";
 	public static String SOLR_URL = "http://localhost:8080/solr/";
 	public static String VIDEO_SERVICES_URL = "http://localhost:8080/TapiesWebServices/rest/";
 	

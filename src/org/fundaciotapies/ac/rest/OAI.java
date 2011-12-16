@@ -7,6 +7,8 @@ import javax.ws.rs.Path;
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.oai.OAIFilesGenerator;
 
+import com.google.gson.Gson;
+
 @Path("/oai")
 public class OAI {
 	private static Logger log = Logger.getLogger(OAI.class);
@@ -15,10 +17,10 @@ public class OAI {
 	public String oai() {
 		try {
 			new OAIFilesGenerator().generate();
-			return "success";
+			return new Gson().toJson("success");
 		} catch (Exception e) {
 			log.error("Error ", e);
-			return "error";
+			return new Gson().toJson("error");
 		}
 	}
 }

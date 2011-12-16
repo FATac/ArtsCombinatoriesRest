@@ -32,7 +32,10 @@ public class GetMediaFile {
 		
 		try {
 			ObjectFile objectFile = new Request().getMediaFile(id, profile, uid);
-			if (objectFile==null) throw new Exception("There is no media file");
+			if (objectFile==null) {
+				log.warn("There is no media file for: " + id + " profile: " + profile);
+				return "";
+			}
 			response.setContentType(objectFile.getContentType());
 			
 			// Get the response
@@ -58,7 +61,10 @@ public class GetMediaFile {
 		
 		try {
 			ObjectFile objectFile = new Request().getMediaFile(id, null, uid);
-			if (objectFile==null) throw new Exception("There is no media file");
+			if (objectFile==null) {
+				log.warn("There is no media file for: " + id);
+				return "";
+			}
 			response.setContentType(objectFile.getContentType());
 			
 			// Get the response

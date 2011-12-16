@@ -118,6 +118,8 @@ public class ViewGenerator {
 			template = getObjectTemplate(id);
 			if (template == null) return null;
 			
+			template.setClassName(new Request().getObjectClass(id));
+			
 			for (TemplateSection section : template.getSections()) {
 				if (sectionName!=null && !"".equals(sectionName) && !sectionName.contains(section.getName())) {
 					section.setData(null);
