@@ -113,6 +113,17 @@
 		},
 		
 		{
+		    "name":"PersonName",
+		    "type":"text",
+		    "path":[
+		        "ac:Case-File.ac:references=ac:Event.ac:applicationOf=ac:Role.ac:performedBy=ac:Person.ac:Name",
+		        "ac:Person.ac:Name"
+		    ],
+		    "search":"yes",
+		    "autocomplete":"yes"
+		},
+		
+		{
 		    "name":"Organisation",
 		    "type":"string",
 		    "path":[
@@ -120,6 +131,17 @@
 		        "ac:Organisation.ac:Name"
 		    ],
 		    "category":"yes",
+		    "search":"yes",
+		    "autocomplete":"yes"
+		},
+		
+		{
+		    "name":"OrganisationName",
+		    "type":"text",
+		    "path":[
+		        "ac:Case-File.ac:references=ac:Event.ac:applicationOf=ac:Role.ac:performedBy=ac:Organisation.ac:Name",
+		        "ac:Organisation.ac:Name"
+		    ],
 		    "search":"yes",
 		    "autocomplete":"yes"
 		},
@@ -143,6 +165,16 @@
 		    ],
 		    "category":"yes",
 		    "multilingual":"yes",
+		    "search":"yes",
+		    "autocomplete":"yes"
+		},
+		
+		{
+		    "name":"ArtWorkName",
+		    "type":"text",
+		    "path":[
+		        "ac:Art_Work.ac:Title"
+		    ],
 		    "search":"yes",
 		    "autocomplete":"yes"
 		}

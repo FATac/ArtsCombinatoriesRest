@@ -44,6 +44,7 @@ public class SolrManager {
 		StringBuffer sb = new StringBuffer();
 		sb.append(" <fields> \n");
 		sb.append(" 	<field name=\"id\" type=\"identifier\" indexed=\"true\" stored=\"true\" required=\"true\" /> \n");
+		sb.append(" 	<field name=\"class\" type=\"identifier\" indexed=\"true\" stored=\"true\" required=\"true\" /> \n");
 		sb.append(" 	<field name=\"views\" type=\"long\" indexed=\"true\" stored=\"true\" required=\"false\" /> \n");
 		sb.append(" 	<field name=\"lastView\" type=\"long\" indexed=\"true\" stored=\"true\" required=\"false\" /> \n");
 		sb.append(" 	<field name=\"creation\" type=\"long\" indexed=\"true\" stored=\"true\" required=\"false\" /> \n");
@@ -97,12 +98,13 @@ public class SolrManager {
 		return xml;
 	}*/
 	
-	private void createDocumentEntry(String id, String className, Mapping mapping) {
+	private void createDocumentEntry(String id, String className, Mapping mapping) throws Exception {
 		CustomMap doc = documents.get(id);
 		if (doc==null) doc = new CustomMap();
 		
 		for(DataMapping m : mapping.getData()) {
 			Boolean isMultilingual = "yes".equals(m.getMultilingual());
+			if ("id,class,superclass".contains(m.getName())) throw new Exception(m.getName() + " is a reserved key word ");
 			if (doc.get(m.getName())==null) {
 				if (m.getPath()!=null) {
 					for (String path : m.getPath()) {
@@ -163,6 +165,7 @@ public class SolrManager {
 			CustomMap doc = ent1.getValue();
 			xml += "	<doc>\n";
 			xml += "		<field name='id'>" + id +"</field>\n";
+			xml += "		<field name='class'>" + request.getObjectClassSimple(id) +"</field>\n";
 			for(Map.Entry<String, Object> ent2 : doc.entrySet()) {
 				String name = ent2.getKey();
 				Object val = ent2.getValue();
