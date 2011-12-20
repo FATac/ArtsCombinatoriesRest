@@ -227,7 +227,7 @@ public class Upload {
 		String result = "error";
 		VirtTransactionHandler vth = null;
 		if (className==null) return "error";
-		if (about==null) about = className.substring(className.indexOf(":")+1);
+		if (about==null || "".equals(about)) about = className.substring(className.indexOf(":")+1);
 		
 		try {
 			

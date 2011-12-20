@@ -307,6 +307,10 @@ public class Request {
 	}
 	
 	public List<String[]> listClassProperties(String className) {
+		return listClassProperties(className, true);
+	}
+	
+	public List<String[]> listClassProperties(String className, boolean direct) {
 		List<String[]> result = new ArrayList<String[]>();
 
 		try {
@@ -336,8 +340,10 @@ public class Request {
 				range = "";
 			}
 			
-			List<String> scl = listSuperClasses(className);
-			for (String sc : scl) result.addAll(0, listClassProperties(sc));
+			if (!direct) { 
+				List<String> scl = listSuperClasses(className);
+				for (String sc : scl) result.addAll(0, listClassProperties(sc));
+			}
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
@@ -745,6 +751,20 @@ public class Request {
 		if (rs.hasNext()) {
 			QuerySolution r = rs.next();
 			return Cfg.fromNamespaceToPrefix(r.get("c").asResource().getNameSpace()) + r.get("c").asResource().getLocalName();
+		} else return null;
+	}
+	
+	public String getObjectClassSimple(String id) {
+		// Connect to rdf server
+		InfModel model = ModelUtil.getModel();
+		
+		// Create search query
+		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * WHERE { <"+Cfg.RESOURCE_URI_NS+id+"> rdf:type ?c } ", model);
+		ResultSet rs = vqe.execSelect();
+		
+		if (rs.hasNext()) {
+			QuerySolution r = rs.next();
+			return r.get("c").asResource().getLocalName();
 		} else return null;
 	}
 	

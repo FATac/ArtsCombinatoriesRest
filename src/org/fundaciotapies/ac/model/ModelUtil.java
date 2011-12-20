@@ -9,6 +9,7 @@ import virtuoso.jena.driver.VirtModel;
 import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.reasoner.InfGraph;
+
 public class ModelUtil {
 
 	private static InfModel model = null;
