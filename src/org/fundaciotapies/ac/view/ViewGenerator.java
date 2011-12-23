@@ -299,7 +299,7 @@ public class ViewGenerator {
 			
 			int userLegalLevel = new Request().getUserLegalLevel(uid);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(uid)) {
-				f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/default.jpg");
+				return null;
 			} else {
 				f = new File(Cfg.MEDIA_PATH + "thumbnails/" + id + ".jpg");
 			}

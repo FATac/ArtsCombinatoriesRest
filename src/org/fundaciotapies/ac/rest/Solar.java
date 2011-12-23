@@ -8,6 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
+import org.fundaciotapies.ac.logic.solr.SearchConfigurations;
 import org.fundaciotapies.ac.logic.solr.SolrManager;
 import org.fundaciotapies.ac.model.Request;
 
@@ -30,6 +31,7 @@ public class Solar {
 				solr.deleteAll();
 			} else if ("schema".equals(option)) {
 				solr.generateSchema();
+				return new Gson().toJson("success: restart web application server.");
 			} else if ("update".equals(option)) {
 				solr.indexate();
 			} else if ("reload".equals(option)) {
@@ -39,7 +41,9 @@ public class Solar {
 				return solr.search(searchText, filter, start, rows, lang, searchConfig, sort);
 			} else if ("autocomplete".equals(option)) {
 				return solr.autocomplete(searchText, start, rows, lang, searchConfig);
-			} 
+			} else if ("configurations".equals(option)) {
+				return new SearchConfigurations().listSearchConfigurations();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new Gson().toJson("error");

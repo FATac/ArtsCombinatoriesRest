@@ -65,11 +65,13 @@ public class Cfg {
 	
 	static {
 		
-		log.info(">>>>>>>>>>>>>>>> LOADING CONFIGURATION <<<<<<<<<<<<<<< ");
-
+		
 		try {
+			String canonicalPath = new File(".").getCanonicalPath();
+			log.info(">>>>>>>>>>>>>>>> LOADING CONFIGURATION <<<<<<<<<<<<<<< (current dir: " + canonicalPath + ")");
+			
 			File f = new File("config.json");
-			if (!f.exists()) throw new Exception("Could not find confing.json in current path: " + new File(".").getCanonicalPath());
+			if (!f.exists()) throw new Exception("Could not find confing.json in current path: " + canonicalPath);
 			
 			ObjectMapper m = new ObjectMapper();
 			JsonNode jsonConfig = m.readValue(new File("config.json"), JsonNode.class);

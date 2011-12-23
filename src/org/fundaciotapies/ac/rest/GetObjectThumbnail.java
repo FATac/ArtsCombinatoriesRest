@@ -24,7 +24,9 @@ public class GetObjectThumbnail {
 		
 		try {
 			InputStream in = new ViewGenerator().getObjectThumbnail(id, uid, true);
-			if (in==null) throw new Exception("There is no media file for " + id);
+			if (in==null) {
+				return "";
+			}
 			response.setContentType("image/jpg");
 			
 			DataInputStream dis = new DataInputStream(in);

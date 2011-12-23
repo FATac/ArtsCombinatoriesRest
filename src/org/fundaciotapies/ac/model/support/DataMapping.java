@@ -14,6 +14,8 @@ public class DataMapping {
 	private String sort;
 	private String search;
 	private String autocomplete;
+	private List<String> filter;
+	private String sortCategory;
 	
 	private String sortBy;
 	
@@ -83,5 +85,16 @@ public class DataMapping {
 	public String getAutocomplete() {
 		return autocomplete;
 	}
-	
+	public void setFilter(List<String> filter) {
+		this.filter = filter;
+	}
+	public List<String> getFilter() {
+		return filter;
+	}
+	public void setSortCategory(String sortCategory) {
+		this.sortCategory = sortCategory;
+	}
+	public String getSortCategory() {
+		return sortCategory;
+	}
 }

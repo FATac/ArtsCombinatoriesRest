@@ -24,7 +24,7 @@
 		    "autocomplete":"yes",
 		    "multilingual":"yes"
 		},
-
+		
 		{
 			"name":"Description",
 		    "type":"text",
@@ -42,9 +42,11 @@
 		        "ac:Case-File.ac:references=*.ac:StartDate",
 		        "ac:Case-File.ac:references=*.ac:EndDate"
 		    ],
-		    "category":"yes",
-		    "sort":"value"
+		    "search":"yes",
+		    "autocomplete":"yes",
+		    "sort":"yes"
 		},
+		
 
 		{
 		    "name":"Country",
@@ -177,7 +179,27 @@
 		    ],
 		    "search":"yes",
 		    "autocomplete":"yes"
-		}
+		},
 		
+		{
+			"name":"AlphabeticalOrder",
+		    "type":"string",
+		    "path":[
+		    	"ac:Case-File.ac:references=*.ac:Title", 
+		    	"ac:Art_Work.ac:Title", 
+		    	"ac:Person.ac:Name",
+		    	"ac:Organisation.ac:Name"
+		    ],
+		    "sort":"yes"
+		},
+		
+		{
+		    "name":"ChronologicalOrder",
+		    "type":"date.year",
+		    "path":[
+		        "ac:Case-File.ac:references=*.ac:StartDate"
+		    ],
+		    "sort":"yes"
+		}
 	]
 }

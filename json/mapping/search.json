@@ -1,8 +1,23 @@
 {
 	"data":[
+	
 	    {   
-	        "name":"default",
-			"type":"search"
+	        "type":"search",
+	        "name":"default"
+		},
+		
+		{   
+			"type":"search",
+	        "name":"Principal",
+			"filter":["class:Case-File","class:Publication"],
+			"sort":"class asc"
+		},
+		
+		{   
+			"type":"search",
+	        "name":"Nomes_Tapies",
+			"value":["Tapies"],
+			"sort":"class asc"
 		}
 	]
 }

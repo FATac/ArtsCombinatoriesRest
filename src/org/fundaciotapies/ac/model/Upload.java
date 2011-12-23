@@ -508,6 +508,8 @@ public class Upload {
 					File fx = new File(Cfg.MEDIA_PATH+x);
 					if (fx.isFile()) fx.delete();
 				}
+				
+				log.info(">>>> RESETING ALL DATA (MEDIA, MODEL, TABLES) AND UPDATING ONTOLOGIES <<<<");
 			}
 		} catch (Exception e) {
 			log.error("Error ", e);

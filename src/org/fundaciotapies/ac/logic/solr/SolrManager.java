@@ -35,7 +35,6 @@ public class SolrManager {
 	public List<String[]> statistics = null;
 		
 	public void generateSchema() throws Exception {
-		// TODO: set deafaultSearchField in Schema.xml
 		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
@@ -43,22 +42,26 @@ public class SolrManager {
 		
 		StringBuffer sb = new StringBuffer();
 		sb.append(" <fields> \n");
+		sb.append(" <!-- SYSTEM FIELDS --> \n");
 		sb.append(" 	<field name=\"id\" type=\"identifier\" indexed=\"true\" stored=\"true\" required=\"true\" /> \n");
 		sb.append(" 	<field name=\"class\" type=\"identifier\" indexed=\"true\" stored=\"true\" required=\"true\" /> \n");
 		sb.append(" 	<field name=\"views\" type=\"long\" indexed=\"true\" stored=\"true\" required=\"false\" /> \n");
 		sb.append(" 	<field name=\"lastView\" type=\"long\" indexed=\"true\" stored=\"true\" required=\"false\" /> \n");
 		sb.append(" 	<field name=\"creation\" type=\"long\" indexed=\"true\" stored=\"true\" required=\"false\" /> \n");
+		sb.append(" <!-- CUSTOMIZED FIELDS --> \n");
 		
 		for(DataMapping m : mapping.getData()) {
 			String type = "string";
 			if ("date.year".equals(m.getType())) type = "int";								// TODO: add more types
 			if ("text".equals(m.getType())) type = "text_general";
-			
-			sb.append("	<field name=\""+m.getName()+"\" type=\""+type+"\" indexed=\"true\" stored=\"true\" multiValued=\"true\" /> \n");
+			if ("yes".equals(m.getSort()))
+				sb.append("	<field name=\""+m.getName()+"\" type=\""+type+"\" indexed=\"true\" stored=\"true\" multiValued=\"false\" /> \n");
+			else
+				sb.append("	<field name=\""+m.getName()+"\" type=\""+type+"\" indexed=\"true\" stored=\"true\" multiValued=\"true\" /> \n");
 		}
 		
 		sb.append(" </fields> \n\n\n ");
-		fin = new BufferedReader(new FileReader(Cfg.SOLR_PATH + "conf/schema.xml-EMPTY"));
+		fin = new BufferedReader(new FileReader(Cfg.SOLR_PATH + "schema.xml-EMPTY"));
 		
 		StringBuffer sb2 = new StringBuffer();
 		String str = null;
@@ -113,8 +116,15 @@ public class SolrManager {
 						if (className.equals(currentClassName) || "*".equals(currentClassName)) {
 							String[] result = new Request().resolveModelPath(path, id, false, true, isMultilingual);
 							for (String r : result) {
-								if (r!=null) doc.put(m.getName(), r);
+								if (r!=null) {
+									doc.put(m.getName(), r);
+									if ("yes".equals(m.getSort())) break;
+								}
 							}
+						}
+						
+						if (doc.get(m.getName())!=null && "yes".equals(m.getSort())) {
+							break;
 						}
 					}
 				}
@@ -183,7 +193,7 @@ public class SolrManager {
 		xml += "</add>";
 		
 		try {
-			PrintWriter fout = new PrintWriter(Cfg.SOLR_PATH + "data/data.xml");
+			PrintWriter fout = new PrintWriter(Cfg.SOLR_PATH + "data.xml");
 			fout.print(xml);
 			fout.close();
 		} catch (Exception e) {
@@ -287,7 +297,6 @@ public class SolrManager {
 				} else {
 					if (d.getName().equals(fp[0].trim())) f = fp[0] + ":\"" + fp[1] + "\"";
 				}
-				
 			}
 			
 			if (lastField!=null && f.startsWith(lastField+":")) {
@@ -320,7 +329,10 @@ public class SolrManager {
 		if (searchConfig==null || "".equals(searchConfig)) searchConfig = "default";
 		for (DataMapping searchConf : searchConfigurations.getData()) {
 			if (searchConf.getName().equals(searchConfig)) {
-				searchValues = searchConf.getValue();
+				searchValues = searchConf.getFilter();
+				if (searchConf.getValue()!=null) {
+					for (String val : searchConf.getValue()) searchText += " " + val;
+				}
 				break;
 			}
 		}
@@ -343,24 +355,26 @@ public class SolrManager {
 		boolean firstTime = true;
 		for (DataMapping m : mapping.getData()) {
 			if ("yes".equals(m.getSearch()) && !"".equals(searchText)) {
-				if (firstTime) {
-					if (hasFilter) solrQuery1 += " AND ("; 
+				if (m.getType().contains("date") && !searchText.matches("[0-9]+")) {
+					// do something
 				} else {
-					solrQuery1 += " OR ";
+					if (firstTime) {
+						if (hasFilter) solrQuery1 += " AND ("; 
+					} else {
+						solrQuery1 += " OR ";
+					}
+					
+					if ("yes".equals(m.getMultilingual()))
+						solrQuery1 += m.getName() + ":LANG" + lang + "__" + searchText + " OR ";
+						
+					solrQuery1 += m.getName() + ":" + searchText;
+					firstTime = false;
 				}
-				
-				if ("yes".equals(m.getMultilingual())) {  
-					solrQuery1 += m.getName() + ":\"LANG" + lang + "__" + searchText+"\"";
-				} else {
-					solrQuery1 += m.getName() + ":\"" + searchText + "\"";
-				}
-				
-				firstTime = false;
 			}
-			if ("yes".equals(m.getCategory())) {	// TODO: Intersect with search configuration categories
+			if ("yes".equals(m.getCategory())) {
 				solrQuery2 += "&facet.field="+m.getName();
 				if ("yes".equals(m.getMultilingual())) solrQuery2 += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";
-				if ("value".equals(m.getSort())) solrQuery2 += "&f."+m.getName()+".facet.sort=index";
+				if ("value".equals(m.getSortCategory())) solrQuery2 += "&f."+m.getName()+".facet.sort=index";
 			}
 		}
 		
@@ -399,7 +413,10 @@ public class SolrManager {
 		if (searchConfig==null || "".equals(searchConfig)) searchConfig = "default";
 		for (DataMapping searchConf : searchConfigurations.getData()) {
 			if (searchConf.getName().equals(searchConfig)) {
-				searchValues = searchConf.getValue();
+				searchValues = searchConf.getFilter();
+				if (searchConf.getValue()!=null) {
+					for (String val : searchConf.getValue()) searchText += " " + val;
+				}
 				break;
 			}
 		}
@@ -425,6 +442,7 @@ public class SolrManager {
 		}
 		
 		solrQuery2 += "&facet.mincount=1";
+		solrQuery1 = "*:*";
 		
 		URL url = new URL(Cfg.SOLR_URL + "select/?q=" + URLEncoder.encode(solrQuery1, "UTF-8") + solrQuery2);
 		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
