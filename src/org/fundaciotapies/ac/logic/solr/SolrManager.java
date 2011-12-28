@@ -1,6 +1,7 @@
 package org.fundaciotapies.ac.logic.solr;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
@@ -9,8 +10,11 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +105,40 @@ public class SolrManager {
 		return xml;
 	}*/
 	
+	private String extractDatePart(String value, String type) {
+		try {
+			if (type.equals("date")) {
+				SimpleDateFormat df = new SimpleDateFormat(Cfg.DATE_FORMAT);
+				return df.parse(value).getTime()+"";
+			} else {
+				SimpleDateFormat df = new SimpleDateFormat(Cfg.DATE_FORMAT);
+				try {
+					Date d = df.parse(value);
+					if (type.equals("date.month")) {
+						return new SimpleDateFormat(Cfg.MONTH_FORMAT).format(d);
+					} else if (type.equals("date.day")) {
+						return new SimpleDateFormat(Cfg.DAY_FORMAT).format(d);
+					} else if (type.equals("date.year")) {
+						return new SimpleDateFormat(Cfg.YEAR_FORMAT).format(d);
+					}
+				} catch (ParseException e) {
+					if (type.equals("date.month")) {
+						new SimpleDateFormat(Cfg.MONTH_FORMAT).parse(value);
+					} else if (type.equals("date.day")) {
+						new SimpleDateFormat(Cfg.DAY_FORMAT).parse(value);
+					} else if (type.equals("date.year")) {
+						new SimpleDateFormat(Cfg.YEAR_FORMAT).parse(value);
+					}
+				}
+			}	
+		} catch (ParseException e) {
+			log.warn("Value '"+value+"' not valid for data type: " + type + ". Please check format in Configuration.");
+			return null;
+		}
+		
+		return value;
+	}
+	
 	private void createDocumentEntry(String id, String className, Mapping mapping) throws Exception {
 		CustomMap doc = documents.get(id);
 		if (doc==null) doc = new CustomMap();
@@ -116,6 +154,7 @@ public class SolrManager {
 						if (className.equals(currentClassName) || "*".equals(currentClassName)) {
 							String[] result = new Request().resolveModelPath(path, id, false, true, isMultilingual);
 							for (String r : result) {
+								if (m.getType().startsWith("date") && r!=null) r = extractDatePart(r, m.getType());
 								if (r!=null) {
 									doc.put(m.getName(), r);
 									if ("yes".equals(m.getSort())) break;
@@ -318,22 +357,36 @@ public class SolrManager {
 		if (searchText==null) searchText = "";
 		String solrQuery1 = "";
 		
-		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/search.json"));
-		TemplateSection searchConfigurations = new Gson().fromJson(fin, TemplateSection.class);
 		
-		fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
+		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
 		List<String> searchValues = null;
 		
-		if (searchConfig==null || "".equals(searchConfig)) searchConfig = "default";
-		for (DataMapping searchConf : searchConfigurations.getData()) {
-			if (searchConf.getName().equals(searchConfig)) {
-				searchValues = searchConf.getFilter();
-				if (searchConf.getValue()!=null) {
-					for (String val : searchConf.getValue()) searchText += " " + val;
+		Mapping searchConfigurations = null;
+		
+		try {
+			fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/search.json"));
+			searchConfigurations = new Gson().fromJson(fin, Mapping.class);
+		} catch (FileNotFoundException e) {	}
+		
+		if (searchConfigurations!=null) {
+			if (searchConfig==null || "".equals(searchConfig)) searchConfig = "default";
+			for (DataMapping searchConf : searchConfigurations.getData()) {
+				if (searchConf.getName().equals(searchConfig)) {
+					searchValues = searchConf.getFilter();
+					if (searchConf.getValue()!=null) {
+						for (String val : searchConf.getValue()) {
+							if (!"".equals(searchText))	searchText += " " + val;
+							else searchText += val;
+						}
+					}
+					if (searchConf.getSort()!=null) {
+						if (sort!=null && !"".equals(sort)) sort = searchConf.getSort() + "," + sort;
+						else sort = searchConf.getSort();
+					}
+					break;
 				}
-				break;
 			}
 		}
 		
@@ -374,7 +427,7 @@ public class SolrManager {
 			if ("yes".equals(m.getCategory())) {
 				solrQuery2 += "&facet.field="+m.getName();
 				if ("yes".equals(m.getMultilingual())) solrQuery2 += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";
-				if ("value".equals(m.getSortCategory())) solrQuery2 += "&f."+m.getName()+".facet.sort=index";
+				if ("yes".equals(m.getSortCategory())) solrQuery2 += "&f."+m.getName()+".facet.sort=index";
 			}
 		}
 		
@@ -402,22 +455,28 @@ public class SolrManager {
 		if (searchText==null || searchText.length()==0) return null;
 		String solrQuery1 = "";
 		
-		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/search.json"));
-		TemplateSection searchConfigurations = new Gson().fromJson(fin, TemplateSection.class);
-		
-		fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
+		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
+		
+		TemplateSection searchConfigurations = null;
+		
+		try {
+			 fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/search.json"));
+			searchConfigurations = new Gson().fromJson(fin, TemplateSection.class);
+		} catch (FileNotFoundException e) {	}
 		
 		List<String> searchValues = null;
 		
 		if (searchConfig==null || "".equals(searchConfig)) searchConfig = "default";
-		for (DataMapping searchConf : searchConfigurations.getData()) {
-			if (searchConf.getName().equals(searchConfig)) {
-				searchValues = searchConf.getFilter();
-				if (searchConf.getValue()!=null) {
-					for (String val : searchConf.getValue()) searchText += " " + val;
+		if (searchConfigurations!=null) {
+			for (DataMapping searchConf : searchConfigurations.getData()) {
+				if (searchConf.getName().equals(searchConfig)) {
+					searchValues = searchConf.getFilter();
+					if (searchConf.getValue()!=null) {
+						for (String val : searchConf.getValue()) searchText += " " + val;
+					}
+					break;
 				}
-				break;
 			}
 		}
 		

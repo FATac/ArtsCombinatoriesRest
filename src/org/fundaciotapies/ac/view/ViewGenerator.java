@@ -288,7 +288,7 @@ public class ViewGenerator {
 		}
 	}
 	
-	public InputStream getObjectThumbnail(String id, String uid, Boolean firstCall) {
+	public synchronized InputStream getObjectThumbnail(String id, String uid, Boolean firstCall) {
 
 		Request req = new Request();
 		try {

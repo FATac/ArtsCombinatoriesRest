@@ -17,6 +17,10 @@ public class Cfg {
 	public static Integer THUMBNAIL_HEIGHT = 180;
 	public static String[] MEDIA_CONVERSION_PROFILES = {"avi mov", "mp3 aif"};
 	public static Boolean MEDIA_AUTOCONVERT = false;
+	public static String DATE_FORMAT = "dd/MM/yyyy";
+	public static String YEAR_FORMAT = "yyyy";
+	public static String MONTH_FORMAT = "MM";
+	public static String DAY_FORMAT = "dd";
 	
 	public static String[] LANGUAGE_LIST = { "ca", "en", "es", "fr", "it", "de" };							// First language on the list is set as default
 	public static String[] USER_LEVEL = { "*", "Member", "Manager Reviewer", "Site Administrator" };	// From level 1 to level 4 of authorization level

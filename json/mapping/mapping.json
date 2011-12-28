@@ -18,7 +18,7 @@
 	    
 		{
 			"name":"Title",
-		    "type":"string",
+		    "type":"text",
 		    "path":["ac:Case-File.ac:references=*.ac:Title"],
 		    "search":"yes",
 		    "autocomplete":"yes",
@@ -42,9 +42,10 @@
 		        "ac:Case-File.ac:references=*.ac:StartDate",
 		        "ac:Case-File.ac:references=*.ac:EndDate"
 		    ],
+		    "category":"yes",
+		    "sortCategory":"yes",
 		    "search":"yes",
-		    "autocomplete":"yes",
-		    "sort":"yes"
+		    "autocomplete":"yes"
 		},
 		
 

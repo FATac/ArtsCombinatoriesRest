@@ -3,21 +3,24 @@
 	
 	    {   
 	        "type":"search",
-	        "name":"default"
+	        "name":"default",
+	        "sortFields":["AlphabeticalOrder", "ChronologicalOrder"]
 		},
 		
 		{   
 			"type":"search",
 	        "name":"Principal",
 			"filter":["class:Case-File","class:Publication"],
-			"sort":"class asc"
+			"sort":"class asc",
+			"sortFields":["AlphabeticalOrder", "ChronologicalOrder"]
 		},
 		
 		{   
 			"type":"search",
 	        "name":"Nomes_Tapies",
 			"value":["Tapies"],
-			"sort":"class asc"
+			"sort":"class asc",
+			"sortFields":["AlphabeticalOrder", "ChronologicalOrder"]
 		}
 	]
 }

@@ -8,7 +8,6 @@ public class DataMapping {
 	private String type;
 	private List<String> path;
 	private List<String> value;
-	private List<String> categories;
 	private String category;
 	private String multilingual;
 	private String sort;
@@ -16,8 +15,7 @@ public class DataMapping {
 	private String autocomplete;
 	private List<String> filter;
 	private String sortCategory;
-	
-	private String sortBy;
+	private List<String> sortFields;
 	
 	public String getName() {
 		return name;
@@ -49,12 +47,6 @@ public class DataMapping {
 	public List<String> getValue() {
 		return value;
 	}
-	public void setSortBy(String sortBy) {
-		this.sortBy = sortBy;
-	}
-	public String getSortBy() {
-		return sortBy;
-	}
 	public void setMultilingual(String multilingual) {
 		this.multilingual = multilingual;
 	}
@@ -66,12 +58,6 @@ public class DataMapping {
 	}
 	public String getSort() {
 		return sort;
-	}
-	public void setCategories(List<String> categories) {
-		this.categories = categories;
-	}
-	public List<String> getCategories() {
-		return categories;
 	}
 	public void setSearch(String search) {
 		this.search = search;
@@ -96,5 +82,11 @@ public class DataMapping {
 	}
 	public String getSortCategory() {
 		return sortCategory;
+	}
+	public void setSortFields(List<String> sortFields) {
+		this.sortFields = sortFields;
+	}
+	public List<String> getSortFields() {
+		return sortFields;
 	}
 }

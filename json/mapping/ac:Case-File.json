@@ -39,8 +39,7 @@
 			 	{   
 			        "type":"search",
 			        "value":["CaseFile:"],
-			        "path":["ac:Case-File.id"],
-			        "categories":["Year", "Media", "Person", "ArtWork", "License", "ObjectType"]
+			        "path":["ac:Case-File.id"]
 			    }
 			] 
 		},

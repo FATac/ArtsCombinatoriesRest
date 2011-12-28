@@ -125,7 +125,7 @@ public class LegalProcess {
 		}
 	}
 	
-	public List<LegalBlockData> nextBlockData(Map<String, String> data, String user) {
+	public List<LegalBlockData> nextBlockData(Map<String, String> data, String user) throws Exception {
 		
 		try {
 			// load current legal process data
@@ -190,7 +190,7 @@ public class LegalProcess {
 			
 		} catch (Exception e) {
 			abortLegal(user);
-			log.error("Exception ", e);
+			throw e;
 		} finally {
 			try { if (!sqlConnector.isClosed()) sqlConnector.close(); } catch (Exception e) {}
 		}
