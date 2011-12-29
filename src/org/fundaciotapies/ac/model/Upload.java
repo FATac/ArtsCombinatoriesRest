@@ -263,7 +263,7 @@ public class Upload {
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) 
-						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> "+properties[i].trim()+" <"+Cfg.RESOURCE_URI_NS+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> "+properties[i].trim()+" <"+Cfg.RESOURCE_URI_NS+propertyValues[i].trim()+"> }");
 					else {
 						String lang = null;
 						
@@ -277,7 +277,7 @@ public class Upload {
 						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
 						
 						propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
-						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> "+properties[i].trim()+" \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> "+properties[i].trim()+" \"" + propertyValues[i].trim() + "\""+(lang!=null?lang:"")+" }");
 					}
 				}
 				
@@ -398,7 +398,7 @@ public class Upload {
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
-						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" <"+Cfg.RESOURCE_URI_NS+propertyValues[i]+"> }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" <"+Cfg.RESOURCE_URI_NS+propertyValues[i].trim()+"> }");
 					} else {
 						String lang = null;
 						
@@ -412,7 +412,7 @@ public class Upload {
 						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
 						
 						propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
-						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" \"" + propertyValues[i] + "\""+(lang!=null?lang:"")+" }");
+						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" \"" + propertyValues[i].trim() + "\""+(lang!=null?lang:"")+" }");
 					}
 				}
 				i++;

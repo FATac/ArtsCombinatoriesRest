@@ -325,18 +325,20 @@ public class Request {
 				QuerySolution qs = rs.next();
 				String propName = Cfg.fromNamespaceToPrefix(qs.get("prop").asResource().getNameSpace()) +  qs.get("prop").asResource().getLocalName();
 				if (!propName.equals(lastPropName) && lastPropName != null) {
-					result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(2):"_"),  propType } );
+					result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(1):"_"),  propType } );
 					range = "";
 					propType = "";
 				}
 				
-				if (qs.get("type")!=null) propType += ", "+qs.get("type").asResource().getLocalName();
-				if (qs.get("range")!=null) range += ", "+qs.get("range").asResource().getLocalName();
+				if (qs.get("type")!=null) propType += ","+qs.get("type").asResource().getLocalName();
+				if (qs.get("range")!=null) {
+					range += ","+Cfg.fromNamespaceToPrefix(qs.get("range").asResource().getNameSpace())+qs.get("range").asResource().getLocalName();
+				}
 				lastPropName = propName;
 			}
 			
 			if (lastPropName != null) {
-				result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(2):"_") , propType } );
+				result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(1):"_") , propType } );
 				range = "";
 			}
 			
