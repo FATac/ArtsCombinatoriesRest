@@ -584,6 +584,16 @@ public class Request {
 			for (String ns : Cfg.ONTOLOGY_NAMESPACES) if (ns.length()>10) filter += " && !regex(?o, \""+ns+"\",\"i\") ";
 			filter += ")";
 			
+			if (className!=null && !"".equals(className)) {
+				String[] classNameList = className.split(",");
+				filter += " . ";
+				for (String c : classNameList) {
+					filter += " { ?s rdf:type " + c + " } UNION ";  
+				}
+				
+				filter = filter.substring(0, filter.length()-6);
+			}
+			
 			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + qc + filter + " } ", model);
 			ResultSet rs = vqe.execSelect();
 			
