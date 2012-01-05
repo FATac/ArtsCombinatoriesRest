@@ -16,7 +16,6 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
-import org.fundaciotapies.ac.logic.legal.support.LegalAutodata;
 import org.fundaciotapies.ac.logic.legal.support.LegalBlock;
 import org.fundaciotapies.ac.logic.legal.support.LegalBlockData;
 import org.fundaciotapies.ac.logic.legal.support.LegalBlockRules;
@@ -47,8 +46,10 @@ public class LegalProcess {
 					r.setRightLevel(3);
 				} else if ("yellow".equals(color)) {
 					r.setRightLevel(2);
-				} else {
+				} else if ("green".equals(color)) {
 					r.setRightLevel(1);
+				} else {
+					r.setRightLevel(0);
 				}
 				
 				r.saveUpdate();
@@ -171,7 +172,13 @@ public class LegalProcess {
 				if (res!=null && res) {
 					if (r.getResult().getBlock()!=null) {
 						LegalBlock b2 = def.getBlock(r.getResult().getBlock());
-						if (b2==null) throw new Exception("Cannot fin block " + r.getResult().getBlock());
+						if (b2==null) {
+							String objectIds = prop.getProperty("___objects");
+							setObjectsRight(Arrays.asList(objectIds.split(",")), "none");
+							new File(Cfg.CONFIGURATIONS_PATH + "legal/" + user + ".properties").delete();
+							log.warn("Cannot fin block " + r.getResult().getBlock());
+							return null;
+						}
 						prop.setProperty("___lastBlock", b2.getName());
 						prop.store(new FileOutputStream(Cfg.CONFIGURATIONS_PATH + "legal/" + user + ".properties"), null);
 						return restoreData(b2, prop);
@@ -182,7 +189,6 @@ public class LegalProcess {
 						setObjectsRight(Arrays.asList(objectIds.split(",")), color);
 						
 						new File(Cfg.CONFIGURATIONS_PATH + "legal/" + user + ".properties").delete();
-						
 						return null;
 					}
 				}
@@ -199,11 +205,11 @@ public class LegalProcess {
 	}
 	
 	private void storeData(LegalBlock b, Map<String, String> data, Properties prop) throws Exception {
-		if (b.getAutodata()==null) return;
+		if (b.getReference()==null) return;
 		if (sqlConnector==null) throw new Exception("Sql connector must be provided when autodata feature is used!");
 		
-		LegalAutodata lad = b.getAutodata();
-		String keyVal = prop.getProperty(lad.getKey());
+		String reference = b.getReference();
+		String keyVal = prop.getProperty(reference);
 		
 		PreparedStatement pstmt = null;
 		
@@ -211,14 +217,14 @@ public class LegalProcess {
 			for (LegalBlockData d : b.getData()) {
 				if (d==null) break;
 				pstmt = sqlConnector.prepareStatement("DELETE FROM _autodata WHERE keyName = ? AND keyValue = ? AND name = ? ");
-				pstmt.setString(1, lad.getKey());
+				pstmt.setString(1, reference);
 				pstmt.setString(2, keyVal);
 				pstmt.setString(3, d.getName());
 				pstmt.executeUpdate();
 				pstmt.close();
 				
 				pstmt = sqlConnector.prepareStatement("INSERT INTO _autodata (keyName,keyValue,name,defaultValue) VALUES (?,?,?,?) ");
-				pstmt.setString(1, lad.getKey());
+				pstmt.setString(1, reference);
 				pstmt.setString(2, keyVal);
 				pstmt.setString(3, d.getName());
 				pstmt.setString(4, data.get(d.getName()));
@@ -232,10 +238,10 @@ public class LegalProcess {
 	}
 	
 	private List<LegalBlockData> restoreData(LegalBlock b, Properties prop) throws Exception {
-		if (b.getAutodata()==null) return b.getData();
+		if (b.getReference()==null) return b.getData();
 		if (sqlConnector==null) throw new Exception("Sql connector must be provided when autodata feature is used!");
 		
-		LegalAutodata lad = b.getAutodata();
+		String reference = b.getReference();
 		ResultSet rs = null;
 		PreparedStatement pstmt = null;
 		try {
@@ -243,14 +249,14 @@ public class LegalProcess {
 			for (LegalBlockData d : b.getData()) {
 				if (d==null) break;
 				
-				pstmt.setString(1, lad.getKey());
-				pstmt.setString(2, prop.getProperty(lad.getKey()));
+				pstmt.setString(1, reference);
+				pstmt.setString(2, prop.getProperty(reference));
 				pstmt.setString(3, d.getName());
 				
 				rs = pstmt.executeQuery();
 				if (rs.next()) d.setDefaultValue(rs.getString("defaultValue"));
 				
-				if (lad.getKey().equals(d.getName())) d.setAutodata(Boolean.TRUE);
+				if (reference.equals(d.getName())) d.setAutodata(Boolean.TRUE);
 			}
 		} catch (Exception e) {
 			throw e;

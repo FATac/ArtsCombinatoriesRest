@@ -36,7 +36,7 @@
 	
 	    {
 	        "name":"bGeneral",
-	        "autodata":{"key":"work_reference"},
+	        "reference":"work_reference",
 	        "description":"General data which is required for any work or document",
 	        "data":
 	        [
@@ -57,7 +57,7 @@
 	    
 	    {
 	        "name":"bAuthor",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"Author",
 	        "data":
 	        [
@@ -76,7 +76,7 @@
 	    
 	    {
 	        "name":"bOrder",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"Order data",
 	        "data":
 	        [
@@ -93,7 +93,7 @@
 	    
 	    {
 	        "name":"bAssignment",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"Transfer of rights",
 	        "data":
 	        [
@@ -111,7 +111,7 @@
 	    
 	    {
 	    	"name":"bAuthorRights",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	    	"description":"Author rights cession",
 	    	"data":
 	    	[
@@ -133,7 +133,7 @@
 	    
 	    {
 	        "name":"bOrphan",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"Orphan works info",
 	        "data":
 	        [
@@ -156,7 +156,7 @@
 	    
 	    {
 	        "name":"bWorkType",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -180,7 +180,7 @@
 	    
 	    {
 	        "name":"bPhoto",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"Resolution",
 	        "data":
 	        [
@@ -195,7 +195,7 @@
 	    
 	    {
 	        "name":"bAudio",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"Audio",
 	        "data":
 	        [
@@ -215,7 +215,7 @@
 	    
 	    {
 	        "name":"bAudioSpeech",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"Audio Speech",
 	        "data":
 	        [
@@ -234,7 +234,7 @@
 	    
 	    {
 	        "name":"bAudioSpeakerContract",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "descrption":"Audio speaker contract",
 	        "data":
 	        [
@@ -258,7 +258,7 @@
 	    
 	    {
 	        "name":"bAudioMusic",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -276,7 +276,7 @@
 	    
 	    {
 	        "name":"bAudioInterview",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -292,7 +292,7 @@
 	    
 	    {
 	        "name":"bAudiovisual",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -308,7 +308,7 @@
 	    
 	    {
 	        "name":"bAudiovisualActors",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -326,7 +326,7 @@
 	    
 	    {
 	        "name":"bAudiovisualActorsContract",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "descrption":"Audiovisual actors contract",
 	        "data":
 	        [
@@ -348,7 +348,7 @@
 	    
 	    {
 	        "name":"bPhotoBuilding",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -366,7 +366,7 @@
 
 	    {
 	        "name":"bPersonBrandInfo",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -388,7 +388,7 @@
 
 	    {
 	        "name":"bPrivacy",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -412,7 +412,7 @@
 	    
 	    {
 	        "name":"bPrivacyPerson",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -438,7 +438,7 @@
 	    
 	    {
 	        "name":"bBrand",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -462,7 +462,7 @@
 	    
 	    {
 	        "name":"bPersonalData",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -487,7 +487,7 @@
 	    
 	    {
 	        "name":"bConfidentiality",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -514,7 +514,7 @@
 	    
 	    {
 	        "name":"bRelatedWorks",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [
@@ -533,7 +533,7 @@
 	    {
 	        "name":"bContainerWork",
 	        "description":"",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "data":
 	        [
 	            {"name":"container_work_result", "type":"legal_result", "values":["green", "yellow", "orange", "red"]}
@@ -549,7 +549,7 @@
 	    {
 	        "name":"bContainedWorks",
 	        "description":"",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "data":
 	        [
 	            {"name":"contained_works_result", "type":"legal_result", "values":["green", "yellow", "orange", "red"]}
@@ -567,7 +567,7 @@
 	    
 	    {
 	        "name":"bFinal",
-	        "autodata":{"key":"work_reference", "table":"autodata_table"},
+	        "reference":"work_reference",
 	        "description":"",
 	        "data":
 	        [

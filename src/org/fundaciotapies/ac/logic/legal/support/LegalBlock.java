@@ -7,7 +7,7 @@ public class LegalBlock {
 	private String description;
 	private List<LegalBlockData> data;
 	private List<LegalBlockRules> rules;
-	private LegalAutodata autodata;
+	private String reference;
 	
 	public void setName(String name) {
 		this.name = name;
@@ -42,10 +42,10 @@ public class LegalBlock {
 		} else return false;
 	}
 	
-	public void setAutodata(LegalAutodata autodata) {
-		this.autodata = autodata;
+	public void setReference(String reference) {
+		this.reference = reference;
 	}
-	public LegalAutodata getAutodata() {
-		return autodata;
+	public String getReference() {
+		return reference;
 	}
 }

@@ -311,7 +311,15 @@ public class ViewGenerator {
 			
 				Template template = getObjectTemplate(id);
 				if (template != null) {
+					boolean hasThumbnailSection = false;
 					for (TemplateSection section : template.getSections()) {
+						if ("thumbnail".equals(section.getName())) {
+							hasThumbnailSection = true;
+							break;
+						}
+					}
+					for (TemplateSection section : template.getSections()) {
+						if (hasThumbnailSection && !"thumbnail".equals(section.getName())) continue;
 						for (DataMapping d : section.getData()) {
 							for (String path : d.getPath()) {
 								if (d.getType().equals("media")) {

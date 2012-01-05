@@ -17,7 +17,14 @@
 					"name":"Description",
 					"type":"text",
 					"path":["ac:Event.ac:Description"]
+				},
+				
+				{
+					"name":"RelatedPeople",
+					"type":"text",
+					"path":["ac:Event.ac:applicationOf=ac:Role.ac:performedBy=*.ac:Name"]
 				}
+				
 			]
 		}
 	]

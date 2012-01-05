@@ -113,6 +113,46 @@ public class Request {
 		return lang;
 	}
 	
+	public List<String> listObjectLegalColor(String color) {
+		try {
+			Integer rightLevel = null;
+			if (color!=null) {
+				if ("red".equals(color)) {
+					rightLevel = 4;
+				} else if ("orange".equals(color)) {
+					rightLevel = 3;
+				} else if ("yellow".equals(color)) {
+					rightLevel = 2;
+				} else if ("green".equals(color)) {
+					rightLevel = 1;
+				} else {
+					rightLevel = 0;
+				}
+			}
+			
+			List<String> result = Right.list(rightLevel);
+			for (int i=1;i<result.size();i+=2) {
+				String sRightLevel = result.get(i);
+				if ("4".equals(sRightLevel)) {
+					result.set(i, "red");
+				} else if ("3".equals(sRightLevel)) {
+					result.set(i, "orange");
+				} else if ("2".equals(sRightLevel)) {
+					result.set(i, "yellow");
+				} else if ("1".equals(sRightLevel)) {
+					result.set(i, "green");
+				} else if ("0".equals(sRightLevel)) {
+					result.set(i, "none");
+				}
+			}
+			
+			return result;
+		} catch (Exception e) {
+			log.error("Error ", e);
+			return null;
+		}
+	}
+	
 	
 	public String getObjectLegalColor(String id) {
 		
@@ -127,7 +167,7 @@ public class Request {
 			case 2: return "#ffff00"; // yellow
 			case 3: return "#ffa500"; // orange
 			case 4: return "#ff0000"; // red
-			default: return "#00ff00";
+			default: return "#dddddd";
 			}
 		} catch (Exception e) {
 			log.error("Error ", e);

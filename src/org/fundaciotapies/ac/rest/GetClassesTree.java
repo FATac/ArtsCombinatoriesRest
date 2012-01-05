@@ -22,6 +22,7 @@ public class GetClassesTree {
 	@Produces("application/json")
 	public String getClassesTree(@QueryParam("c") String rootClass) {
 		String[] rootClassList = new String[0];
+		if ("_".equals(rootClass)) rootClass = null;
 		if (rootClass!=null) rootClassList = rootClass.split(",");
 		
 		if (rootClassList.length>1) {

@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -158,6 +160,41 @@ public class Right implements Serializable {
 				if (conn!=null) conn.close();
 			} catch (Exception e) { throw e; }
 		}   
+	}
+	
+	public static List<String> list(Integer rightLevel) throws Exception {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		
+		try {
+		    Context ctx = new InitialContext();
+		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
+		    conn = ds.getConnection();
+		    
+    		String sql = "SELECT * FROM _right";
+    		if (rightLevel!=null) sql += " WHERE rightLevel = ? ";
+		    		
+    		stmt = conn.prepareStatement(sql);
+    		if (rightLevel!=null) stmt.setInt(1, rightLevel);
+    		
+    		ResultSet rs = stmt.executeQuery();
+    		List<String> result = new ArrayList<String>();
+    		
+    		while(rs.next()) {
+    			result.add(rs.getString("objectId"));
+    			result.add(rs.getString("rightLevel"));
+    		}
+		    
+		    return result;
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			try {
+				if (stmt!=null) stmt.close();
+				if (conn!=null) conn.close();
+			} catch (Exception e) { throw e; }
+		}
+		
 	}
 	
 }
