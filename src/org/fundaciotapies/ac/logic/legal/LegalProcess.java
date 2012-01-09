@@ -31,6 +31,9 @@ public class LegalProcess {
 	
 	private Connection sqlConnector = null;
 	
+	/*
+	 * Assigns right level to objects
+	 */
 	public void setObjectsRight(List<String> objectIdList, String color) {
 		try {
 			Right r = new Right();
@@ -204,6 +207,9 @@ public class LegalProcess {
 		return null;
 	}
 	
+	/*
+	 * Stores block data in DB linking it to a reference, to allow data recovering
+	 */
 	private void storeData(LegalBlock b, Map<String, String> data, Properties prop) throws Exception {
 		if (b.getReference()==null) return;
 		if (sqlConnector==null) throw new Exception("Sql connector must be provided when autodata feature is used!");
@@ -214,6 +220,7 @@ public class LegalProcess {
 		PreparedStatement pstmt = null;
 		
 		try {
+			// For each data name in block, first delete any existing same-name data and next store current data 
 			for (LegalBlockData d : b.getData()) {
 				if (d==null) break;
 				pstmt = sqlConnector.prepareStatement("DELETE FROM _autodata WHERE keyName = ? AND keyValue = ? AND name = ? ");
@@ -237,6 +244,9 @@ public class LegalProcess {
 		}
 	}
 	
+	/*
+	 * Restores any data previously stored using a reference, if exists in the current block
+	 */	
 	private List<LegalBlockData> restoreData(LegalBlock b, Properties prop) throws Exception {
 		if (b.getReference()==null) return b.getData();
 		if (sqlConnector==null) throw new Exception("Sql connector must be provided when autodata feature is used!");
@@ -256,6 +266,7 @@ public class LegalProcess {
 				rs = pstmt.executeQuery();
 				if (rs.next()) d.setDefaultValue(rs.getString("defaultValue"));
 				
+				// If the reference key is in this block, turn autodata on
 				if (reference.equals(d.getName())) d.setAutodata(Boolean.TRUE);
 			}
 		} catch (Exception e) {
@@ -268,6 +279,9 @@ public class LegalProcess {
 		return b.getData();
 	}
 	
+	/*
+	 * Restores any data previously stored using a reference passed by parameter
+	 */	
 	public List<LegalBlockData> restoreData(String key, String keyValue) throws Exception {
 		if (sqlConnector==null) throw new Exception("Sql connector must be provided when autodata feature is used!");
 				

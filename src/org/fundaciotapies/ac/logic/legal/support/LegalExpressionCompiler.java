@@ -11,6 +11,9 @@ public class LegalExpressionCompiler {
 	 
 	private Properties data = new Properties();
 	
+	/*
+	 * Returns a 3-element string containing: first operand, operator, second operand. First element can be negation operator. 
+	 */
 	public String[] extractOperands(String exp) throws LegalExpressionException {
 		String[] result = { null, null, null, null };
 		
@@ -22,6 +25,8 @@ public class LegalExpressionCompiler {
 			exp = exp.substring(1).trim();
 		}
 		
+		// expressions inside parenthesis are considered as a single operator 
+		// if there are operands outside 
 		if (exp.startsWith("(")) {
 			int lastIdx = 0;
 			int par = 1;
@@ -49,7 +54,7 @@ public class LegalExpressionCompiler {
 		} else {
 			exp = (result[0]!=null?result[0]:"")+exp;
 			result[0] = null;
-			int closestIdx = 99999;
+			int closestIdx = 99999;		// this would not be the best solution if the expression was insanely long
 			String closestOp = null;
 			for (String o : operators) {
 				int idx = exp.indexOf(o);
