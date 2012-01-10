@@ -23,7 +23,7 @@ public class Cfg {
 	public static String DAY_FORMAT = "dd";
 	
 	public static String[] LANGUAGE_LIST = { "ca", "en", "es", "fr", "it", "de" };							// First language on the list is set as default
-	public static String[] USER_LEVEL = { "*", "Member", "Manager Reviewer", "Site Administrator" };	// From level 1 to level 4 of authorization level
+	public static String[] USER_LEVEL = { "*", "Member", "Manager+Reviewer", "Site Administrator" };	// From level 1 to level 4 of authorization level
 	
 	// Services base URLs and connection strings
 	public static String RDFDB_URL = "jdbc:virtuoso://localhost:1111";
@@ -31,6 +31,7 @@ public class Cfg {
 	public static String RDFDB_PASS = "dba";
 	public static String REST_URL = "http://ec2-50-17-94-196.compute-1.amazonaws.com:8080/ArtsCombinatoriesRest/";
 	public static String SOLR_URL = "http://localhost:8080/solr/";
+	public static String USER_ROLE_SERVICE_URL = "http://localhost:8084/fatac/usergroup?u=";
 	public static String VIDEO_SERVICES_URL = "http://localhost:8080/TapiesWebServices/rest/";
 	
 	// Ontology namespaces (After any change, all existing triples must be fixed)
@@ -106,6 +107,7 @@ public class Cfg {
 			REST_URL = jsonConfig.path("REST_URL").getTextValue();
 			SOLR_URL = jsonConfig.path("SOLR_URL").getTextValue();
 			VIDEO_SERVICES_URL = jsonConfig.path("VIDEO_SERVICES_URL").getTextValue();
+			USER_ROLE_SERVICE_URL = jsonConfig.path("USER_ROLE_SERVICE_URL").getTextValue();
 			
 			RESOURCE_URI_NS = jsonConfig.path("RESOURCE_URI_NS").getTextValue();
 			RESOURCE_PREFIX = jsonConfig.path("RESOURCE_PREFIX").getTextValue();
@@ -116,10 +118,10 @@ public class Cfg {
 			ONTOLOGY_NAMESPACES = tmplist.toArray(new String[0]);
 			
 			CONFIGURATIONS_PATH = jsonConfig.path("CONFIGURATIONS_PATH").getTextValue();
-			SOLR_PATH = jsonConfig.path("SOLR_PATH").getTextValue();
+			if (jsonConfig.path("SOLR_PATH")!=null) SOLR_PATH = jsonConfig.path("SOLR_PATH").getTextValue(); else SOLR_PATH = null;
 			MEDIA_PATH = jsonConfig.path("MEDIA_PATH").getTextValue();
 			ONTOLOGY_PATH = jsonConfig.path("ONTOLOGY_PATH").getTextValue();
-			if (jsonConfig.path("OAI_PATH")!=null) OAI_PATH = jsonConfig.path("OAI_PATH").getTextValue();				
+			if (jsonConfig.path("OAI_PATH")!=null) OAI_PATH = jsonConfig.path("OAI_PATH").getTextValue(); else OAI_PATH = null;
 		
 		} catch (Exception e) {
 			log.error("Error culd not load properties", e);

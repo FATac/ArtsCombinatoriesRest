@@ -3,10 +3,35 @@
 {
 	"data":
 	[
-		{
+	    {
 			"name":"CaseFile",
 			"type":"string",
 			"path":["ac:Event.ac:isReferencedBy", "ac:SpecialObject.ac:isReferencedBy", "ac:Media.ac:containedBy"]
+		},
+	
+	    {
+			"name":"Description",
+		    "type":"text",
+		    "path":["ac:Event.ac:Description",
+		    		"ac:Art_Work.ac:Title",
+		    		"ac:Person.ac:Name",
+		        	"ac:Person.ac:Bio",
+		    		"ac:Organisation.ac:Name",
+		        	"ac:Case-File.ac:references=*.ac:Title",
+		    		"ac:Case-File.ac:references=*.ac:tookPlaceAt=ac:City.ac:IsLocatedIn=ac:Country.ac:Name",
+		    		"ac:Case-File.ac:references=*.ac:tookPlaceAt=ac:City.ac:Name",
+		    		"ac:Case-File.ac:references=*.ac:tookPlaceAt=ac:Country.ac:Name",
+		    		"ac:Case-File.ac:references=ac:Event.ac:applicationOf=ac:Role.ac:performedBy=ac:Organisation.ac:Name",
+		        	"ac:Case-File.ac:references=ac:Event.ac:applicationOf=ac:Role.ac:performedBy=ac:Person.ac:Name",
+		        	"ac:Case-File.ac:references=*.ac:applicationOf=ac:Role.class",
+		        	"ac:Case-File.ac:hasMedia=*.ac:hasLanguage=ac:Language.ac:Label",
+		        	"ac:Case-File.ac:hasMedia=*.class",
+		        	"ac:Case-File.ac:hasMedia=*.ac:isCollectedIn=ac:Collection.class",
+		        	"ac:Case-File.ac:references=*.ac:Description",
+		        	"ac:Media.ac:Title"
+		    ],
+		    "search":"yes",
+		    "autocomplete":"yes"
 		},
 	
 	    {
@@ -15,25 +40,6 @@
 	        "path":["*.class", "*.superclass"],
 	        "category":"yes"
 	    },
-	    
-		{
-			"name":"Title",
-		    "type":"text",
-		    "path":["ac:Case-File.ac:references=*.ac:Title"],
-		    "search":"yes",
-		    "autocomplete":"yes",
-		    "multilingual":"yes"
-		},
-		
-		{
-			"name":"Description",
-		    "type":"text",
-		    "path":["ac:Case-File.ac:references=*.ac:Description",
-		    		"ac:Person.ac:Bio"
-		    ],
-		    "search":"yes",
-		    "multilingual":"yes"
-		},
 
 		{
 		    "name":"Year",
@@ -43,11 +49,8 @@
 		        "ac:Case-File.ac:references=*.ac:EndDate"
 		    ],
 		    "category":"yes",
-		    "sortCategory":"yes",
-		    "search":"yes",
-		    "autocomplete":"yes"
+		    "sortCategory":"yes"
 		},
-		
 
 		{
 		    "name":"Country",
@@ -57,8 +60,7 @@
 		    	"ac:Case-File.ac:references=*.ac:tookPlaceAt=ac:Country.ac:Name"
 		    ],
 		    "category":"yes",
-		    "multilingual":"yes",
-		    "search":"yes"
+		    "multilingual":"yes"
 		},
 		
 		{
@@ -68,8 +70,7 @@
 			    "ac:Case-File.ac:hasMedia=*.ac:hasLanguage=ac:Language.ac:Label"
 			],
 			"category":"yes",
-			"multilingual":"yes",
-		    "search":"yes"
+			"multilingual":"yes"
 		},
 		
 		{
@@ -78,8 +79,7 @@
 		    "path":[
 		    	"ac:Case-File.ac:hasMedia=*.class"
 		    ],
-		    "category":"yes",
-		    "search":"yes"
+		    "category":"yes"
 		},
 		
 		{
@@ -88,8 +88,7 @@
 		    "path":[
 		        "ac:Case-File.ac:references=*.ac:hasLicense=ac:License.ac:Label"
 		    ],
-		    "category":"yes",
-		    "search":"yes"
+		    "category":"yes"
 		},
 		
 		{
@@ -98,9 +97,7 @@
 		    "path":[
 		        "ac:Case-File.ac:references=*.ac:applicationOf=ac:Role.class"
 		    ],
-		    "category":"yes",
-		    "search":"yes",
-		    "autocomplete":"yes"
+		    "category":"yes"
 		},
 		
 		{
@@ -110,20 +107,7 @@
 		        "ac:Case-File.ac:references=ac:Event.ac:applicationOf=ac:Role.ac:performedBy=ac:Person.ac:Name",
 		        "ac:Person.ac:Name"
 		    ],
-		    "category":"yes",
-		    "search":"yes",
-		    "autocomplete":"yes"
-		},
-		
-		{
-		    "name":"PersonName",
-		    "type":"text",
-		    "path":[
-		        "ac:Case-File.ac:references=ac:Event.ac:applicationOf=ac:Role.ac:performedBy=ac:Person.ac:Name",
-		        "ac:Person.ac:Name"
-		    ],
-		    "search":"yes",
-		    "autocomplete":"yes"
+		    "category":"yes"
 		},
 		
 		{
@@ -133,20 +117,7 @@
 		        "ac:Case-File.ac:references=ac:Event.ac:applicationOf=ac:Role.ac:performedBy=ac:Organisation.ac:Name",
 		        "ac:Organisation.ac:Name"
 		    ],
-		    "category":"yes",
-		    "search":"yes",
-		    "autocomplete":"yes"
-		},
-		
-		{
-		    "name":"OrganisationName",
-		    "type":"text",
-		    "path":[
-		        "ac:Case-File.ac:references=ac:Event.ac:applicationOf=ac:Role.ac:performedBy=ac:Organisation.ac:Name",
-		        "ac:Organisation.ac:Name"
-		    ],
-		    "search":"yes",
-		    "autocomplete":"yes"
+		    "category":"yes"
 		},
 		
 		{
@@ -155,9 +126,7 @@
 		    "path":[
 		        "ac:Case-File.ac:hasMedia=*.ac:isCollectedIn=ac:Collection.class"
 		    ],
-		    "category":"yes",
-		    "search":"yes",
-		    "autocomplete":"yes"
+		    "category":"yes"
 		},
 		
 		{
@@ -167,19 +136,7 @@
 		        "ac:Art_Work.ac:Title"
 		    ],
 		    "category":"yes",
-		    "multilingual":"yes",
-		    "search":"yes",
-		    "autocomplete":"yes"
-		},
-		
-		{
-		    "name":"ArtWorkName",
-		    "type":"text",
-		    "path":[
-		        "ac:Art_Work.ac:Title"
-		    ],
-		    "search":"yes",
-		    "autocomplete":"yes"
+		    "multilingual":"yes"
 		},
 		
 		{

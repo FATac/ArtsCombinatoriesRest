@@ -11,6 +11,9 @@ import com.google.gson.Gson;
 
 public class SearchConfigurations {
 
+	/*
+	 * Simple function that return search configurations, hiding (setting to null) parts that are unnecessary for client 
+	 */
 	public String listSearchConfigurations() throws Exception {
 		try {
 			Mapping mapping = new Gson().fromJson(new FileReader(Cfg.CONFIGURATIONS_PATH+"mapping/search.json"), Mapping.class);

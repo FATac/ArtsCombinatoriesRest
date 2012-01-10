@@ -15,12 +15,18 @@ public class ModelUtil {
 	private static InfModel model = null;
 	private static VirtModel ontology = null;
 	
+	/*
+	 * Gets Ontology graph from Virtuoso and reuses it everytime it's requested 
+	 */
 	public static VirtModel getOntology() {
 		if (ontology!=null && !ontology.isClosed()) return ontology;
 		ontology = VirtModel.openDatabaseModel(Cfg.ONTOLOGY_NAMESPACES[0], Cfg.RDFDB_URL, Cfg.RDFDB_USER, Cfg.RDFDB_PASS);
 		return ontology;
 	}
 	
+	/*
+	 * Gets data graph from Virtuoso and reuses it everytime it's requested
+	 */
 	public static InfModel getModel() {
 		if (model!=null && !model.isClosed()) return model;
 		getOntology().createRuleSet("ac_rules", Cfg.ONTOLOGY_NAMESPACES[0]);
@@ -34,6 +40,10 @@ public class ModelUtil {
 		resetOntology();
 	}
 	
+	/*
+	 * Reset all ontologies specified in Configuration
+	 * by loading them, clearing and reloading
+	 */
 	public static void resetOntology() {
 		for (int i=0;i<Cfg.ONTOLOGY_NAMESPACES.length;i+=2){
 			VirtGraph ont = new VirtGraph(Cfg.ONTOLOGY_NAMESPACES[i], Cfg.RDFDB_URL, Cfg.RDFDB_USER, Cfg.RDFDB_PASS);
@@ -41,13 +51,18 @@ public class ModelUtil {
 			ont.read(Cfg.ONTOLOGY_NAMESPACES[i], null);
 			ont.close();
 		}
+		// close current Virtuoso ontology to ensure it will be reloaded on next request 
 		if (ontology!=null) ontology.close();
 	}
 	
+	/*
+	 * Reset data by loading its Virtuoso graph and clearing
+	 */
 	public static void resetModel() {
 		VirtGraph res = new VirtGraph(Cfg.RESOURCE_URI_NS, Cfg.RDFDB_URL, Cfg.RDFDB_USER, Cfg.RDFDB_PASS);
 		res.clear();
 		res.close();
+		// close current data graph to ensure reload on next request
 		if (model!=null) model.close();
 	}	
 	

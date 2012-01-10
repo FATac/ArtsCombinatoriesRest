@@ -55,12 +55,16 @@ public class ViewGenerator {
 		return new Gson().fromJson(new FileReader(f), Template.class);
 	}
 	
-	public void getObjectSectionView(TemplateSection section, String id, String lang) {
+	public void getObjectSectionView(TemplateSection section, String id, String lang, boolean hideMedia) {
 		Request req = new Request();
 		req.setCurrentLanguage(lang);
 		
 		for (DataMapping dm : section.getData()) {
 			String type = dm.getType();
+			if ("media".equals(type) && hideMedia) {
+				dm.setPath(null);
+				continue;
+			}
 			
 			if ("linkedObjects".equals(type)) {
 				for (String path : dm.getPath()) {
@@ -110,10 +114,11 @@ public class ViewGenerator {
 			Right right = new Right();
 			right.load(id);
 			
-			/*int userLegalLevel = new Request().getUserLegalLevel(uid);
+			boolean hideMedia = false;
+			int userLegalLevel = new Request().getUserLegalLevel(uid);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(uid)) {
-				throw new Exception("Access to object denied due to legal restrictions");
-			}*/
+				hideMedia = true;
+			}
 			
 			template = getObjectTemplate(id);
 			if (template == null) return null;
@@ -125,7 +130,7 @@ public class ViewGenerator {
 					section.setData(null);
 					continue;
 				}
-				getObjectSectionView(section, id, lang);
+				getObjectSectionView(section, id, lang, hideMedia);
 			}
 			
 			if (sectionName==null || "".equals(sectionName)) ResourceStatistics.visit(id);

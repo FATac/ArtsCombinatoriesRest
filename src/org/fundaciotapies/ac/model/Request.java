@@ -1,8 +1,12 @@
 package org.fundaciotapies.ac.model;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,7 +23,6 @@ import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.Right;
-import org.fundaciotapies.ac.model.bo.User;
 import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
@@ -46,6 +49,9 @@ public class Request {
 	
 	private String currentLanguage = Cfg.LANGUAGE_LIST[0];
 	
+	/*
+	 * Converts prefix-based className to full qualified notation
+	 */
 	public String fromClassNameToURI(String className) {
 		String classURI = null;
 		if (className!=null) {
@@ -59,29 +65,39 @@ public class Request {
 		return classURI;
 	}
 	
+	/*
+	 * Gets user legal level using an external service that allows accepts user id as parameter
+	 * and returns user role or group name. 
+	 * User level is determined by USER_LEVEL property of Configuration
+	 */
 	public int getUserLegalLevel(String userId) {
-		if (userId == null) return 1;
-		int userLegalLevel = 1;
-		
-		User user = new User();
 		
 		try {
-			user.load(userId);
+			// Connect
+			URL url = new URL(Cfg.USER_ROLE_SERVICE_URL + userId);
+		    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+		    conn.setRequestProperty("Content-Type", "plain/text");
+		    conn.setRequestMethod("GET");
+	
+		    // Get the response
+		    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+		    String str;
+		    StringBuffer sb = new StringBuffer();
+		    while ((str = rd.readLine()) != null) sb.append(str);
+		    String userRole = sb.toString();
+		    
+		    // Group name position in USER_LEVEL array determines user level
+		    // if it's not in the array, user level is 1
+		    int i = 1;
+		    for (String l : Cfg.USER_LEVEL) {
+		    	if (l.contains(userRole)) return i;
+		    	i++;
+		    }
+		    
 		} catch (Exception e) {
-			log.warn("Could not obtaing user role, please check that User database is running");
-			return userLegalLevel;
+			//log.warn("Error obtaining user role. Please make sure that USER_ROLE_SERVICE_URL is correct.");
 		}
-		
-		if (user.getUserRole()!=null) {
-			for (int l=0;l<Cfg.USER_LEVEL.length;l++) {
-				if (Cfg.USER_LEVEL[l].contains(user.getUserRole())) {
-					userLegalLevel = l+1;
-					break;
-				}
-			}
-		}
-		
-		return userLegalLevel;
+	    return 1;
 	}
 	
 	public void setCurrentLanguage(String currentLanguage) {
@@ -92,6 +108,9 @@ public class Request {
 		return currentLanguage;
 	}
 	
+	/*
+	 * Read cookies of request to get the current language of the client
+	 */
 	public String getCurrentLanguage(HttpServletRequest request) {
 		String lang = Cfg.LANGUAGE_LIST[0];
 		Cookie[] ckl = request.getCookies();
@@ -113,6 +132,10 @@ public class Request {
 		return lang;
 	}
 	
+	
+	/*
+	 * Gets all objects of an specific legal color
+	 */
 	public List<String> listObjectLegalColor(String color) {
 		try {
 			Integer rightLevel = null;
@@ -153,7 +176,9 @@ public class Request {
 		}
 	}
 	
-	
+	/*
+	 * Gets object legal color as rgb code
+	 */
 	public String getObjectLegalColor(String id) {
 		
 		try {
@@ -183,9 +208,10 @@ public class Request {
 			Right right = new Right();
 			right.load(id);
 			
+			boolean hideUrl = false;
 			int userLegalLevel = getUserLegalLevel(userId);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) {
-				throw new Exception("Access to object denied due to legal restrictions");
+				hideUrl = true;
 			}
 			
 			// Connect to rdf server
@@ -205,6 +231,7 @@ public class Request {
 				String value = null;
 				if (val.isLiteral()) {
 					value = val.asLiteral().toString();
+					if (value.startsWith("http://") && hideUrl) continue;
 				} else {
 					value = Cfg.fromNamespaceToPrefix(val.asResource().getNameSpace())+val.asResource().getLocalName();
 				}
@@ -535,6 +562,9 @@ public class Request {
 		return result;
 	}
 	
+	/*
+	 * List all object ids of a given class name 
+	 */
 	public List<String> listObjectsId(String className) {
 		List<String> result = new ArrayList<String>();
 		
@@ -884,6 +914,9 @@ public class Request {
 		return result;
 	}
 	
+	/*
+	 * Resolves the actual property value of a given subject
+	 */
 	private String[] resolveModelPathPart(String className, String property, String id, boolean includeId, boolean anyLanguage, boolean showLang) {
 		if ("class".equals(property)) return new String[]{ getObjectClassName(id) }; // 'class' is reserved word
 		if ("superclass".equals(property)) { // 'superclass' is reserved word
@@ -893,6 +926,8 @@ public class Request {
 			return supList;
 		}
 		
+		// 'id' is a reserved word
+		// instead of a property value return the actual id of the subject
 		if ("id".equals(property)) return new String[]{ id };  
 		
 		List<String> result = new ArrayList<String>();
@@ -900,10 +935,13 @@ public class Request {
 		// Connect to rdf server
 		InfModel model = ModelUtil.getModel();
 		
+		// construct the proper query
 		String classClause = "";
 		String idClause = " ?a ";
 		String propertyClause = " "+property+" ";
+		// current subject
 		if (id!=null) idClause = " <"+Cfg.RESOURCE_URI_NS+id+"> "; 
+		// if classname is given discard results that does not match it's object class or superclasses
 		if (className!=null && !"*".equals(className)) classClause = ". "+ idClause +" rdf:type " + className + " ";
 		
 		// Create search query
@@ -915,9 +953,13 @@ public class Request {
 			
 			if (node.isLiteral())  {
 				String lang = node.asLiteral().getLanguage();
+				// if we require a specific language results discard all other languages
+				// get current language from class variable "currentLanguage" that has been previously set
 				if (!anyLanguage && lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
+				// if language code is required to be shown, add LANG prefix which is later used by Solr to filter results by language
 				result.add((showLang && lang!=null && !"".equals(lang)?"LANG"+lang+"__":"") + node.asLiteral().getString() + (includeId?"@"+id:""));
 			} else {
+				// its a resource so return the identifier
 				result.add(node.asResource().getLocalName());
 			}
 		}

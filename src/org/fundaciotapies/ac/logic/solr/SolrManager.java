@@ -38,12 +38,16 @@ public class SolrManager {
 	public Map<String, CustomMap> documents = null;
 	public List<String[]> statistics = null;
 		
+	/*
+	 * Generates Solr schema.xml file mixing mapping.json specifications and schema.xml-EMPTY file
+	 */
 	public void generateSchema() throws Exception {
 		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
 		fin.close();
 		
+		// insert several fields by default
 		StringBuffer sb = new StringBuffer();
 		sb.append(" <fields> \n");
 		sb.append(" <!-- SYSTEM FIELDS --> \n");
@@ -54,57 +58,41 @@ public class SolrManager {
 		sb.append(" 	<field name=\"creation\" type=\"long\" indexed=\"true\" stored=\"true\" required=\"false\" /> \n");
 		sb.append(" <!-- CUSTOMIZED FIELDS --> \n");
 		
+		// insert user defined fields at mapping.json, each data type determines solr field type
 		for(DataMapping m : mapping.getData()) {
 			String type = "string";
 			if ("date.year".equals(m.getType())) type = "int";								// TODO: add more types
 			if ("text".equals(m.getType())) type = "text_general";
-			if ("yes".equals(m.getSort()))
+			if ("yes".equals(m.getSort()))	// sort fields must be single-value to allow sorting
 				sb.append("	<field name=\""+m.getName()+"\" type=\""+type+"\" indexed=\"true\" stored=\"true\" multiValued=\"false\" /> \n");
 			else
 				sb.append("	<field name=\""+m.getName()+"\" type=\""+type+"\" indexed=\"true\" stored=\"true\" multiValued=\"true\" /> \n");
 		}
 		
 		sb.append(" </fields> \n\n\n ");
-		fin = new BufferedReader(new FileReader(Cfg.SOLR_PATH + "schema.xml-EMPTY"));
+		
+		// load schema.xml-EMPTY that contains field type definitions plus other stuff
+		fin = new BufferedReader(new FileReader(Cfg.SOLR_PATH + "conf/schema.xml-EMPTY"));
 		
 		StringBuffer sb2 = new StringBuffer();
 		String str = null;
 		while ((str = fin.readLine()) != null) sb2.append(str+"\n");
 		
+		// uses a string mark to find out where to put field list
 		int idx = sb2.indexOf("<!-- FIELDS_INSERTION_MARK -->") + 31;
 		if (idx!=-1) sb2.insert(idx, sb);
 		
+		// save schema.xml overwriting any existing schema
 		FileWriter fout = new FileWriter(Cfg.SOLR_PATH + "conf/schema.xml");
 		fout.write(sb2.toString());
 		fout.close();
 	}
 	
 	
-	/*public String createDocumentEntry(String id, String className, Mapping mapping) {
-		String xml = "	<doc>\n";
-		xml += "		<field name='id'>"+id+"</field>\n";
-		
-		for(DataMapping m : mapping.getData()) {
-			Boolean isMultilingual = "yes".equals(m.getMultilingual());
-			if (m.getPath()!=null) {
-				for (String path : m.getPath()) {
-					String currentClassName = path.split("\\.")[0].trim();
-					
-					if (className.equals(currentClassName) || "*".equals(currentClassName)) {
-						String[] result = new Request().resolveModelPath(path, id, false, true, isMultilingual);
-						for (String r : result) {
-							if (r!=null) xml += "		<field name='"+m.getName()+"'><![CDATA["+r+"]]></field>\n";
-						}
-					}
-				}
-			}
-		}
-		
-		xml += "	</doc>\n";
-		
-		return xml;
-	}*/
-	
+	/*
+	 * Implements "date", "date.year", "date.month", "date.day" data types of mapping.json 
+	 * Extract the desired part of date value, according to type 
+	 */
 	private String extractDatePart(String value, String type) {
 		try {
 			if (type.equals("date")) {
@@ -139,29 +127,39 @@ public class SolrManager {
 		return value;
 	}
 	
+	/*
+	 * Create a single object indexing
+	 */
 	private void createDocumentEntry(String id, String className, Mapping mapping) throws Exception {
 		CustomMap doc = documents.get(id);
 		if (doc==null) doc = new CustomMap();
 		
 		for(DataMapping m : mapping.getData()) {
 			Boolean isMultilingual = "yes".equals(m.getMultilingual());
-			if ("id,class,superclass".contains(m.getName())) throw new Exception(m.getName() + " is a reserved key word ");
+			
+			// checks that there's no reserved word in mapping
+			if ("id,class,views,lastView,creation".contains(m.getName())) throw new Exception(m.getName() + " is a reserved key word ");
 			if (doc.get(m.getName())==null) {
 				if (m.getPath()!=null) {
 					for (String path : m.getPath()) {
 						String currentClassName = path.split("\\.")[0].trim();
 						
+						// if current data path refers to this object class
+						// or is *, which refers to all 
 						if (className.equals(currentClassName) || "*".equals(currentClassName)) {
+							// get path value/s and put it in document indexing info.
 							String[] result = new Request().resolveModelPath(path, id, false, true, isMultilingual);
 							for (String r : result) {
 								if (m.getType().startsWith("date") && r!=null) r = extractDatePart(r, m.getType());
 								if (r!=null) {
 									doc.put(m.getName(), r);
-									if ("yes".equals(m.getSort())) break;
+									if ("yes".equals(m.getSort())) break; // if it is a sort field, we want no more than 1 value
 								}
 							}
 						}
 						
+						// if it is a sort field, we want no more than 1 value 
+						// (otherwise Solr would launch error) 
 						if (doc.get(m.getName())!=null && "yes".equals(m.getSort())) {
 							break;
 						}
@@ -170,6 +168,7 @@ public class SolrManager {
 			}
 		}
 		
+		// add statistics information using default fields: views, creation and lastView 
 		if (statistics != null) {
 			for (String[] stat : statistics) {
 				if (id.equals(stat[0])) {
@@ -181,9 +180,15 @@ public class SolrManager {
 			}
 		}
 		
+		// put single document in all documents group to be indexed 
 		documents.put(id, doc);
 	}
 	
+	/*
+	 * Main indexing function
+	 * loops through all indexing data fields defined in mapping.json, determines which class of objects are to be indexed
+	 * creates document group and generates resulting xml, which is finally saved and posted to Solr service "update"
+	 */
 	public void indexate() throws Exception {
 		documents = new HashMap<String, CustomMap>();
 		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
@@ -193,6 +198,7 @@ public class SolrManager {
 		Request request = new Request();
 		Set<String> objectTypesIndexed = new TreeSet<String>();
 		
+		// Collects all classes referenced from root in mapping.json
 		for(DataMapping m : mapping.getData()) {
 			if (m.getPath()!=null) {
 				for (String path : m.getPath()) {
@@ -202,12 +208,16 @@ public class SolrManager {
 			}
 		}
 		
+		// loads statistics that will be used to create every document indexes
 		statistics = ResourceStatistics.list();
 		for(String className : objectTypesIndexed) {
+			// for each class eligible for indexing, get all its objects
 			List<String> list = request.listObjectsId(className);
+			// and generate its index info
 			for(String id : list) createDocumentEntry(id, className, mapping);
 		}
 		
+		// render xml index that will feed Solr
 		String xml = "<add>\n";
 		for(Map.Entry<String, CustomMap> ent1 : documents.entrySet()) {
 			String id = ent1.getKey();
@@ -231,22 +241,23 @@ public class SolrManager {
 		}
 		xml += "</add>";
 		
+		// saving data.xml is for information purposes ony
+		// so it is not critical if it fails 
 		try {
 			PrintWriter fout = new PrintWriter(Cfg.SOLR_PATH + "data.xml");
 			fout.print(xml);
 			fout.close();
 		} catch (Exception e) {
-			System.out.println("Error saving indexation data.xml");
-			e.printStackTrace();
+			log.warn("Error saving indexation data.xml", e);
 		}
 		
-		// Connect
+		// Connect to Solr, service Update
 		URL url = new URL(Cfg.SOLR_URL + "update");
 	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 	    conn.setRequestProperty("Content-Type", "application/xml");
 	    conn.setRequestMethod("POST");
 
-	    // Send data
+	    // Feed hungry Solr with all index
 	    conn.setDoOutput(true);
 	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
 	    wr.write(xml);
@@ -266,6 +277,10 @@ public class SolrManager {
 	    rd.close();
 	}
 	
+	/*
+	 * Initial purpose of commit function was to effectively commit after indexing, 
+	 * but it seems unnecessary as Solr commits automatically (???)
+	 */
 	public void commit() throws Exception {
 		// Connect
 		URL url = new URL(Cfg.SOLR_URL + "update");
@@ -293,6 +308,9 @@ public class SolrManager {
 	    rd.close();
 	}
 	
+	/*
+	 * Clear all Solr index
+	 */
 	public void deleteAll() throws Exception {
 		// Connect
 		URL url = new URL(Cfg.SOLR_URL + "update");
@@ -300,7 +318,7 @@ public class SolrManager {
 	    conn.setRequestProperty("Content-Type", "application/xml");
 	    conn.setRequestMethod("POST");
 
-	    // Send data
+	    // Send "everything" query
 	    conn.setDoOutput(true);
 	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
 	    wr.write("<delete><query>*:*</query></delete>");
@@ -320,7 +338,7 @@ public class SolrManager {
 	    rd.close();
 	}
 	
-	public String getQueryFilter(List<String> filterValues, String lang) throws Exception {
+	private String getQueryFilter(List<String> filterValues, String lang) throws Exception {
 		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		
@@ -352,7 +370,9 @@ public class SolrManager {
 		return resp;
 	}
 
-	
+	/*
+	 * Performs a Solr search
+	 */
 	public String search(String searchText, String filter, String start, String rows, String lang, String searchConfig, String sort) throws Exception {
 		if (searchText==null) searchText = "";
 		String solrQuery1 = "";
@@ -370,8 +390,10 @@ public class SolrManager {
 			searchConfigurations = new Gson().fromJson(fin, Mapping.class);
 		} catch (FileNotFoundException e) {	}
 		
+		// if solr configurations are specified
 		if (searchConfigurations!=null) {
 			if (searchConfig==null || "".equals(searchConfig)) searchConfig = "default";
+			// get the current solr config and add its specifications to current search options
 			for (DataMapping searchConf : searchConfigurations.getData()) {
 				if (searchConf.getName().equals(searchConfig)) {
 					searchValues = searchConf.getFilter();
@@ -407,9 +429,12 @@ public class SolrManager {
 
 		boolean firstTime = true;
 		for (DataMapping m : mapping.getData()) {
+			// fields with "search" clause are meant to be used on search
 			if ("yes".equals(m.getSearch()) && !"".equals(searchText)) {
-				if (m.getType().contains("date") && !searchText.matches("[0-9]+")) {
-					// do something
+				if (m.getType().contains("date.") && !searchText.matches("[0-9]+")) {
+					// if it is a date type, it is converted to an int field
+					// solr fails searching text in numeric fields so we avoid this case
+					// do nothing
 				} else {
 					if (firstTime) {
 						if (hasFilter) solrQuery1 += " AND ("; 
@@ -424,9 +449,11 @@ public class SolrManager {
 					firstTime = false;
 				}
 			}
+			
+			// use solr facets to build categories of fields marked as so 
 			if ("yes".equals(m.getCategory())) {
 				solrQuery2 += "&facet.field="+m.getName();
-				if ("yes".equals(m.getMultilingual())) solrQuery2 += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";
+				if ("yes".equals(m.getMultilingual())) solrQuery2 += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";		// if field is multilingual consider only current language  
 				if ("yes".equals(m.getSortCategory())) solrQuery2 += "&f."+m.getName()+".facet.sort=index";
 			}
 		}
@@ -434,12 +461,13 @@ public class SolrManager {
 		if (hasFilter == true && !firstTime) solrQuery1 += ")";
 		//solrQuery2 += "&facet.mincount=1";
 		
+		// in case having no search text and filtering, perform a global query
 		if (solrQuery1 == null || "".equals(solrQuery1)) solrQuery1 = "*:*";
 		URL url = new URL(Cfg.SOLR_URL + "select/?q=" + URLEncoder.encode(solrQuery1, "UTF-8") + (sort!=null?"&sort="+URLEncoder.encode(sort, "UTF-8"):"") + solrQuery2);
 		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 	    conn.setRequestMethod("GET");
 	    
-	    // Get the response
+	    // Get solr search results
 	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 	    String str;
 	    StringBuffer sb = new StringBuffer();
@@ -448,9 +476,15 @@ public class SolrManager {
 	    	sb.append("\n");
 	    }
 	    
+	    
+	    // remove language code prefix from results
 	    return sb.toString().replaceAll("LANG"+lang+"__", "");
 	}
 	
+	/*
+	 * Performs Solr search to autocomplete taking advantage of facets prefix feature, 
+	 * which categorizes only values that have the specified prefix
+	 */
 	public String autocomplete(String searchText, String start, String rows, String lang, String searchConfig) throws Exception {
 		if (searchText==null || searchText.length()==0) return null;
 		String solrQuery1 = "";
@@ -485,7 +519,7 @@ public class SolrManager {
 		
 		String solrQuery2 = "&fl=id&facet=true&wt=json";
 		if (start!=null) solrQuery2 += "&start="+start;
-		if (rows!=null) solrQuery2 += "&rows="+rows;
+		solrQuery2 += "&rows=0";
 
 		if (lang==null || "".equals(lang)) lang = Cfg.LANGUAGE_LIST[0];
 		
