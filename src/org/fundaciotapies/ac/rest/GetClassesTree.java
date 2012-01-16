@@ -22,7 +22,7 @@ public class GetClassesTree {
 	@Produces("application/json")
 	public String getClassesTree(@QueryParam("c") String rootClass) {
 		String[] rootClassList = new String[0];
-		if ("_".equals(rootClass)) rootClass = null;
+		if ("".equals(rootClass)) rootClass = null;
 		if (rootClass!=null) rootClassList = rootClass.split(",");
 		
 		if (rootClassList.length>1) {
@@ -44,10 +44,7 @@ public class GetClassesTree {
 				json2 += getClassesTree(c)+", ";
 			
 			if (!"".equals(json2)) {
-				if (classesList.size() > 1)
-					json = json + ": [ " +  json2.substring(0,json2.length()-2) + " ] ";
-				else
-					json = json + ":" +  json2.substring(0,json2.length()-2);
+				json = json + ": [ " +  json2.substring(0,json2.length()-2) + " ] ";
 				json = " { " + json + " } ";
 			}
 			
