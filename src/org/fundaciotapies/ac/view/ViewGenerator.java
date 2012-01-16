@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -19,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
+import javax.media.jai.JAI;
+import javax.media.jai.RenderedOp;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
@@ -30,6 +31,7 @@ import org.fundaciotapies.ac.model.support.Template;
 import org.fundaciotapies.ac.model.support.TemplateSection;
 
 import com.google.gson.Gson;
+import com.sun.media.jai.codec.SeekableStream;
 
 public class ViewGenerator {
 	private static Logger log = Logger.getLogger(ViewGenerator.class);
@@ -286,11 +288,8 @@ public class ViewGenerator {
 	
 	
 	private BufferedImage loadImage(InputStream in) throws Exception {
-		try {
-			return ImageIO.read(in);
-		} catch (IOException e) {
-			return null;
-		}
+		RenderedOp img = JAI.create("stream", SeekableStream.wrapInputStream(in, true));
+		return img.getAsBufferedImage();
 	}
 	
 	public synchronized InputStream getObjectThumbnail(String id, String uid, Boolean firstCall) {

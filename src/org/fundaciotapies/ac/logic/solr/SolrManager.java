@@ -244,7 +244,7 @@ public class SolrManager {
 		// saving data.xml is for information purposes ony
 		// so it is not critical if it fails 
 		try {
-			PrintWriter fout = new PrintWriter(Cfg.SOLR_PATH + "data.xml");
+			PrintWriter fout = new PrintWriter(Cfg.SOLR_PATH + "data/data.xml");
 			fout.print(xml);
 			fout.close();
 		} catch (Exception e) {

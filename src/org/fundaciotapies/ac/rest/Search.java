@@ -26,8 +26,8 @@ public class Search {
 
 	@GET
 	@Produces("application/json")
-	public String search(@QueryParam("s") String word, @QueryParam("c") String className, @QueryParam("u") String uid) {
-		Map<String, CustomMap> result = new Request().search(word, className, uid);
+	public String search(@QueryParam("s") String word, @QueryParam("c") String className, @QueryParam("k") String color, @QueryParam("u") String uid) {
+		Map<String, CustomMap> result = new Request().search(word, className, color, uid);
 		return new Gson().toJson(result);
 	}
 }

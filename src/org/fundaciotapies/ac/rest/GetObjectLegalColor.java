@@ -22,7 +22,7 @@ public class GetObjectLegalColor {
 	
 	@GET
 	public String getObjectLegalColor(@Context HttpServletResponse response, @PathParam("id") String id) {
-		return new Request().getObjectLegalColor(id);
+		return new Request().getObjectLegalColorRGB(id);
 	}
 
 }

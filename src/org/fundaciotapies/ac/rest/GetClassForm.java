@@ -35,7 +35,7 @@ public class GetClassForm {
 	@GET
 	@Produces("application/json")
 	public String getInsertObjectForm(@PathParam("class") String className) {
-		List<String[]> fieldList = new Request().listClassProperties(className, false);
+		List<String[]> fieldList = new Request().listClassProperties(className);
 		List<GenericInput> inputList = new ArrayList<GenericInput>();
 		
 		for (String[] f: fieldList) {

@@ -10,7 +10,7 @@
 		    	{
 					"name":"Name",
 					"type":"text",
-					"path":["ac:Person.ac:Name"]
+					"path":["ac:Person.ac:Name", "ac:Person.ac:BirthDate"]
 				}
 			]
 		},
@@ -29,9 +29,7 @@
 			        "name":"Author",
 			        "type":"linkedObjects",
 			        "path":[
-			         	"ac:Person.ac:performsRole=ac:Artist.ac:appliesOn=*.ac:Title",
-			        	"ac:Person.ac:performsRole=ac:Writer.ac:appliesOn=*.ac:Title",
-			        	"ac:Person.ac:performsRole=ac:Author.ac:appliesOn=*.ac:Title"
+			         	"ac:Person.ac:performsRole=*.ac:appliesOn=*.ac:Title"
 			        ]
 			    }
 			]  

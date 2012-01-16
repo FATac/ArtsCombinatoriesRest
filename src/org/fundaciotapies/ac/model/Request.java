@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +33,7 @@ import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
@@ -179,7 +179,7 @@ public class Request {
 	/*
 	 * Gets object legal color as rgb code
 	 */
-	public String getObjectLegalColor(String id) {
+	public String getObjectLegalColorRGB(String id) {
 		
 		try {
 			Right right = new Right();
@@ -199,7 +199,32 @@ public class Request {
 			return null;
 		}
 	}
+	
+	public String getObjectLegalColorName(String id) {
+		
+		try {
+			Right right = new Right();
+			right.load(id);
+			Integer level = right.getRightLevel();
+			
+			if (level==null) return null;
+			
+			switch (level) {
+			case 1: return "green"; // green
+			case 2: return "yellow"; // yellow
+			case 3: return "orange"; // orange
+			case 4: return "red"; // red
+			default: return "gray";
+			}
+		} catch (Exception e) {
+			log.error("Error ", e);
+			return null;
+		}
+	}
 
+	/*
+	 * Get all object properties-values
+	 */
 	public CustomMap getObject(String id, String userId) {
 		CustomMap result = null;
 
@@ -227,10 +252,12 @@ public class Request {
 				Resource prop = qs.get("prop").asResource();
 				RDFNode val = qs.get("val");
 				
+				// URIs are converted to compact format
 				String property = Cfg.fromNamespaceToPrefix(prop.getNameSpace())+prop.getLocalName();
 				String value = null;
-				if (val.isLiteral()) {
+				if (val.isLiteral()) { 
 					value = val.asLiteral().toString();
+					// we hide URLs (assuming they link to medias) if user is not allowed to access them
 					if (value.startsWith("http://") && hideUrl) continue;
 				} else {
 					value = Cfg.fromNamespaceToPrefix(val.asResource().getNameSpace())+val.asResource().getLocalName();
@@ -282,6 +309,9 @@ public class Request {
 		return result;
 	}
 	
+	/*
+	 * Get media file extension
+	 */
 	public String getObjectFileFormat(String id) {
 		try {
 			Media media = new Media();
@@ -374,16 +404,48 @@ public class Request {
 	}
 	
 	public List<String[]> listClassProperties(String className) {
-		return listClassProperties(className, true);
-	}
-	
-	public List<String[]> listClassProperties(String className, boolean direct) {
 		List<String[]> result = new ArrayList<String[]>();
 
 		try {
 			if (className == null) return null;
 			
-			QueryExecution qe = VirtuosoQueryExecutionFactory.create("select * where { ?prop rdfs:domain "+className+" . ?prop rdf:type ?type . OPTIONAL { ?prop rdfs:range ?range } } ORDER BY ?prop ", ModelUtil.getOntology());
+			String prefix = "";
+			for(int i=0;i<Cfg.ONTOLOGY_NAMESPACES.length;i+=2) {
+				prefix += " prefix " + Cfg.ONTOLOGY_NAMESPACES[i+1] + ": <" + Cfg.ONTOLOGY_NAMESPACES[i] + "> "; 
+			}
+			
+			/*
+			 * get all properties and their ranges of a given class and its super classes
+			 * also get properties that have no domain, that is- properties that can be used in any class
+			 */
+			String query = prefix +
+				" select ?prop ?type ?range " +
+				"		where " +
+				"		{ " +
+				"		  { ?prop rdf:type owl:ObjectProperty } " + 
+				"		  union " +
+				"		  { ?prop rdf:type owl:DatatypeProperty } " + 
+				"		  . " +
+				"		  { ?prop rdfs:domain " + className +
+				"		    . ?prop rdf:type ?type " +
+				"		  } " +
+				"		  union " +
+				"		  { ?prop rdf:type ?type . filter not exists { ?prop rdfs:domain ?x } } " +
+				"		  union " +
+				"		  { "+ className +" rdfs:subClassOf ?super " +
+				"		  . ?prop rdfs:domain ?super " +
+				"		  . ?prop rdf:type ?type " +
+				"		  } " +
+				"		  . optional " + 
+				"		  { ?prop rdfs:range ?range } " +
+				"		} " +
+				"		order by ?prop ";
+			
+			// Virtuoso reasoning does not work here!! We use Jena instead 
+			//QueryExecution qe = VirtuosoQueryExecutionFactory.create(query, ModelUtil.getOntology());
+			//QueryExecution qe = VirtuosoQueryExecutionFactory.create();
+			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM_TRANS_INF, ModelUtil.getOntology());
+			QueryExecution qe = QueryExecutionFactory.create(query, ont);
 			ResultSet rs = qe.execSelect();
 			String lastPropName = null;
 			String range = "";
@@ -391,12 +453,16 @@ public class Request {
 			while(rs.hasNext()) {
 				QuerySolution qs = rs.next();
 				String propName = Cfg.fromNamespaceToPrefix(qs.get("prop").asResource().getNameSpace()) +  qs.get("prop").asResource().getLocalName();
+				
+				// group triple list by property name
 				if (!propName.equals(lastPropName) && lastPropName != null) {
-					result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(1):"_"),  propType } );
+					// pack property
+					result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(1):""),  propType } );
 					range = "";
 					propType = "";
 				}
 				
+				// response includes property type and value range (coma separated)
 				if (qs.get("type")!=null) propType += ","+qs.get("type").asResource().getLocalName();
 				if (qs.get("range")!=null) {
 					range += ","+Cfg.fromNamespaceToPrefix(qs.get("range").asResource().getNameSpace())+qs.get("range").asResource().getLocalName();
@@ -404,15 +470,12 @@ public class Request {
 				lastPropName = propName;
 			}
 			
+			// pack last property found
 			if (lastPropName != null) {
-				result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(1):"_") , propType } );
+				result.add(new String[] { lastPropName , ((!"".equals(range))?range.substring(1):"") , propType } );
 				range = "";
 			}
 			
-			if (!direct) { 
-				List<String> scl = listSuperClasses(className);
-				for (String sc : scl) result.addAll(0, listClassProperties(sc));
-			}
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
@@ -426,7 +489,30 @@ public class Request {
 		try {
 			if (className == null) return null;
 			
-			QueryExecution qe = VirtuosoQueryExecutionFactory.create("select * where { ?prop rdfs:domain "+className+" } ORDER BY ?prop ", ModelUtil.getOntology());
+			/*
+			 * get all properties of a given class and its super classes
+			 * also get properties that have no domain, that is- properties that can be used in any class
+			 */
+			String query = 
+				" select ?prop " +
+				" where {" +
+				"   { { ?prop rdf:type owl:ObjectProperty } " +
+				"   union" +
+				"   { ?prop rdf:type owl:DatatypeProperty } } " +
+				"   . " +
+				"   { ?prop rdfs:domain "+ className +" } " +
+				"   union" +
+				"   { ?prop rdf:type ?z . filter not exists { ?prop rdfs:domain ?x } }" +
+				"   union " +
+				"   { "+ className +" rdfs:subClassOf ?super" +
+				"     . ?prop rdfs:domain ?super } " +
+				" } " +
+				" order by ?prop ";
+			
+			// Virtuoso reasoning does not work here!! We use Jena instead 
+			//QueryExecution qe = VirtuosoQueryExecutionFactory.create(query, ModelUtil.getOntology());
+			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM_TRANS_INF, ModelUtil.getOntology());
+			QueryExecution qe = QueryExecutionFactory.create(query, ont);
 			ResultSet rs = qe.execSelect();
 			
 			while(rs.hasNext()) {
@@ -496,6 +582,9 @@ public class Request {
 		return result;	
 	}*/
 	
+	/*
+	 * List all object of a given class name 
+	 */
 	public Map<String, CustomMap> listObjects(String className) {
 		Map<String, CustomMap> result = new TreeMap<String, CustomMap>();
 		
@@ -617,36 +706,18 @@ public class Request {
 		
 		return result;
 	}
-
 	
-	public Map<String, CustomMap> search(String word, String className, String userId) {
+	/* Full model search */
+	public Map<String, CustomMap> search(String word, String className, String color, String userId) {
+		if ("".equals(color)) color = null;
 		Map<String, CustomMap> result = new TreeMap<String, CustomMap>();
 		
 		try {
 			// Connect to rdf server
 			InfModel model = ModelUtil.getModel();
-			int userLegalLevel = 1;
 			
 			String qc = null;
 			
-			// If specified, filter results for given class name and for all its subclasses 
-			/*if (className!=null && !"".equals(className) && !"_".equals(className)) {
-				String[] clsl = className.split(",");
-				
-				for(String cls : clsl) {
-					if (cls!=null && !"".equals(cls)) {
-						if (qc==null) {
-							qc = " . { ?s rdf:type "+cls+" } "; 
-						} else {
-							qc += " UNION { ?s rdf:type "+cls+" } ";
-						}
-						
-						List<String> subClassesList = listSubclasses(cls, false);
-						for (String sc : subClassesList) qc += " UNION { ?s rdf:type "+sc+" } ";
-					}
-				}
-			}*/
-
 			if (qc==null) qc = "";
 
 			// Create search query
@@ -671,34 +742,19 @@ public class Request {
 			String lastId = null;
 			CustomMap currentObject = null;
 			
-			// Get user role level
-			/*int userLegalLevel = 1;
-			if (userId != null && !"".equals(userId)) {
-				User user = new User();
-				user.load(userId);
-				userLegalLevel = getRoleLevel(user.getUserRole());
-			}*/
-			
 			// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
-			Right right = null;
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
 				
 				currentId = r.get("s").asResource().getLocalName();
+				if (color!=null && !color.equals(getObjectLegalColorName(currentId))) continue;
+				
 				if (!currentId.equals(lastId)) {
-					if (lastId != null && (right.getRightLevel()==null || right.getRightLevel() <= userLegalLevel)) {
-						if (currentObject.size()>0) result.put(lastId, currentObject);
-					}
-					
+					if (lastId != null && currentObject.size()>0) result.put(lastId, currentObject);
 					currentObject = new CustomMap();
-					
-					right = new Right();
-					right.load(currentId);
 				}
 				
 				lastId = currentId;
-				
-				if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(userId)) continue;
 				
 				String propertyName = Cfg.fromNamespaceToPrefix(r.get("p").asResource().getNameSpace()) + r.get("p").asResource().getLocalName();
 				if (r.get("o").isResource()) {
@@ -708,7 +764,7 @@ public class Request {
 				}
 			}
 
-			if (lastId != null && (right.getRightLevel()==null || right.getRightLevel() <= userLegalLevel)) result.put(lastId, currentObject);
+			if (currentObject != null && currentObject.size()>0) result.put(currentId, currentObject);
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
@@ -716,6 +772,7 @@ public class Request {
 		return result;
 	}
 
+	/* Get the object what has a specified field-value property and is of a given type */
 	public List<String> specificObjectSearch(String field, String value, String className) {
 		List<String> idList = new ArrayList<String>();
 		
@@ -742,6 +799,7 @@ public class Request {
 		return idList; 
 	}
 
+	/* not used */
 	public void saveBackup2() {
 		
 		try {
@@ -783,6 +841,7 @@ public class Request {
 		}
 	}
 	
+	/* not used */
 	public void saveBackup() {
 		
 		InfModel model = ModelUtil.getModel();
@@ -916,8 +975,9 @@ public class Request {
 	
 	/*
 	 * Resolves the actual property value of a given subject
+	 * Removed functions, we use a single non-recursive function instead
 	 */
-	private String[] resolveModelPathPart(String className, String property, String id, boolean includeId, boolean anyLanguage, boolean showLang) {
+	/*private String[] resolveModelPathPart(String className, String property, String id, boolean includeId, boolean anyLanguage, boolean showLang) {
 		if ("class".equals(property)) return new String[]{ getObjectClassName(id) }; // 'class' is reserved word
 		if ("superclass".equals(property)) { // 'superclass' is reserved word
 			List<String> sup = listSuperClassesName(getObjectClass(id));
@@ -969,7 +1029,7 @@ public class Request {
 		return res;
 	}
 
-	public String[] resolveModelPath(String path, String id, boolean includeId, boolean anyLang, boolean showLang) {
+	public String[] resolveModelPath2(String path, String id, boolean includeId, boolean anyLang, boolean showLang) {
 		if (path==null) return new String[]{};
 		
 		int idx = path.indexOf("=");
@@ -989,6 +1049,89 @@ public class Request {
 		} 
 		
 		return values;
+	}*/
+	
+	/*
+	 * Resolves the actual value of a given path
+	 */
+	public String[] resolveModelPath(String path, String id, boolean includeId, boolean anyLang, boolean showLang) {
+		if (path==null) return new String[]{};
+		List<String> result = new ArrayList<String>();
+		
+		String idClause = " ?p0 ";
+		if (id!=null) idClause = " <"+Cfg.RESOURCE_URI_NS+id+"> "; 
+		
+		/*
+		 * Translate the path to a comprehensible sparql query
+		 */
+		String query = " where { ";
+		String[] parts = path.split("=");
+		int i = 0;
+		for(String part : parts) {
+			String[] atom = part.split("\\.");
+			if (i==0) {
+				if ("id".equals(atom[1])) {		// "id" is a reserved word
+					return new String[]{ id }; // return the actual Id of the object
+				} else {
+					if ("class".equals(atom[1]) || "superclass".equals(atom[1])) { // 'class' and 'superclass' are reserved words
+						query += idClause + " rdf:type ?p"+(++i)+" ";			// return the object types 
+						break;
+					} else {
+						query += idClause + atom[1] + " ?p"+(++i)+" ";
+					}
+				}
+				if (!atom[0].equals("*") && id==null) query += ". ?p0 " + " rdf:type " + atom[0];
+			} else {
+				if (!atom[0].equals("*")) query += ". ?p"+i + " rdf:type " + atom[0]; // related object must be of specified type ("*" means "any type")
+				if ("id".equals(atom[1])) {
+					break;
+				} else {
+					if ("class".equals(atom[1]) || "superclass".equals(atom[1])) {
+						query += " . ?p"+i + " rdf:type ?p"+(++i)+" ";
+						break;
+					/*} else if ("superclass".equals(atom[1])) {
+						query += " . ?p"+i + " rdf:type " + " ?t ";
+						query += " . ?t  rdfs:subClassOf ?p"+(++i)+" ";
+						break;*/
+					} else {
+						query += " . ?p"+i + " " + atom[1] + " ?p"+(++i)+" ";
+					}
+				}
+			}
+		}
+		
+		query = "select * " + query + " } ";
+		
+		//log.info("PATH: " + path);
+		//log.info("QUERY: " + query);
+		
+		QueryExecution vqe = VirtuosoQueryExecutionFactory.create(query, ModelUtil.getModel());
+		ResultSet rs = vqe.execSelect();
+		while(rs.hasNext()) {
+			QuerySolution s = rs.next();
+			RDFNode node = s.get("p"+i);
+			String thisId = id;
+			
+			if (i>1) {
+				RDFNode IdNode = s.get("p"+(i-1));
+				thisId = IdNode.asResource().getLocalName();
+			}
+			if (node.isLiteral())  {
+				String lang = node.asLiteral().getLanguage();
+				// if we require a specific language results discard all other languages
+				// get current language from class variable "currentLanguage" that has been previously set
+				if (!anyLang && lang!=null && !"".equals(lang) && !lang.equals(getCurrentLanguage())) continue;
+				// if language code is required to be shown, add LANG prefix which is later used by Solr to filter results by language
+				result.add((showLang && lang!=null && !"".equals(lang)?"LANG"+lang+"__":"") + node.asLiteral().getString() + (includeId?"@"+thisId:""));
+			} else {
+				// its a resource so return the identifier
+				result.add(node.asResource().getLocalName());
+			}
+		}
+		
+		String[] res = new String[result.size()];
+		result.toArray(res);
+		return res;
 	}
 	
 }

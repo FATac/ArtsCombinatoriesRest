@@ -32,11 +32,6 @@ import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Property;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.shared.Command;
 
 public class Upload {
@@ -46,25 +41,37 @@ public class Upload {
 	
 	public InfModel model = null;
 	
+	/*
+	 * Transform any string to an identifier
+	 */
 	private String normalizeId(String about) throws Exception {
 		String temp = Normalizer.normalize(about.trim(), Normalizer.Form.NFD);
-	    Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+	    Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+"); // remove diacritical marks (accents, etc.)
+	    
+	    // remove anything that is not a letter, nubmer or space form, and transform all space forms to '_' 
 	    String result = pattern.matcher(temp).replaceAll("").replaceAll("\\<.*?>","").replaceAll("[^A-Za-z0-9_\\s]", "").replaceAll("[\\s+\\n+\\t+]", "_");
 	    if (result!=null && !"".equals(result)) {
+	    	// number-starting strings cannot be identifiers so add a starting character
 	    	if ("0123456789".contains(result.charAt(0)+"")) result = "_" + result;
 	    } else {
+	    	// if no identifier is left after normalization, use a predefined string
 	    	result = "Unidentified";
 	    }
+	    // cut too long ids
 	    if (result.length()>140) result = result.substring(0, 140);
 	    return result;
 	}
 	
+	/*
+	 * Generate identifier ensuring that its unique
+	 */
 	private String generateObjectId(String about) throws Exception {
 		if (about == null) throw new NullPointerException();
 		IdentifierCounter oc = new IdentifierCounter();
 		
 		about = normalizeId(about);
 		
+		// get identifier counter
 		oc.load(about);
 		oc.setCounter(oc.getCounter()+1);
 		if (oc.getCounter() == 1l) {
@@ -75,11 +82,12 @@ public class Upload {
 		
 		Long n = oc.getCounter();
 		if (n>1) 
-			return about + "_" + oc.getCounter();
+			return about + "_" + oc.getCounter(); // add counter mark if this id is already used
 		else
 			return about;
 	}
 	
+	// use video services to encode media file in given profile
 	public void encodeMediaFile(String sourceFilePath, String destinationFilePath, int profile) throws Exception {
 		TranscoEntity transco = new TranscoEntity();
 		transco.setSrc_path(Cfg.MEDIA_PATH + sourceFilePath);
@@ -95,7 +103,6 @@ public class Upload {
 	
 	public String auxId;
 	public String removeMediaFile(String id) {
-		
 		try {
 			Media media = new Media();
 			media.load(id);
@@ -361,7 +368,9 @@ public class Upload {
 		return result;
 	}
 
-	
+	/*
+	 * Updates object data
+	 */
 	public String updateObject(String uniqueId, String[] properties, String[] propertyValues) {
 		String result = "error";
 		VirtTransactionHandler vth = null;
@@ -370,38 +379,44 @@ public class Upload {
 		
 		try {
 			model = ModelUtil.getModel();
+			
+			// load ontology and jena reasoner
 			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ModelUtil.getOntology());
 			int i = 0;
 			
 			script = new ArrayList<String>();
 
+			// list all ontology object properties (relations)
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			while(i<properties.length) {
-				if ("rdf:type".equalsIgnoreCase(properties[i])) {
+				if ("rdf:type".equalsIgnoreCase(properties[i])) { // rdf type is ignored
 					i++;
 					continue;
 				}
 				boolean isObjectProperty = false;
 				
+				// all property names come with prefix, they need to be converted to namespace to be compared with Jena responses
 				String qualifiedProperty = Cfg.fromPrefixToNamespace(properties[i].split(":")[0])+properties[i].split(":")[1];
 				for(ObjectProperty op : lop) {
-					if (op.toString().equals(qualifiedProperty)) {
+					if (op.toString().equals(qualifiedProperty)) { // checks whether current property is relation (ObjectProperty)
 						isObjectProperty = true;
 						break;
 					}
 				}
 				
 				if (!"".equals(propertyValues[i]) && !alreadyDeleted.contains(properties[i])) {
+					// first delete properties that are being modified 
 					script.add("DELETE FROM <" + Cfg.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a "+properties[i]+" ?c FILTER (?a = <" + Cfg.RESOURCE_URI_NS+uniqueId + "> ) . ?a ?b ?c }");
-					alreadyDeleted.add(properties[i]);
+					alreadyDeleted.add(properties[i]); // ensure that properties are only deleted once per update
 				}
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
+						// if current property is a relation, predicate-object is a URI
 						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" <"+Cfg.RESOURCE_URI_NS+propertyValues[i].trim()+"> }");
-					} else {
+					} else { // otherwise, predicate-object is a literal/number/date value
+						// extract language from value, if exists
 						String lang = null;
-						
 						for (String l : Cfg.LANGUAGE_LIST) {
 							if (propertyValues[i].endsWith("@"+l)) {
 								lang = "@"+l;
@@ -410,7 +425,7 @@ public class Upload {
 						}
 						
 						if (lang!=null) propertyValues[i] = propertyValues[i].substring(0, propertyValues[i].length()-3);
-						
+						// remove any conflictive character
 						propertyValues[i] = propertyValues[i].replace('"', '\'').replace('\n', ' ').replace('\t', ' ');
 						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" \"" + propertyValues[i].trim() + "\""+(lang!=null?lang:"")+" }");
 					}
@@ -441,54 +456,10 @@ public class Upload {
 		return result;
 	}
 	
-	public String mixAndExportOntologyAndData() {
-		VirtTransactionHandler vth = null;
-		
-		try {
-			model = ModelUtil.getModel();
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, ModelUtil.getOntology());
-			
-			script = new ArrayList<String>();
-			
-			StmtIterator it = ont.listStatements();
-			while(it.hasNext()) {
-				Statement stmt = it.next();
-				Resource  subject   = stmt.getSubject();     // get the subject
-			    Property  predicate = stmt.getPredicate();   // get the predicate
-			    RDFNode   object    = stmt.getObject();      // get the object
-			    
-			    if (!object.isLiteral())
-			    	script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+subject.toString()+"> <"+predicate.toString()+"> <"+object.toString()+"> } ");
-			    else {
-			    	String value = object.toString().replaceAll("\\n", "\\s");
-			    	script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+subject.toString()+"> <"+predicate.toString()+"> \""+value+"\" } ");
-			    }
-			}
-			
-			Command c = new Command() {
-				@Override
-				public Object execute() {
-					for (String s : script) {
-						System.out.println(s);
-						VirtuosoUpdateFactory.create(s, ((VirtGraph)(model.getGraph()))).exec();
-					}
-					return null;
-				}
-			};
-			
-			vth = new VirtTransactionHandler((VirtGraph)model.getGraph());
-			vth.begin();
-			vth.executeInTransaction(c);
-			vth.commit();
-		} catch (Exception e) {
-			log.error("Error ", e);
-			if (vth!=null) vth.abort();
-			return "error";
-		}
-		
-		return "success";
-	}
-	
+	/*
+	 * Resets ontologies (reloads all of them), erases model data and media files
+	 * IF all is set to false, only reloads ontologies
+	 */
 	public void reset(boolean all) throws Exception {
 		
 		try {

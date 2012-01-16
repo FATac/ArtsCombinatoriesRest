@@ -42,7 +42,8 @@ public class Cfg {
 		"http://localhost:8080/ArtsCombinatoriesRest/ontology/ac#", "ac",
 		"http://dublincore.org/2010/10/11/dcterms.rdf#", "dcterms",
 		"http://www.w3.org/1999/02/22-rdf-syntax-ns#", "rdf",
-		"http://www.w3.org/2000/01/rdf-schema#", "rdfs"
+		"http://www.w3.org/2000/01/rdf-schema#", "rdfs",
+		"http://www.w3.org/2002/07/owl#", "owl"
 	};
 	
 	// File system paths
