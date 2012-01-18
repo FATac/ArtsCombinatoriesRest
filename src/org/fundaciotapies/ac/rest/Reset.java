@@ -35,7 +35,7 @@ public class Reset {
 					return new Gson().toJson("error");
 				}
 			} else {
-				return new Gson().toJson("Wrong confirmation date. Server date is: " + dateStr);
+				return new Gson().toJson("Wrong confirmation date. Server date is " + dateStr);
 			}
 		}
 		

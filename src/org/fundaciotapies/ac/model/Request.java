@@ -25,7 +25,6 @@ import org.fundaciotapies.ac.model.bo.Right;
 import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.ObjectFile;
 
-import virtuoso.jena.driver.VirtModel;
 import virtuoso.jena.driver.VirtuosoQueryExecutionFactory;
 
 import com.hp.hpl.jena.ontology.OntClass;
@@ -383,7 +382,7 @@ public class Request {
 
 		try {
 			// Load ontology
-			VirtModel ont = ModelUtil.getOntology();
+			OntModel ont = ModelUtil.getOntology();
 			
 			Query sparql = QueryFactory.create(" select ?a where { ?a rdf:type owl:Class } "); 
 		    QueryExecution qexec = VirtuosoQueryExecutionFactory.create(sparql, ont);
@@ -444,7 +443,7 @@ public class Request {
 			// Virtuoso reasoning does not work here!! We use Jena instead 
 			//QueryExecution qe = VirtuosoQueryExecutionFactory.create(query, ModelUtil.getOntology());
 			//QueryExecution qe = VirtuosoQueryExecutionFactory.create();
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM_TRANS_INF, ModelUtil.getOntology());
+			OntModel ont = ModelUtil.getOntology();
 			QueryExecution qe = QueryExecutionFactory.create(query, ont);
 			ResultSet rs = qe.execSelect();
 			String lastPropName = null;
@@ -489,11 +488,16 @@ public class Request {
 		try {
 			if (className == null) return null;
 			
+			String prefix = "";
+			for(int i=0;i<Cfg.ONTOLOGY_NAMESPACES.length;i+=2) {
+				prefix += " prefix " + Cfg.ONTOLOGY_NAMESPACES[i+1] + ": <" + Cfg.ONTOLOGY_NAMESPACES[i] + "> "; 
+			}
+			
 			/*
 			 * get all properties of a given class and its super classes
 			 * also get properties that have no domain, that is- properties that can be used in any class
 			 */
-			String query = 
+			String query = prefix +
 				" select ?prop " +
 				" where {" +
 				"   { { ?prop rdf:type owl:ObjectProperty } " +
@@ -511,7 +515,7 @@ public class Request {
 			
 			// Virtuoso reasoning does not work here!! We use Jena instead 
 			//QueryExecution qe = VirtuosoQueryExecutionFactory.create(query, ModelUtil.getOntology());
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM_TRANS_INF, ModelUtil.getOntology());
+			OntModel ont = ModelUtil.getOntology();
 			QueryExecution qe = QueryExecutionFactory.create(query, ont);
 			ResultSet rs = qe.execSelect();
 			
@@ -520,9 +524,6 @@ public class Request {
 				String propName = Cfg.fromNamespaceToPrefix(qs.get("prop").asResource().getNameSpace()) +  qs.get("prop").asResource().getLocalName();
 				result.add(propName);
 			}
-			
-			List<String> scl = listSuperClasses(className);
-			for (String sc : scl) result.addAll(listClassPropertiesSimple(sc));
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}

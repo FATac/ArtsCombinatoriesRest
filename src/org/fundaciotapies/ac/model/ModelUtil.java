@@ -6,6 +6,8 @@ import virtuoso.jena.driver.VirtGraph;
 import virtuoso.jena.driver.VirtInfGraph;
 import virtuoso.jena.driver.VirtModel;
 
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.reasoner.InfGraph;
@@ -13,14 +15,15 @@ import com.hp.hpl.jena.reasoner.InfGraph;
 public class ModelUtil {
 
 	private static InfModel model = null;
-	private static VirtModel ontology = null;
+	private static OntModel ontology = null;
 	
 	/*
 	 * Gets Ontology graph from Virtuoso and reuses it everytime it's requested 
 	 */
-	public static VirtModel getOntology() {
+	public static OntModel getOntology() {
 		if (ontology!=null && !ontology.isClosed()) return ontology;
-		ontology = VirtModel.openDatabaseModel(Cfg.ONTOLOGY_NAMESPACES[0], Cfg.RDFDB_URL, Cfg.RDFDB_USER, Cfg.RDFDB_PASS);
+		VirtModel vm = VirtModel.openDatabaseModel(Cfg.ONTOLOGY_NAMESPACES[0], Cfg.RDFDB_URL, Cfg.RDFDB_USER, Cfg.RDFDB_PASS);
+		ontology = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_TRANS_INF, vm);
 		return ontology;
 	}
 	
@@ -29,7 +32,8 @@ public class ModelUtil {
 	 */
 	public static InfModel getModel() {
 		if (model!=null && !model.isClosed()) return model;
-		getOntology().createRuleSet("ac_rules", Cfg.ONTOLOGY_NAMESPACES[0]);
+		VirtModel vm = VirtModel.openDatabaseModel(Cfg.ONTOLOGY_NAMESPACES[0], Cfg.RDFDB_URL, Cfg.RDFDB_USER, Cfg.RDFDB_PASS);
+		vm.createRuleSet("ac_rules", Cfg.ONTOLOGY_NAMESPACES[0]);
 		InfGraph igr = new VirtInfGraph("ac_rules", true, Cfg.RESOURCE_URI_NS, Cfg.RDFDB_URL, Cfg.RDFDB_USER, Cfg.RDFDB_PASS);
 		model = ModelFactory.createInfModel(igr);
 		return model;

@@ -29,9 +29,7 @@ import virtuoso.jena.driver.VirtuosoUpdateFactory;
 
 import com.hp.hpl.jena.ontology.ObjectProperty;
 import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.rdf.model.InfModel;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.shared.Command;
 
 public class Upload {
@@ -239,7 +237,7 @@ public class Upload {
 		try {
 			
 			model = ModelUtil.getModel();
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ModelUtil.getOntology());
+			OntModel ont = ModelUtil.getOntology();
 			
 			String[] cls = className.split(",");
 			String id = generateObjectId(about);
@@ -381,7 +379,7 @@ public class Upload {
 			model = ModelUtil.getModel();
 			
 			// load ontology and jena reasoner
-			OntModel ont = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ModelUtil.getOntology());
+			OntModel ont = ModelUtil.getOntology();
 			int i = 0;
 			
 			script = new ArrayList<String>();
