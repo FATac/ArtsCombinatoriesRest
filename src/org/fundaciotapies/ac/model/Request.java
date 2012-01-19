@@ -30,6 +30,7 @@ import virtuoso.jena.driver.VirtuosoQueryExecutionFactory;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
+import com.hp.hpl.jena.ontology.OntProperty;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -482,7 +483,7 @@ public class Request {
 		return result;
 	}
 	
-	public Set<String> listClassPropertiesSimple(String className) {
+	public Set<String> listClassPropertiesSimple2(String className) {
 		Set<String> result = new TreeSet<String>();
 
 		try {
@@ -524,6 +525,30 @@ public class Request {
 				String propName = Cfg.fromNamespaceToPrefix(qs.get("prop").asResource().getNameSpace()) +  qs.get("prop").asResource().getLocalName();
 				result.add(propName);
 			}
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+
+		return result;
+	}
+	
+	public Set<String> listClassPropertiesSimple(String className) {
+		Set<String> result = new TreeSet<String>();
+
+		try {
+			if (className == null) return null;
+			
+			OntModel ont = ModelUtil.getOntology();
+			int idx = className.indexOf(':');
+			String ns = Cfg.fromPrefixToNamespace(className.substring(0, idx));
+			String uri = ns + className.substring(idx+1);
+			ExtendedIterator<OntProperty> it = ont.getOntClass(uri).listDeclaredProperties();
+			
+			while(it.hasNext()) {
+				OntProperty p = it.next();
+				result.add(Cfg.fromNamespaceToPrefix(p.getNameSpace()) + p.getLocalName());
+			}
+			
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
@@ -1133,6 +1158,10 @@ public class Request {
 		String[] res = new String[result.size()];
 		result.toArray(res);
 		return res;
+	}
+	
+	public List<String> listMedia() throws Exception {
+		return new Media().list();
 	}
 	
 }

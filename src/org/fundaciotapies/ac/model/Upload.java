@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 
@@ -130,19 +131,15 @@ public class Upload {
 	}
 	
 	public String addMediaFile(InputStream in, String filePath) {
-		String id = "_media_file_";
-		
+		String fileName = filePath.split("\\.")[0];
+		if ("".equals(fileName.trim())) fileName = "m";
+
 		try {
+			String id = normalizeId(fileName) + "_" + UUID.randomUUID().toString().replaceAll("-", "").substring(0,15);
+			
 			String[] tmp = filePath.split("\\.");
 			String ext = "";
 			if (tmp!=null && tmp.length>0) ext = tmp[tmp.length-1];
-			
-			IdentifierCounter oc = new IdentifierCounter();
-			oc.load(id);
-			oc.setCounter(oc.getCounter()+1);
-			if (oc.getCounter() == 1l) oc.save(); else oc.update();
-			
-			id = id + oc.getCounter();
 			
 			filePath = id + "." + ext;
 			File f = new File(Cfg.MEDIA_PATH+filePath);
@@ -164,12 +161,12 @@ public class Upload {
 			media.saveUpdate();
 			
 		 	if (Cfg.MEDIA_AUTOCONVERT) convertMediaFile(id);
+		 	
+		 	return Cfg.REST_URL+"media/"+id;
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";
 		}
-		
-		return Cfg.REST_URL+"media/"+id;
 	}
 	
 	
@@ -252,11 +249,12 @@ public class Upload {
 			
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			
-			List<String> lcp = new ArrayList<String>(new Request().listClassPropertiesSimple(className));
+			//List<String> lcp = new ArrayList<String>(new Request().listClassPropertiesSimple(className));
 			while(i<properties.length) {
 				boolean isObjectProperty = false;
 				
-				if (!lcp.contains(properties[i]) && !"ac:FatacId".equals(properties[i]) || "type".equals(properties[i])) { i++; continue; }
+				//if (!lcp.contains(properties[i]) && !"ac:FatacId".equals(properties[i]) || "type".equals(properties[i])) { i++; continue; }
+				if ("rdf:type".equals(properties[i]) || !properties[i].contains(":")) { i++; continue; }
 				
 				String qualifiedProperty = Cfg.fromPrefixToNamespace(properties[i].split(":")[0])+properties[i].split(":")[1];
 				for(ObjectProperty op : lop) {
@@ -387,10 +385,7 @@ public class Upload {
 			// list all ontology object properties (relations)
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			while(i<properties.length) {
-				if ("rdf:type".equalsIgnoreCase(properties[i])) { // rdf type is ignored
-					i++;
-					continue;
-				}
+				if ("rdf:type".equals(properties[i]) || !properties[i].contains(":")) { i++; continue; }
 				boolean isObjectProperty = false;
 				
 				// all property names come with prefix, they need to be converted to namespace to be compared with Jena responses

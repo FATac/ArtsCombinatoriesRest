@@ -51,17 +51,18 @@ public class GetClassForm {
 				input = new ObjectInput(prop, range);
 			} else if (dType.contains("DatatypeProperty")) {
 				range = range.substring(0, range.length());
+				range = range.toLowerCase();
 				if (range.contains("boolean")) {
 					input = new CheckInput(prop);
-				} else if (range.contains("float") || range.contains("Integer") || range.contains("nonNegativeInteger")) {
+				} else if (range.contains("float") || range.contains("int") || range.contains("nonnegativeinteger") || range.contains("real") || range.contains("short") || range.contains("byte")) {
 					input = new NumericInput(prop);
-				} else if (range.contains("date") || range.contains("dateTime")) {
+				} else if (range.contains("date") || range.contains("datetime")) {
 					input = new DateInput(prop);
 				} else if (range.contains("time")) {
 					input = new TimeInput(prop);
 				} else if (range.contains("string")) {
 					input = new TextAreaInput(prop); 
-				} else if (range.contains("anyURI")) {
+				} else if (range.contains("anyuri")) {
 					input = new FileInput(prop);
 				} else {
 					input = new TextInput(prop);

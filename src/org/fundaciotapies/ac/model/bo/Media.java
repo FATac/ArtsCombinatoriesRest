@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -29,6 +31,35 @@ public class Media implements Serializable {
 	}
 	public void setPath(String path) {
 		this.path = path;
+	}
+	
+	public List<String> list() throws Exception {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		List<String> result = new ArrayList<String>();
+		
+		try {
+			Context ctx = new InitialContext();
+		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
+		    conn = ds.getConnection();
+		      
+		    stmt = conn.prepareStatement("SELECT mediaId FROM _media ");
+		      
+		    rs = stmt.executeQuery();
+		    while (rs.next()) result.add(rs.getString("mediaId"));
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			try {
+				if (stmt!=null) stmt.close();
+				if (conn!=null) conn.close();
+				if (rs!=null) rs.close();
+			} catch (Exception e) { throw e; }
+		} 
+		
+		return result;
 	}
 	
 	public void load(Long sid) throws Exception {

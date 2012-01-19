@@ -7,12 +7,15 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.support.ObjectFile;
+
+import com.google.gson.Gson;
 
 /**
  * Call: http://{host:port}/media/{id}
@@ -56,8 +59,18 @@ public class GetMediaFile {
 	}
 	
 	@GET
+	@Produces("application/json")
 	@Path("media/{id}")
 	public String getMediaFile(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("u") String uid) {
+		
+		try {
+			if ("list".equals(id)) {
+				return getMediaList();
+			}
+		} catch (Exception e) {
+			log.error("Error ",e);
+			return "";
+		}
 		
 		try {
 			ObjectFile objectFile = new Request().getMediaFile(id, null, uid);
@@ -82,6 +95,10 @@ public class GetMediaFile {
 		}
 		
 		return "";
+	}
+	
+	private String getMediaList() throws Exception {
+		return new Gson().toJson(new Request().listMedia());
 	}
 }
  
