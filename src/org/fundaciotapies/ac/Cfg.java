@@ -69,6 +69,8 @@ public class Cfg {
 		return "";
 	}
 	
+	public static boolean USER_ROLE_SERVICE_AVAILABLE = true;
+	
 	static {
 		
 		

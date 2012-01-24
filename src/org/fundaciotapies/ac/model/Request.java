@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -72,6 +73,8 @@ public class Request {
 	 */
 	public int getUserLegalLevel(String userId) {
 		
+		if (!Cfg.USER_ROLE_SERVICE_AVAILABLE) return 1;
+		
 		try {
 			// Connect
 			URL url = new URL(Cfg.USER_ROLE_SERVICE_URL + userId);
@@ -80,7 +83,8 @@ public class Request {
 		    conn.setRequestMethod("GET");
 	
 		    // Get the response
-		    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+		    InputStream responseStream = conn.getInputStream();
+		    BufferedReader rd = new BufferedReader(new InputStreamReader(responseStream));
 		    String str;
 		    StringBuffer sb = new StringBuffer();
 		    while ((str = rd.readLine()) != null) sb.append(str);
@@ -94,7 +98,10 @@ public class Request {
 		    	i++;
 		    }
 		    
+		    responseStream.close();
+		    
 		} catch (Exception e) {
+			Cfg.USER_ROLE_SERVICE_AVAILABLE = false;
 			//log.warn("Error obtaining user role. Please make sure that USER_ROLE_SERVICE_URL is correct.");
 		}
 	    return 1;
