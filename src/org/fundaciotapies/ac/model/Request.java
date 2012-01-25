@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.bo.Media;
+import org.fundaciotapies.ac.model.bo.ResourceStatistics;
 import org.fundaciotapies.ac.model.bo.Right;
 import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.ObjectFile;
@@ -813,8 +814,11 @@ public class Request {
 			// Connect to rdf server
 			InfModel model = ModelUtil.getModel();
 			
+			String classClause = "";
+			if (className!=null) classClause =  " . ?s rdf:type <"+className+"> ";
+			
 			// Create search query
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s <"+field+"> ?o  FILTER regex(?o,\""+value+"\",\"i\") . ?s rdf:type <"+className+"> } ORDER BY ?s ", model);
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s "+field+" ?o  FILTER regex(?o,\""+value+"\",\"i\") "+classClause+" } ORDER BY ?s ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -1006,9 +1010,14 @@ public class Request {
 		return result;
 	}
 	
+	public List<String> listRecentChanges(String minutesago) throws Exception {
+		long millisecondsago = new Long(minutesago)*60000;
+		return ResourceStatistics.listRecentChanges(millisecondsago);
+	}
+	
 	/*
 	 * Resolves the actual property value of a given subject
-	 * Removed functions, we use a single non-recursive function instead
+	 * !!!!Removed functions, we use a single non-recursive function instead
 	 */
 	/*private String[] resolveModelPathPart(String className, String property, String id, boolean includeId, boolean anyLanguage, boolean showLang) {
 		if ("class".equals(property)) return new String[]{ getObjectClassName(id) }; // 'class' is reserved word
