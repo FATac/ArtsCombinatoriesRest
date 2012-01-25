@@ -22,6 +22,7 @@ import javax.media.jai.JAI;
 import javax.media.jai.RenderedOp;
 
 import org.apache.log4j.Logger;
+import org.apache.sanselan.Sanselan;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.bo.ResourceStatistics;
@@ -143,11 +144,8 @@ public class ViewGenerator {
 		return template;
 	}
 	
-	private boolean downloadImage(String path) throws Exception {
+	private boolean downloadImage(String path, String tmp) throws Exception {
 		boolean downloaded = false;
-		
-		File f = new File(Cfg.MEDIA_PATH+"tmp.jpg");
-		if (f.exists()) f.delete();
 		
 		URL url = new URL(path);
 		HttpURLConnection conn = (HttpURLConnection)url.openConnection();
@@ -155,7 +153,7 @@ public class ViewGenerator {
 		conn.setDoInput(true);
 	    conn.setRequestMethod("GET");
 	    
-	    OutputStream os = new FileOutputStream(Cfg.MEDIA_PATH+"tmp.jpg");
+	    OutputStream os = new FileOutputStream(Cfg.MEDIA_PATH+"tmp"+tmp+".jpg");
 	    
 	    InputStream is = conn.getInputStream();
 	    byte[] buffer = new byte[1024];
@@ -172,13 +170,16 @@ public class ViewGenerator {
 	    return downloaded;
 	}
 	
-	private void resizeImage(BufferedImage img0, BufferedImage img1, BufferedImage img2, BufferedImage img3, String id) throws Exception {
+	private void resizeImage(BufferedImage img0, BufferedImage img1, BufferedImage img2, BufferedImage img3, String id, boolean toGray) throws Exception {
 		if (img0==null) return;
+		if (toGray) img0 = toGray(img0);
+		
+		Color lightGray = new Color(224, 224, 224);
 		
 		int w = Cfg.THUMBNAIL_WIDTH;
 		int h = Cfg.THUMBNAIL_HEIGHT;
 		
-		BufferedImage resizedImage = new BufferedImage(Cfg.THUMBNAIL_WIDTH, Cfg.THUMBNAIL_HEIGHT, img0.getType());
+		BufferedImage resizedImage = new BufferedImage(Cfg.THUMBNAIL_WIDTH, Cfg.THUMBNAIL_HEIGHT, BufferedImage.TYPE_INT_BGR);
 		Graphics2D gResult = resizedImage.createGraphics();
 		gResult.setColor(Color.WHITE);
 		gResult.fillRect(0, 0, Cfg.THUMBNAIL_WIDTH, Cfg.THUMBNAIL_HEIGHT);
@@ -195,9 +196,9 @@ public class ViewGenerator {
 		float heightScale = img0.getHeight() / h;
 		float scale = widthScale>heightScale?heightScale:widthScale;
 		
-		BufferedImage cutImage = new BufferedImage(scale>1?Math.round(w*scale):w, scale>1?Math.round(h*scale):h, img0.getType());
+		BufferedImage cutImage = new BufferedImage(scale>1?Math.round(w*scale):w, scale>1?Math.round(h*scale):h, BufferedImage.TYPE_INT_BGR);
 		Graphics2D gCut = cutImage.createGraphics();
-		gCut.setColor(Color.WHITE);
+		gCut.setColor(lightGray);
 		gCut.fillRect(0, 0, cutImage.getWidth(), cutImage.getHeight());
 		gCut.drawImage(img0, cutImage.getWidth()/2 - img0.getWidth()/2, cutImage.getHeight()/2 - img0.getHeight()/2, null);
 		gResult.drawImage(cutImage, 0, 0, w, h, null);
@@ -210,7 +211,7 @@ public class ViewGenerator {
 			
 			cutImage = new BufferedImage(scale>1?Math.round(w*scale):w, scale>1?Math.round(h*scale):h, img1.getType());
 			gCut = cutImage.createGraphics();
-			gCut.setColor(Color.WHITE);
+			gCut.setColor(lightGray);
 			gCut.fillRect(0, 0, cutImage.getWidth(), cutImage.getHeight());
 			gCut.drawImage(img1, cutImage.getWidth()/2 - img1.getWidth()/2, cutImage.getHeight()/2 - img1.getHeight()/2, null);
 			gResult.drawImage(cutImage, w+Math.round(margin), 0, w, h, null);
@@ -224,7 +225,7 @@ public class ViewGenerator {
 			
 			cutImage = new BufferedImage(scale>1?Math.round(w*scale):w, scale>1?Math.round(h*scale):h, img2.getType());
 			gCut = cutImage.createGraphics();
-			gCut.setColor(Color.WHITE);
+			gCut.setColor(lightGray);
 			gCut.fillRect(0, 0, cutImage.getWidth(), cutImage.getHeight());
 			gCut.drawImage(img2, cutImage.getWidth()/2 - img2.getWidth()/2, cutImage.getHeight()/2 - img2.getHeight()/2, null);
 			gResult.drawImage(cutImage, 0, h+Math.round(margin), w, h, null);
@@ -236,7 +237,7 @@ public class ViewGenerator {
 			
 			cutImage = new BufferedImage(scale>1?Math.round(w*scale):w, scale>1?Math.round(h*scale):h, img3.getType());
 			gCut = cutImage.createGraphics();
-			gCut.setColor(Color.WHITE);
+			gCut.setColor(lightGray);
 			gCut.fillRect(0, 0, cutImage.getWidth(), cutImage.getHeight());
 			gCut.drawImage(img3, cutImage.getWidth()/2 - img3.getWidth()/2, cutImage.getHeight()/2 - img3.getHeight()/2, null);
 			gResult.drawImage(cutImage, w+Math.round(margin), h+Math.round(margin), w, h, null);
@@ -270,7 +271,7 @@ public class ViewGenerator {
 				if (resize) {
 					File tmp = getClassThumbnail(className);
 					BufferedImage img = ImageIO.read(tmp);
-					resizeImage(img, null, null, null, "classes/"+className+"_resized");
+					resizeImage(img, null, null, null, "classes/"+className+"_resized", true);
 					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/" + className + "_resized.jpg");
 				} else {
 					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/default.jpg");
@@ -285,11 +286,75 @@ public class ViewGenerator {
 		return null;
 	}
 	
+	private BufferedImage toGray(BufferedImage img) {
+        Color col;
+        for (int x = 0; x < img.getWidth(); x++) { //width
+            for (int y = 0; y < img.getHeight(); y++) { //height
+
+                int RGBA = img.getRGB(x, y); //gets RGBA data for the specific pixel
+
+                col = new Color(RGBA, true); //get the color data of the specific pixel
+                int r = (col.getRed() + 187)/2;
+                int g = (col.getGreen() + 187)/2;
+                int b = (col.getBlue() + 187)/2;
+                
+                col = new Color(r,g,b);
+                img.setRGB(x, y, col.getRGB()); //set the pixel to the altered colors
+            }
+        }
+        return img;
+    }
 	
+	private BufferedImage negative(BufferedImage img) {
+        Color col;
+        for (int x = 0; x < img.getWidth(); x++) { //width
+            for (int y = 0; y < img.getHeight(); y++) { //height
+
+                int RGBA = img.getRGB(x, y); //gets RGBA data for the specific pixel
+
+                col = new Color(RGBA, true); //get the color data of the specific pixel
+
+                col = new Color(Math.abs(col.getRed() - 255),
+                        Math.abs(col.getGreen() - 255), Math.abs(col.getBlue() - 255)); //Swaps values
+                //i.e. 255, 255, 255 (white)
+                //becomes 0, 0, 0 (black)
+                
+                img.setRGB(x, y, col.getRGB()); //set the pixel to the altered colors
+            }
+        }
+        return img;
+    }
 	
-	private BufferedImage loadImage(InputStream in) throws Exception {
-		RenderedOp img = JAI.create("stream", SeekableStream.wrapInputStream(in, true));
-		return img.getAsBufferedImage();
+	private synchronized BufferedImage loadImage(InputStream in, int module) throws Exception {
+		if (module==0) {
+			try {
+				return Sanselan.getBufferedImage(in);
+			} catch (Throwable e1) {
+				return null;
+			}
+		} else if (module==1) {
+			try {
+				BufferedImage bi = ImageIO.read(in);
+				if (bi==null) throw new NullPointerException();
+				return bi; 
+			} catch (Throwable e2) {
+				return null;
+			}
+		} else if (module==2) {
+			try {
+				RenderedOp img = JAI.create("stream", SeekableStream.wrapInputStream(in, true));
+				return negative(img.getAsBufferedImage());
+			} catch (Throwable e3) {
+				return null;
+			}		
+		} else if (module==3) {
+			try {
+				RenderedOp img = JAI.create("stream", SeekableStream.wrapInputStream(in, true));
+				return img.getAsBufferedImage();
+			} catch (Throwable e3) {
+				return null;
+			}
+		} else return null;
 	}
 	
 	public synchronized InputStream getObjectThumbnail(String id, String uid, Boolean firstCall) {
@@ -340,11 +405,19 @@ public class ViewGenerator {
 					
 					if (medias.size()>0) {
 						for (String m : medias) {
-							if (downloadImage(m)) {
-								BufferedImage in = loadImage(new FileInputStream(Cfg.MEDIA_PATH+"tmp.jpg"));
-								if (in!=null) {
-									il.add(in);
-									count++;
+							long rand = Math.round(Math.random()*10000);
+							if (downloadImage(m, rand+"")) {
+								File df = new File(Cfg.MEDIA_PATH+"tmp"+rand+".jpg");
+								
+								if (df.exists()) {
+									BufferedImage in = null;
+									int mod=0;
+									while(in==null && mod<3) in = loadImage(new FileInputStream(df), mod++);
+									if (in!=null) {
+										il.add(in);
+										count++;
+									}
+									df.delete();
 								}
 							}
 							
@@ -357,7 +430,7 @@ public class ViewGenerator {
 							for (String o : subobjects) {
 								InputStream in = getObjectThumbnail(o, "", false);
 								if (in!=null) {
-									il.add(loadImage(in));
+									il.add(loadImage(in, 1));
 									count++;
 								}
 								
@@ -366,19 +439,19 @@ public class ViewGenerator {
 						}
 					}
 					
-					resizeImage(il.size()>0?il.get(0):null, il.size()>1?il.get(1):null, il.size()>2?il.get(2):null, il.size()>3?il.get(3):null, id);
+					resizeImage(il.size()>0?il.get(0):null, il.size()>1?il.get(1):null, il.size()>2?il.get(2):null, il.size()>3?il.get(3):null, id, false);
 					f = new File(Cfg.MEDIA_PATH + "thumbnails/" + id + ".jpg");
 				}
 			}
 
-			if (!f.exists()) {
+			if (!f.exists() && firstCall) {
 				String className = new Request().getObjectClass(id);
 				f = getClassThumbnail(className, firstCall);
 			}
 			
 			if (f.exists())	return new FileInputStream(f);
 		} catch (Throwable e) {
-			log.warn("Error " + e);
+			log.warn("Error " + e, e);
 		}
 		
 		return null;

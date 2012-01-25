@@ -13,10 +13,29 @@
 */
 
 {
-	"startBlock":"bOriginal",
+	"startBlock":"bStart",
 	
 	"blocks":
 	[
+
+         {
+            "name":"bStart",
+            "data":
+            [
+                 {"name":"Triar_el_color_directament", "type":"string", "values":["(fer el proces legal)","verd","groc","taronja","vermell"]}
+            ],
+
+            "rules":
+            [
+                {"exp":"Triar_el_color_directament='verd'", "result":{"color":"green"}},
+                {"exp":"Triar_el_color_directament='groc'", "result":{"color":"yellow"}},
+                {"exp":"Triar_el_color_directament='taronja'", "result":{"color":"orange"}},
+                {"exp":"Triar_el_color_directament='vermell'", "result":{"color":"red"}},
+                {"exp":"true", "result":{"block":"bOriginal"}}
+            ]
+        },
+	    
+	
 		/* PHASE 1: Processes general information of the container: creation data, author rights transfered */    
 	
 	    {

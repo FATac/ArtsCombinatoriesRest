@@ -4,12 +4,22 @@
 	    {   
 	        "type":"search",
 	        "name":"default",
-	        "sortFields":["AlphabeticalOrder", "ChronologicalOrder"]
+	        "filter":["ObjectType:Case-File","ObjectType:Publication"],
+	        "sortFields":["AlphabeticalOrder", "ChronologicalOrder"],
+	        "sort":"class asc"
 		},
 		
 		{   
 			"type":"search",
-	        "name":"Principal",
+	        "name":"Explorar",
+			"sort":"AlphabeticalOrder asc",
+			"sortFields":["AlphabeticalOrder", "ChronologicalOrder"]
+		},
+		
+		{   
+			"type":"search",
+	        "description":"Arxiu de la Fundació",
+	        "name":"Arxiu",
 			"filter":["class:Case-File","class:Publication"],
 			"sort":"class asc",
 			"sortFields":["AlphabeticalOrder", "ChronologicalOrder"]
@@ -17,8 +27,36 @@
 		
 		{   
 			"type":"search",
-	        "name":"Nomes_Tapies",
+	        "description":"Tapies geni i figura",
+	        "name":"Tapies",
 			"value":["Tapies"],
+			"sort":"class asc",
+			"sortFields":["AlphabeticalOrder", "ChronologicalOrder"]
+		},
+		
+		{   
+			"type":"search",
+	        "description":"Videoteca",
+	        "name":"Videoteca",
+	        "filter":["class:Video"],
+			"sort":"class asc",
+			"sortFields":["AlphabeticalOrder", "ChronologicalOrder"]
+		},
+		
+		{   
+			"type":"search",
+	        "description":"Exposicions",
+	        "name":"Exposicions",
+			"filter":["class:FrameActivity"],
+			"sort":"class asc",
+			"sortFields":["AlphabeticalOrder", "ChronologicalOrder"]
+		},
+		
+		{   
+			"type":"search",
+	        "description":"Clàssics de l'Art Contemporani",
+	        "name":"Classics",
+			"filter":["id:Ocregris","id:Creu_de_paper_de_diari","id:Mitjo","id:Porta_metallica_i_violi"],
 			"sort":"class asc",
 			"sortFields":["AlphabeticalOrder", "ChronologicalOrder"]
 		}

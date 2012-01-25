@@ -138,7 +138,10 @@ public class SolrManager {
 			Boolean isMultilingual = "yes".equals(m.getMultilingual());
 			
 			// checks that there's no reserved word in mapping
-			if ("id,class,views,lastView,creation".contains(m.getName())) throw new Exception(m.getName() + " is a reserved key word ");
+			if ("id,class,views,lastView,creation".contains(m.getName())) {
+				log.info("Ignored mapping keyword: " + m.getName());
+				continue;
+			}
 			if (doc.get(m.getName())==null) {
 				if (m.getPath()!=null) {
 					for (String path : m.getPath()) {
@@ -184,12 +187,16 @@ public class SolrManager {
 		documents.put(id, doc);
 	}
 	
+	public void index() throws Exception {
+		index(null);
+	}
+	
 	/*
 	 * Main indexing function
 	 * loops through all indexing data fields defined in mapping.json, determines which class of objects are to be indexed
 	 * creates document group and generates resulting xml, which is finally saved and posted to Solr service "update"
 	 */
-	public void indexate() throws Exception {
+	public void index(List<String> ids) throws Exception {
 		documents = new HashMap<String, CustomMap>();
 		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
@@ -210,11 +217,25 @@ public class SolrManager {
 		
 		// loads statistics that will be used to create every document indexes
 		statistics = ResourceStatistics.list();
-		for(String className : objectTypesIndexed) {
-			// for each class eligible for indexing, get all its objects
-			List<String> list = request.listObjectsId(className);
-			// and generate its index info
-			for(String id : list) createDocumentEntry(id, className, mapping);
+		if (ids==null) {
+			for(String className : objectTypesIndexed) {
+				// for each class eligible for indexing, get all its objects
+				List<String> list = request.listObjectsId(className);
+				// and generate its index info
+				for(String id : list) createDocumentEntry(id, className, mapping);
+			}
+		} else {
+			for (String id : ids) {
+				String className = request.getObjectClass(id);
+				List<String> allClassNames = request.listSuperClasses(className);
+				allClassNames.add(className);
+				for (String cn : allClassNames) {
+					if (objectTypesIndexed.contains(cn)) {
+						createDocumentEntry(id, className, mapping);
+						break;
+					}
+				}
+			}
 		}
 		
 		// render xml index that will feed Solr

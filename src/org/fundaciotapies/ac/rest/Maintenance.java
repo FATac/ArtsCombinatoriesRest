@@ -30,7 +30,7 @@ public class Maintenance {
 			if (Cfg.SOLR_PATH!=null) {
 				SolrManager solr = new SolrManager();
 				solr.deleteAll();
-				solr.indexate();
+				solr.index();
 			}
 			
 			if (Cfg.OAI_PATH!=null) {

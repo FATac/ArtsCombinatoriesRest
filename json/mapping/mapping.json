@@ -3,6 +3,11 @@
 {
 	"data":
 	[
+		{
+			"name":"class",
+			"category":"yes"
+		},    
+	
 	    {
 			"name":"CaseFile",
 			"type":"string",
@@ -17,6 +22,7 @@
 		    		"ac:Person.ac:Name",
 		        	"ac:Person.ac:Bio",
 		    		"ac:Organisation.ac:Name",
+		    		"ac:Case-File.ac:Description",
 		        	"ac:Case-File.ac:references=*.ac:Title",
 		    		"ac:Case-File.ac:references=*.ac:tookPlaceAt=ac:City.ac:IsLocatedIn=ac:Country.ac:Name",
 		    		"ac:Case-File.ac:references=*.ac:tookPlaceAt=ac:City.ac:Name",
@@ -37,8 +43,7 @@
 	    {
 	        "name":"ObjectType",
 	        "type":"string",
-	        "path":["*.class", "*.superclass"],
-	        "category":"yes"
+	        "path":["*.class"]
 	    },
 
 		{

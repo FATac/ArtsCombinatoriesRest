@@ -22,8 +22,7 @@
 			 	{
 			        "name":"Authors",
 			        "type":"linkedObjects",
-			        "path":["ac:SpecialObject.ac:applicationOf=ac:Author.ac:performedBy",
-			        		"ac:SpecialObject.ac:applicationOf=ac:Artist.ac:performedBy"]
+			        "path":["ac:SpecialObject.ac:applicationOf"]
 			    },
 			    
 			    {

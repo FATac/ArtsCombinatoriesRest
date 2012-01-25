@@ -21,6 +21,39 @@ public class ResourceStatistics implements Serializable {
 	private Long creationMoment;
 	private Long visitCounter;
 	
+	public static List<String> listRecentChanges(long updatePeriod) throws Exception {
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		List<String> result = new ArrayList<String>();
+		
+		try {
+			Context ctx = new InitialContext();
+		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
+		    conn = ds.getConnection();
+		    
+		    long currentMoment = Calendar.getInstance().getTimeInMillis();
+		      
+		    stmt = conn.prepareStatement("SELECT identifier FROM _resource_statistics WHERE creationMoment > ? OR lastMoment > ? ");
+		    stmt.setLong(1, currentMoment - updatePeriod);
+		    stmt.setLong(2, currentMoment - updatePeriod);
+		      
+		    rs = stmt.executeQuery();
+		    while(rs.next()) result.add(rs.getString("identifier"));
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			try {
+				if (stmt!=null) stmt.close();
+				if (conn!=null) conn.close();
+				if (rs!=null) rs.close();				
+			} catch (Exception e) { throw e; }
+		}
+		
+		return result;
+	}
+	
 	public static void creation(String identifier) throws Exception {
 		Connection conn = null;
 		PreparedStatement stmt = null;
