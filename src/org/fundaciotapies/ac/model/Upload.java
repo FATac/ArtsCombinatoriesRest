@@ -69,6 +69,14 @@ public class Upload {
 		IdentifierCounter oc = new IdentifierCounter();
 		
 		about = normalizeId(about);
+		int idx = about.lastIndexOf('_');
+		if (idx>-1) {
+			String dumb = about.substring(idx+1);
+			try {
+				Integer.parseInt(dumb);
+				about = about.substring(0, idx) + "_n" + dumb;
+			} catch (NumberFormatException e) {	}
+		}
 		
 		// get identifier counter
 		oc.load(about);
@@ -81,7 +89,7 @@ public class Upload {
 		
 		Long n = oc.getCounter();
 		if (n>1) 
-			return about + "_" + oc.getCounter(); // add counter mark if this id is already used
+			return about + "_" + n; // add counter mark if this id is already used
 		else
 			return about;
 	}

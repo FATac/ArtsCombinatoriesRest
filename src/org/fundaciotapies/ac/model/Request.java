@@ -74,9 +74,15 @@ public class Request {
 	 */
 	public int getUserLegalLevel(String userId) {
 		
+		if (userId==null) return 1;
 		if (!Cfg.USER_ROLE_SERVICE_AVAILABLE) return 1;
 		
 		try {
+			String result = "1";
+			if ((result=Cfg.userLevelTmp.get(userId))!=null) {
+				return Integer.parseInt(result);
+			}
+			
 			// Connect
 			URL url = new URL(Cfg.USER_ROLE_SERVICE_URL + userId);
 		    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
@@ -94,9 +100,15 @@ public class Request {
 		    // Group name position in USER_LEVEL array determines user level
 		    // if it's not in the array, user level is 1
 		    int i = 1;
+		    String[] userRoles = userRole.split(",");
 		    for (String l : Cfg.USER_LEVEL) {
-		    	if (l.contains(userRole)) return i;
-		    	i++;
+		    	for (String r : userRoles) {
+			    	if (l.contains(r)) {
+			    		Cfg.userLevelTmp.put(userId, i+"");
+			    		return i;
+			    	}
+			    	i++;
+		    	}
 		    }
 		    
 		    responseStream.close();

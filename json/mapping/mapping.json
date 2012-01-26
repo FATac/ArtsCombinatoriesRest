@@ -17,7 +17,8 @@
 	    {
 			"name":"Description",
 		    "type":"text",
-		    "path":["ac:Event.ac:Description",
+		    "path":["ac:Event.ac:Title",
+		    		"ac:Event.ac:Description",
 		    		"ac:Art_Work.ac:Title",
 		    		"ac:Person.ac:Name",
 		        	"ac:Person.ac:Bio",
@@ -34,7 +35,8 @@
 		        	"ac:Case-File.ac:hasMedia=*.class",
 		        	"ac:Case-File.ac:hasMedia=*.ac:isCollectedIn=ac:Collection.class",
 		        	"ac:Case-File.ac:references=*.ac:Description",
-		        	"ac:Media.ac:Title"
+		        	"ac:Media.ac:Title",
+		        	"ac:Collection.ac:Title"
 		    ],
 		    "search":"yes",
 		    "autocomplete":"yes"
@@ -82,7 +84,7 @@
 		    "name":"Media",
 		    "type":"string",
 		    "path":[
-		    	"ac:Case-File.ac:hasMedia=*.class"
+		    	"ac:Case-File.ac:hasMedia=ac:Media.class"
 		    ],
 		    "category":"yes"
 		},
@@ -126,11 +128,22 @@
 		},
 		
 		{
-		    "name":"Collection",
-		    "type":"string",
-		    "path":[
-		        "ac:Case-File.ac:hasMedia=*.ac:isCollectedIn=ac:Collection.class"
-		    ],
+			"name":"Events",
+			"type":"string",
+			"path":[
+			    "ac:Case-File.ac:references=ac:Event.ac:Title",
+			    "ac:Event.ac:Title"
+			],
+		    "category":"yes"
+		},
+		
+		{
+			"name":"Publications",
+			"type":"string",
+			"path":[
+			    "ac:Case-File.ac:references=ac:Publication.ac:Title",
+			    "ac:Publication.ac:Title"
+			],
 		    "category":"yes"
 		},
 		
@@ -138,6 +151,7 @@
 		    "name":"ArtWork",
 		    "type":"string",
 		    "path":[
+		        "ac:Case-File.ac:hasMedia=references=ac:Publication.ac:Title",		    
 		        "ac:Art_Work.ac:Title"
 		    ],
 		    "category":"yes",
@@ -145,11 +159,24 @@
 		},
 		
 		{
+		    "name":"Collection",
+		    "type":"string",
+		    "path":[
+		        "ac:Collection.ac:Title"
+		    ],
+		    "category":"yes",
+		    "multilingual":"yes"
+		},
+		
+		
+		
+		
+		{
 			"name":"AlphabeticalOrder",
 		    "type":"string",
 		    "path":[
-		    	"ac:Case-File.ac:references=*.ac:Title", 
-		    	"ac:Art_Work.ac:Title", 
+		    	"ac:Case-File.ac:references=*.ac:Title",
+		    	"ac:Art_Work.ac:Title",
 		    	"ac:Person.ac:Name",
 		    	"ac:Organisation.ac:Name"
 		    ],
@@ -160,7 +187,8 @@
 		    "name":"ChronologicalOrder",
 		    "type":"date.year",
 		    "path":[
-		        "ac:Case-File.ac:references=*.ac:StartDate"
+		        "ac:Case-File.ac:references=*.ac:StartDate",
+		        "ac:Event.ac:StartDate"
 		    ],
 		    "sort":"yes"
 		}

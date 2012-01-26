@@ -45,10 +45,10 @@ public class Media implements Serializable {
 		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
 		    conn = ds.getConnection();
 		      
-		    stmt = conn.prepareStatement("SELECT mediaId FROM _media ");
+		    stmt = conn.prepareStatement("SELECT path FROM _media ORDER BY path ");
 		      
 		    rs = stmt.executeQuery();
-		    while (rs.next()) result.add(rs.getString("mediaId"));
+		    while (rs.next()) result.add(rs.getString("path"));
 		} catch (Exception e) {
 			throw e;
 		} finally {

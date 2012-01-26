@@ -22,10 +22,21 @@
 			 	{
 			        "name":"Authors",
 			        "type":"linkedObjects",
-			        "path":["ac:Publication.ac:applicationOf=ac:Author.ac:performedBy",
-			        		"ac:Publication.ac:applicationOf=ac:Artist.ac:performedBy"]
+			        "path":["ac:Publication.ac:applicationOf=ac:Writer.ac:performedBy=ac:Agent.ac:Name"]
 			    },
 			    
+			    {
+			        "name":"Designers",
+			        "type":"linkedObjects",
+			        "path":["ac:Publication.ac:applicationOf=ac:Designer.ac:performedBy=ac:Agent.ac:Name"]
+			    },
+			    
+			    {
+			        "name":"Translators",
+			        "type":"linkedObjects",
+			        "path":["ac:Publication.ac:applicationOf=ac:Translator.ac:performedBy=ac:Agent.ac:Name"]
+			    },
+			    			    
 			    {
 			        "name":"Editors",
 			        "type":"linkedObjects",

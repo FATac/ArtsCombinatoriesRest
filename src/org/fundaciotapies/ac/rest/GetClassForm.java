@@ -23,12 +23,6 @@ import org.fundaciotapies.ac.view.fields.TimeInput;
 
 import com.google.gson.GsonBuilder;
 
-/**
- * Call: http://{host:port}/classes/{class}/form
- * <br>
- * Get all fields and its types of given class <br>
- * Params class: Class name
- */
 @Path("/classes/{class}/form")
 public class GetClassForm {
 

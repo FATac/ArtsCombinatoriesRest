@@ -1,0 +1,35 @@
+{
+	"className":"ac:Collection",
+	
+	"sections":
+	[
+		{
+			"name":"header",
+			"data":[
+		
+		    	{
+					"name":"Title",
+					"type":"text",
+					"path":["ac:Collection.ac:Title"]
+				}
+			]
+		},
+		
+		{
+			"name":"body",
+			"data":[]
+		},
+		
+		{
+			"name":"content",
+			"data":[
+			    
+				{
+					"name":"Title",
+					"type":"objects",
+					"path":["ac:Collection.ac:hasObjectCollected"]
+				}
+			]
+		}
+	]
+}

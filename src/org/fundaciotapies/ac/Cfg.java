@@ -2,8 +2,10 @@ package org.fundaciotapies.ac;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
@@ -31,7 +33,7 @@ public class Cfg {
 	public static String RDFDB_PASS = "dba";
 	public static String REST_URL = "http://ec2-50-17-94-196.compute-1.amazonaws.com:8080/ArtsCombinatoriesRest/";
 	public static String SOLR_URL = "http://localhost:8080/solr/";
-	public static String USER_ROLE_SERVICE_URL = "http://localhost:8084/fatac/usergroup?u=";
+	public static String USER_ROLE_SERVICE_URL = "http://localhost:8084/fatac/@@RetornaUserGroups?uid=";
 	public static String VIDEO_SERVICES_URL = "http://localhost:8080/TapiesWebServices/rest/";
 	
 	// Ontology namespaces (After any change, all existing triples must be fixed)
@@ -70,6 +72,7 @@ public class Cfg {
 	}
 	
 	public static boolean USER_ROLE_SERVICE_AVAILABLE = true;
+	public static Map<String,String> userLevelTmp = new HashMap<String, String>();  
 	
 	static {
 		
