@@ -72,7 +72,7 @@ public class Cfg {
 	}
 	
 	public static boolean USER_ROLE_SERVICE_AVAILABLE = true;
-	public static Map<String,String> userLevelTmp = new HashMap<String, String>();  
+	public static Map<String,Integer> userLevelTmp = new HashMap<String, Integer>();  
 	
 	static {
 		

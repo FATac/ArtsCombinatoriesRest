@@ -20,7 +20,13 @@ public class Reset {
 	public String clear(@QueryParam("confirm") String confirm, @QueryParam("option") String opt) {
 		if ("ontology".equals(opt)) {
 			try {
-				new Upload().reset(false);
+				new Upload().reset(1);
+			} catch (Exception e) {
+				return new Gson().toJson("error");
+			}
+		} else if ("roles".equals(opt)) {
+			try {
+				new Upload().reset(2);
 			} catch (Exception e) {
 				return new Gson().toJson("error");
 			}
@@ -30,7 +36,7 @@ public class Reset {
 			
 			if (dateStr.equals(confirm)) {
 				try {
-					new Upload().reset(true);
+					new Upload().reset(0);
 				} catch (Exception e) {
 					return new Gson().toJson("error");
 				}

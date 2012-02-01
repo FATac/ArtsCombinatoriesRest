@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -461,13 +462,16 @@ public class Upload {
 	 * Resets ontologies (reloads all of them), erases model data and media files
 	 * IF all is set to false, only reloads ontologies
 	 */
-	public void reset(boolean all) throws Exception {
+	public void reset(int what) throws Exception {
 		
 		try {
 			// reloads ontology
-			ModelUtil.resetOntology();
-
-			if (all) {
+			if (what==1) {
+				ModelUtil.resetOntology();
+			} else if (what==2) {
+				Cfg.userLevelTmp = new HashMap<String, Integer>();
+			} else {
+				log.info(">>>> RESETING ALL DATA (MEDIA, MODEL, TABLES) AND UPDATING ONTOLOGIES <<<<");
 				// removes model stored data
 				ModelUtil.resetModel();
 				Media.clear();
@@ -481,7 +485,7 @@ public class Upload {
 					if (fx.isFile()) fx.delete();
 				}
 				
-				log.info(">>>> RESETING ALL DATA (MEDIA, MODEL, TABLES) AND UPDATING ONTOLOGIES <<<<");
+				Cfg.userLevelTmp = new HashMap<String, Integer>();
 			}
 		} catch (Exception e) {
 			log.error("Error ", e);

@@ -19,10 +19,11 @@ public class GetObjectThumbnail {
 	private static Logger log = Logger.getLogger(GetObjectThumbnail.class);
 	
 	@GET
-	public String getObjectThumbnail(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("u") String uid) {
+	public String getObjectThumbnail(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("uid") String uid) {
 		byte[] content = null;
 		
 		try {
+			if ("".equals(uid)) uid = null;
 			InputStream in = new ViewGenerator().getObjectThumbnail(id, uid, true);
 			if (in==null) {
 				return "";

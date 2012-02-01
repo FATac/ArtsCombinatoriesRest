@@ -78,9 +78,9 @@ public class Request {
 		if (!Cfg.USER_ROLE_SERVICE_AVAILABLE) return 1;
 		
 		try {
-			String result = "1";
+			Integer result = 1;
 			if ((result=Cfg.userLevelTmp.get(userId))!=null) {
-				return Integer.parseInt(result);
+				return result;
 			}
 			
 			// Connect
@@ -99,23 +99,23 @@ public class Request {
 		    
 		    // Group name position in USER_LEVEL array determines user level
 		    // if it's not in the array, user level is 1
-		    int i = 1;
 		    String[] userRoles = userRole.split(",");
-		    for (String l : Cfg.USER_LEVEL) {
+		    for (int i=Cfg.USER_LEVEL.length-1;i>=0;i--) {
+		    	String l = Cfg.USER_LEVEL[i];
 		    	for (String r : userRoles) {
 			    	if (l.contains(r)) {
-			    		Cfg.userLevelTmp.put(userId, i+"");
-			    		return i;
+			    		Cfg.userLevelTmp.put(userId, i+1);
+			    		return i+1;
 			    	}
-			    	i++;
 		    	}
 		    }
+		    
 		    
 		    responseStream.close();
 		    
 		} catch (Exception e) {
 			Cfg.USER_ROLE_SERVICE_AVAILABLE = false;
-			//log.warn("Error obtaining user role. Please make sure that USER_ROLE_SERVICE_URL is correct.");
+			log.warn("Error obtaining user role. Please make sure that USER_ROLE_SERVICE_URL is correct and restart Tomcat.");
 		}
 	    return 1;
 	}
