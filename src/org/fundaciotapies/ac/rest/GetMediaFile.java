@@ -51,6 +51,7 @@ public class GetMediaFile {
 		    }
 		    
 	        out.close();
+	        objectFile.getInputStream().close();
 		} catch (Exception e) {
 			log.error("Error ",e);
 		}

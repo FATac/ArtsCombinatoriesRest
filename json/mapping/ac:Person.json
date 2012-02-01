@@ -29,7 +29,9 @@
 			        "name":"Author",
 			        "type":"linkedObjects",
 			        "path":[
-			         	"ac:Person.ac:performsRole=*.ac:appliesOn=*.ac:Title"
+			         	"ac:Person.ac:performsRole=ac:Producer.ac:appliesOn=*.ac:Title",
+			         	"ac:Person.ac:performsRole=ac:Writer.ac:appliesOn=*.ac:Title",
+			         	"ac:Person.ac:performsRole=ac:Artist.ac:appliesOn=*.ac:Title"
 			        ]
 			    }
 			]  

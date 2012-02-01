@@ -21,6 +21,7 @@ import org.fundaciotapies.ac.logic.legal.support.LegalBlockData;
 import org.fundaciotapies.ac.logic.legal.support.LegalBlockRules;
 import org.fundaciotapies.ac.logic.legal.support.LegalDefinition;
 import org.fundaciotapies.ac.logic.legal.support.LegalExpressionCompiler;
+import org.fundaciotapies.ac.model.Upload;
 import org.fundaciotapies.ac.model.bo.Right;
 
 
@@ -32,10 +33,11 @@ public class LegalProcess {
 	private Connection sqlConnector = null;
 	
 	/*
-	 * Assigns right level to objects
+	 * Assigns right level and license to objects
 	 */
-	public void setObjectsRight(List<String> objectIdList, String color) {
+	public void setObjectsRight(List<String> objectIdList, String color, String license) {
 		try {
+			Upload upload = new Upload();
 			Right r = new Right();
 			for (String id : objectIdList) {
 				if ("".equals(id.trim())) continue;
@@ -56,6 +58,13 @@ public class LegalProcess {
 				}
 				
 				r.saveUpdate();
+				
+				if (license!=null && !"".equals(license)) {
+					String[] parts = license.split("=");
+					String property = parts[0];
+					String licenseId = parts[1];
+					upload.updateObject(id, new String[]{ property }, new String[]{ licenseId } );
+				}
 			}
 		} catch (Exception e) {
 			log.error("Exception ", e);
@@ -177,7 +186,7 @@ public class LegalProcess {
 						LegalBlock b2 = def.getBlock(r.getResult().getBlock());
 						if (b2==null) {
 							String objectIds = prop.getProperty("___objects");
-							setObjectsRight(Arrays.asList(objectIds.split(",")), "none");
+							setObjectsRight(Arrays.asList(objectIds.split(",")), "none", null);
 							new File(Cfg.CONFIGURATIONS_PATH + "legal/" + user + ".properties").delete();
 							log.warn("Cannot fin block " + r.getResult().getBlock());
 							return null;
@@ -188,8 +197,9 @@ public class LegalProcess {
 					} else {
 						saveLegalData(prop);
 						String color = r.getResult().getColor();
+						String license = r.getResult().getLicense();
 						String objectIds = prop.getProperty("___objects");
-						setObjectsRight(Arrays.asList(objectIds.split(",")), color);
+						setObjectsRight(Arrays.asList(objectIds.split(",")), color, license);
 						
 						new File(Cfg.CONFIGURATIONS_PATH + "legal/" + user + ".properties").delete();
 						return null;

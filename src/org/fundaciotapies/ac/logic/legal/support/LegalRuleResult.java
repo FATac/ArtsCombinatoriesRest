@@ -3,6 +3,8 @@ package org.fundaciotapies.ac.logic.legal.support;
 public class LegalRuleResult {
 	private String block;
 	private String color;
+	private String license;
+	
 	public void setBlock(String block) {
 		this.block = block;
 	}
@@ -14,5 +16,11 @@ public class LegalRuleResult {
 	}
 	public String getColor() {
 		return color;
+	}
+	public void setLicense(String license) {
+		this.license = license;
+	}
+	public String getLicense() {
+		return license;
 	}
 }

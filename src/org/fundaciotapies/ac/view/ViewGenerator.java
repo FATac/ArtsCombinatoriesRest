@@ -38,24 +38,35 @@ public class ViewGenerator {
 	private static Logger log = Logger.getLogger(ViewGenerator.class);
 	
 	private Template getObjectTemplate(String id) throws Exception {
-		Request req = new Request();
-		String className = req.getObjectClass(id);
-		File f = new File(Cfg.CONFIGURATIONS_PATH+"mapping/"+className+".json");
 		
-		if (!f.exists()) {
-			List<String> superClasses = req.listSuperClasses(className);
-			for (String superClassName : superClasses) {
-				f = new File(Cfg.CONFIGURATIONS_PATH+"mapping/"+superClassName+".json");
-				if (f.exists()) break;
+		FileReader fr = null;
+		try {
+			Request req = new Request();
+			String className = req.getObjectClass(id);
+			File f = new File(Cfg.CONFIGURATIONS_PATH+"mapping/"+className+".json");
+			
+			if (!f.exists()) {
+				List<String> superClasses = req.listSuperClasses(className);
+				for (String superClassName : superClasses) {
+					f = new File(Cfg.CONFIGURATIONS_PATH+"mapping/"+superClassName+".json");
+					if (f.exists()) break;
+				}
+			}
+			
+			if (!f.exists()) { 
+				log.warn("Trying to obtain template from no-template object class " + className + "(id " + id + ")");
+				return null;
+			}
+			
+			fr = new FileReader(f);
+			return new Gson().fromJson(fr, Template.class);
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (fr!=null) {
+				try { fr.close(); } catch (Exception e) { /* ignorar */ }
 			}
 		}
-		
-		if (!f.exists()) { 
-			log.warn("Trying to obtain template from no-template object class " + className + "(id " + id + ")");
-			return null;
-		}
-		
-		return new Gson().fromJson(new FileReader(f), Template.class);
 	}
 	
 	public void getObjectSectionView(TemplateSection section, String id, String lang, boolean hideMedia) {
@@ -72,21 +83,21 @@ public class ViewGenerator {
 			if ("linkedObjects".equals(type)) {
 				for (String path : dm.getPath()) {
 					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
-					dm.getValue().addAll(Arrays.asList(req.resolveModelPath(path, id, true, false, false)));
+					dm.getValue().addAll(Arrays.asList(req.resolveModelPath(path, id, true, false, false, true)));
 				}
 			} else if ("search".equals(type)) {
 				String val = (dm.getValue()!=null?dm.getValue().get(0):""); 
 				if (dm.getPath()!=null) {
 					dm.setValue(new ArrayList<String>());
 					for (String path : dm.getPath()) {
-						List<String> res = Arrays.asList(req.resolveModelPath(path, id, false, false, false));
+						List<String> res = Arrays.asList(req.resolveModelPath(path, id, false, false, false, true));
 						for (String r : res) dm.getValue().add(val + r);
 					}
 				}
 			} else if ("counter".equals(type)) { 
 				for (String path : dm.getPath()) {
 					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
-					dm.getValue().addAll(Arrays.asList(req.resolveModelPath(path, id, false, false, false)));
+					dm.getValue().addAll(Arrays.asList(req.resolveModelPath(path, id, false, false, false, false)));
 				}
 				Map<String, Integer> counter = new HashMap<String, Integer>();
 				for (String v : dm.getValue()) {
@@ -102,7 +113,7 @@ public class ViewGenerator {
 			} else {
 				for (String path : dm.getPath()) {
 					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
-					dm.getValue().addAll(Arrays.asList(req.resolveModelPath(path, id, false, false, false)));
+					dm.getValue().addAll(Arrays.asList(req.resolveModelPath(path, id, false, false, false, true)));
 				}
 			}
 			
@@ -136,7 +147,7 @@ public class ViewGenerator {
 				getObjectSectionView(section, id, lang, hideMedia);
 			}
 			
-			if (sectionName==null || "".equals(sectionName)) ResourceStatistics.visit(id);
+			if (sectionName==null || "".equals(sectionName) || sectionName.contains("body")) ResourceStatistics.visit(id);
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}
@@ -392,9 +403,9 @@ public class ViewGenerator {
 						for (DataMapping d : section.getData()) {
 							for (String path : d.getPath()) {
 								if (d.getType().equals("media")) {
-									medias.addAll(Arrays.asList(req.resolveModelPath(path, id, false, true, false)));
+									medias.addAll(Arrays.asList(req.resolveModelPath(path, id, false, true, false, true)));
 								} else if (d.getType().equals("objects")) {
-									subobjects.addAll(Arrays.asList(req.resolveModelPath(path, id, false, true, false)));
+									subobjects.addAll(Arrays.asList(req.resolveModelPath(path, id, false, true, false, true)));
 								}
 							}
 						}
@@ -426,7 +437,7 @@ public class ViewGenerator {
 					}
 					
 					if (count<4) {
-						if (subobjects.size()>0) {					
+						if (subobjects.size()>0) {
 							for (String o : subobjects) {
 								InputStream in = getObjectThumbnail(o, "", false);
 								if (in!=null) {

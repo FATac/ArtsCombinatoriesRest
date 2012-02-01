@@ -32,7 +32,7 @@ public class OAIFilesGenerator {
 					for (String path : m.getPath()) {
 						String currentClassName = path.split("\\.")[0].trim();
 						if (className.equals(currentClassName) || "*".equals(currentClassName)) {
-							String[] result = new Request().resolveModelPath(path, id, false, true, false);
+							String[] result = new Request().resolveModelPath(path, id, false, true, false, true);
 							for (String r : result) {
 								if (r!=null) doc.put(m.getName(), r);
 							}

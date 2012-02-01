@@ -93,7 +93,7 @@
 		    "name":"License",
 		    "type":"string",
 		    "path":[
-		        "ac:Case-File.ac:references=*.ac:hasLicense=ac:License.ac:Label"
+		        "ac:Case-File.ac:references=*.ac:hasLicense=ac:License.id"
 		    ],
 		    "category":"yes"
 		},
@@ -151,7 +151,7 @@
 		    "name":"ArtWork",
 		    "type":"string",
 		    "path":[
-		        "ac:Case-File.ac:hasMedia=references=ac:Publication.ac:Title",		    
+		        "ac:Case-File.ac:references=ac:Art_Work.ac:Title",		    
 		        "ac:Art_Work.ac:Title"
 		    ],
 		    "category":"yes",
@@ -162,14 +162,43 @@
 		    "name":"Collection",
 		    "type":"string",
 		    "path":[
+		        "ac:Case-File.ac:hasMedia=*.ac:isCollectedIn=ac:Collection.ac:Title",
 		        "ac:Collection.ac:Title"
 		    ],
 		    "category":"yes",
 		    "multilingual":"yes"
 		},
 		
+		{
+		    "name":"Administration",
+		    "type":"string",
+		    "path":[
+		        "ac:Administration.ac:references=*.ac:Title"
+		    ],
+		    "category":"yes",
+		    "multilingual":"yes"
+		},
 		
+		{
+		    "name":"CulturalManagement",
+		    "type":"string",
+		    "path":[
+		        "ac:CulturalManagement.ac:references=*.ac:Title"
+		    ],
+		    "category":"yes",
+		    "multilingual":"yes"
+		},
 		
+		{
+		    "name":"ProtectionPromotion",
+		    "type":"string",
+		    "path":[
+		        "ac:ProtectionPromotionAT.ac:references=*.ac:Title",
+		        "ac:ProtectionPromotionFAT.ac:references=*.ac:Title"
+		    ],
+		    "category":"yes",
+		    "multilingual":"yes"
+		},
 		
 		{
 			"name":"AlphabeticalOrder",

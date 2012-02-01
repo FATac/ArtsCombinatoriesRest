@@ -423,6 +423,40 @@ public class Request {
 		return result;
 	}
 	
+	public boolean isSubclass(String className, String superClassName) {
+
+		try {
+			if (className == null) return false;
+			if (superClassName == null) return false;
+			if (className.equals(superClassName)) return true;
+			
+			String prefix = "";
+			for(int i=0;i<Cfg.ONTOLOGY_NAMESPACES.length;i+=2) {
+				prefix += " prefix " + Cfg.ONTOLOGY_NAMESPACES[i+1] + ": <" + Cfg.ONTOLOGY_NAMESPACES[i] + "> "; 
+			}
+			
+			/*
+			 * get all properties and their ranges of a given class and its super classes
+			 * also get properties that have no domain, that is- properties that can be used in any class
+			 */
+			String query = prefix +
+				" select *" +
+				" where { "+className+" rdfs:subClassOf "+superClassName+" } ";
+			
+			OntModel ont = ModelUtil.getOntology();
+			QueryExecution qe = QueryExecutionFactory.create(query, ont);
+			ResultSet rs = qe.execSelect();
+			while(rs.hasNext()) {
+				return true;
+			}
+		} catch (Throwable e) {
+			log.error("Error ", e);
+			
+		}
+		
+		return false;
+	}
+	
 	public List<String[]> listClassProperties(String className) {
 		List<String[]> result = new ArrayList<String[]>();
 
@@ -1108,7 +1142,8 @@ public class Request {
 	/*
 	 * Resolves the actual value of a given path
 	 */
-	public String[] resolveModelPath(String path, String id, boolean includeId, boolean anyLang, boolean showLang) {
+	public String[] resolveModelPath(String path, String id, boolean includeId, boolean anyLang, boolean showLang, boolean distinct) {
+		//System.out.println(path);
 		if (path==null) return new String[]{};
 		List<String> result = new ArrayList<String>();
 		
@@ -1118,7 +1153,7 @@ public class Request {
 		/*
 		 * Translate the path to a comprehensible sparql query
 		 */
-		String query = " where { ";
+		String query = " WHERE { ";
 		String[] parts = path.split("=");
 		int i = 0;
 		for(String part : parts) {
@@ -1154,13 +1189,19 @@ public class Request {
 			}
 		}
 		
-		query = "select * " + query + " } ";
+		//if (!distinct || i<2) //TODO: fix distinct in query
+			query = "SELECT * " + query + " } ";
+		//else 
+		//	query = "SELECT DISTINCT ?p"+(i-1)+" ?p"+i+" " + query + " } ";
 		
-		//log.info("PATH: " + path);
-		//log.info("QUERY: " + query);
+		//System.out.println("PATH: " + path);
+		//System.out.println("QUERY: " + query);
 		
 		QueryExecution vqe = VirtuosoQueryExecutionFactory.create(query, ModelUtil.getModel());
 		ResultSet rs = vqe.execSelect();
+		
+		List<String> distinctList = new ArrayList<String>();
+		
 		while(rs.hasNext()) {
 			QuerySolution s = rs.next();
 			RDFNode node = s.get("p"+i);
@@ -1170,6 +1211,15 @@ public class Request {
 				RDFNode IdNode = s.get("p"+(i-1));
 				thisId = IdNode.asResource().getLocalName();
 			}
+			
+			// TODO: fix dinstinct in query 
+			//       -- this is not a good practice but we were forced to do it since "distinct" queries does not seem to work trough Jena or Virt jdbc
+			if (distinct && i>=2) {
+				String concat = node.toString()+thisId;
+				if (distinctList.contains(concat)) continue;
+				distinctList.add(concat);
+			}
+			
 			if (node.isLiteral())  {
 				String lang = node.asLiteral().getLanguage();
 				// if we require a specific language results discard all other languages

@@ -1,9 +1,13 @@
 package org.fundaciotapies.ac.logic.solr;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -60,6 +64,7 @@ public class SolrManager {
 		
 		// insert user defined fields at mapping.json, each data type determines solr field type
 		for(DataMapping m : mapping.getData()) {
+			if ("class,id,views,lastView,creation".contains(m.getName())) continue;
 			String type = "string";
 			if ("date.year".equals(m.getType())) type = "int";								// TODO: add more types
 			if ("text".equals(m.getType())) type = "text_general";
@@ -133,6 +138,7 @@ public class SolrManager {
 	private void createDocumentEntry(String id, String className, Mapping mapping) throws Exception {
 		CustomMap doc = documents.get(id);
 		if (doc==null) doc = new CustomMap();
+		Request request = new Request();
 		
 		for(DataMapping m : mapping.getData()) {
 			Boolean isMultilingual = "yes".equals(m.getMultilingual());
@@ -149,9 +155,9 @@ public class SolrManager {
 						
 						// if current data path refers to this object class
 						// or is *, which refers to all 
-						if (className.equals(currentClassName) || "*".equals(currentClassName)) {
+						if ("*".equals(currentClassName) || request.isSubclass(className, currentClassName)) {
 							// get path value/s and put it in document indexing info.
-							String[] result = new Request().resolveModelPath(path, id, false, true, isMultilingual);
+							String[] result = new Request().resolveModelPath(path, id, false, true, isMultilingual, true);
 							for (String r : result) {
 								if (m.getType().startsWith("date") && r!=null) r = extractDatePart(r, m.getType());
 								if (r!=null) {
@@ -296,6 +302,51 @@ public class SolrManager {
 
 	    log.info("Indexation Solr Response " + sb.toString());
 	    rd.close();
+	}
+	
+	public void indexLast() throws Exception {
+		String xml = null;
+        DataInputStream in = null;
+
+        try {
+            File f = new File(Cfg.SOLR_PATH + "data/data.xml");
+            byte[] buffer = new byte[(int) f.length()];
+            in = new DataInputStream(new FileInputStream(f));
+            in.readFully(buffer);
+            xml = new String(buffer);
+            
+            // Connect to Solr, service Update
+    		URL url = new URL(Cfg.SOLR_URL + "update");
+    	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+    	    conn.setRequestProperty("Content-Type", "application/xml");
+    	    conn.setRequestMethod("POST");
+
+    	    // Feed hungry Solr with all index
+    	    conn.setDoOutput(true);
+    	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+    	    wr.write(xml);
+    	    wr.flush();
+    	    wr.close();
+
+    	    // Get the response
+    	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+    	    String str;
+    	    StringBuffer sb = new StringBuffer();
+    	    while ((str = rd.readLine()) != null) {
+    	    	sb.append(str);
+    	    	sb.append("\n");
+    	    }
+
+    	    log.info("Indexation Solr Response " + sb.toString());
+    	    rd.close();
+        } catch (IOException e) {
+            throw new RuntimeException("IO problem in fileToString", e);
+        } finally {
+            try {
+                in.close();
+            } catch (IOException e) {  }
+        }
+		
 	}
 	
 	/*
@@ -476,11 +527,11 @@ public class SolrManager {
 				solrQuery2 += "&facet.field="+m.getName();
 				if ("yes".equals(m.getMultilingual())) solrQuery2 += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";		// if field is multilingual consider only current language  
 				if ("yes".equals(m.getSortCategory())) solrQuery2 += "&f."+m.getName()+".facet.sort=index";
+				if ("class".equals(m.getName())) solrQuery2 += "&f.class.facet.mincount=1";
 			}
 		}
 		
 		if (hasFilter == true && !firstTime) solrQuery1 += ")";
-		//solrQuery2 += "&facet.mincount=1";
 		
 		// in case having no search text and filtering, perform a global query
 		if (solrQuery1 == null || "".equals(solrQuery1)) solrQuery1 = "*:*";

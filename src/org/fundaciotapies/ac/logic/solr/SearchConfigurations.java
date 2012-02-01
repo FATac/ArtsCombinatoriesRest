@@ -18,7 +18,6 @@ public class SearchConfigurations {
 		try {
 			Mapping mapping = new Gson().fromJson(new FileReader(Cfg.CONFIGURATIONS_PATH+"mapping/search.json"), Mapping.class);
 			for(DataMapping m : mapping.getData()) {
-				m.setSort(null);
 				m.setFilter(null);
 				m.setValue(null);
 				m.setType(null);

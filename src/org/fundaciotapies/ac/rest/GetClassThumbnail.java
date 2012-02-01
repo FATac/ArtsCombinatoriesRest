@@ -43,6 +43,7 @@ public class GetClassThumbnail {
 	        out.write(content);
 	        out.flush();
 	        out.close();
+	        in.close();
 		} catch (Exception e) {
 			log.error("Error ",e);
 		}

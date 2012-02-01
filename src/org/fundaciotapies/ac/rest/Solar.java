@@ -40,6 +40,9 @@ public class Solar {
 			} else if ("reload".equals(option)) {
 				solr.deleteAll();
 				solr.index();
+			} else if ("reloadLast".equals(option)) {
+				solr.deleteAll();
+				solr.indexLast();
 			} else if ("search".equals(option)) {
 				return solr.search(searchText, filter, start, rows, lang, searchConfig, sort);
 			} else if ("autocomplete".equals(option)) {

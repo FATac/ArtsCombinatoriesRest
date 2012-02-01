@@ -10,7 +10,7 @@
 		    	{
 					"name":"Title",
 					"type":"text",
-					"path":["ac:Case-File.ac:references=ac:Event.ac:Title", "ac:Case-File.ac:references=ac:SpecialObject.ac:Title"]
+					"path":["ac:Case-File.ac:references=*.ac:Title"]
 				}
 			]
 		},
@@ -27,7 +27,13 @@
 				{
 			        "name":"Description",
 			        "type":"text",
-			        "path":["ac:Case-File.ac:references=*.ac:Description"]
+			        "path":["ac:Case-File.ac:references=*.ac:Description","ac:Case-File.ac:Description"]
+			    },
+			    
+			    {
+			        "name":"Collections",
+			        "type":"linkedObjects",
+			        "path":["ac:Case-File.ac:hasMedia=*.ac:isCollectedIn=ac:Collection.ac:Title"]
 			    }
 			]
 		},

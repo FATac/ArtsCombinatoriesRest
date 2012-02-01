@@ -27,10 +27,10 @@
 
             "rules":
             [
-                {"exp":"Triar_el_color_directament='verd'", "result":{"color":"green"}},
-                {"exp":"Triar_el_color_directament='groc'", "result":{"color":"yellow"}},
-                {"exp":"Triar_el_color_directament='taronja'", "result":{"color":"orange"}},
-                {"exp":"Triar_el_color_directament='vermell'", "result":{"color":"red"}},
+                {"exp":"Triar_el_color_directament='verd'", "result":{"color":"green","license":"ac:hasLicense=Creative_Commons"}},
+                {"exp":"Triar_el_color_directament='groc'", "result":{"color":"yellow","license":"ac:hasLicense=LPI"}},
+                {"exp":"Triar_el_color_directament='taronja'", "result":{"color":"orange","license":"ac:hasLicense=Copyright"}},
+                {"exp":"Triar_el_color_directament='vermell'", "result":{"color":"red","license":"ac:hasLicense=Copyright"}},
                 {"exp":"true", "result":{"block":"bOriginal"}}
             ]
         },
