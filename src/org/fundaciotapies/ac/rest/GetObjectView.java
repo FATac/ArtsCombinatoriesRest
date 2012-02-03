@@ -17,15 +17,6 @@ import org.fundaciotapies.ac.view.ViewGenerator;
 
 import com.google.gson.Gson;
 
-/**
- * Call: http://{host:port}/object/{class}/{id}/view
- * <br>
- *  Get fields and data of a specific object view as defined on its corresponding template <br>
- * Params <br>
- * - class: Class name <br>
- * - id: Object identifier <br>
- * Returns: field-value pairs list in JSON
- */
 @Path("/resource/{id}/view")
 public class GetObjectView {
 

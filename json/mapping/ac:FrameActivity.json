@@ -24,6 +24,11 @@
 					"type":"text",
 					"path":["ac:FrameActivity.ac:Date"]
 				},
+				
+				{
+					"type":"text",
+					"value":[" "]
+				},
 			    
 				{
 					"name":"Description",

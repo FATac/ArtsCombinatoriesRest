@@ -134,7 +134,8 @@
 			    "ac:Case-File.ac:references=ac:Event.ac:Title",
 			    "ac:Event.ac:Title"
 			],
-		    "category":"yes"
+		    "category":"yes",
+			"multilingual":"yes"
 		},
 		
 		{

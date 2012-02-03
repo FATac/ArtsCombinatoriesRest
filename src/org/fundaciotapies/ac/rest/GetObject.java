@@ -11,15 +11,6 @@ import org.fundaciotapies.ac.model.support.CustomMap;
 
 import com.google.gson.Gson;
 
-/**
- * Call: http://{host:port}/object/{class}/{id}
- * <br>
- *  Get fields and data of a specific object <br>
- * Params <br>
- * - class: Class name <br>
- * - id: Object identifier <br>
- * Returns: field-value pairs list in JSON
- */
 @Path("/resource/{id}")
 public class GetObject {
 

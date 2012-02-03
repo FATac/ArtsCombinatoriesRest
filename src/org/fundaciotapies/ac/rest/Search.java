@@ -12,15 +12,6 @@ import org.fundaciotapies.ac.model.support.CustomMap;
 
 import com.google.gson.Gson;
 
-/**
- * Call: http://{host:port}/search
- * <br>
- * Basic global search which calls a string based query for all triplet contents. Results can optionally be filtered by given class (and its subclasses)<br>
- * Param:<br>
- * - s: search word<br>
- * - c: class name (optional)<br>
- * - u: user id fot legal restrictions purposes (optional)<br>
- */
 @Path("/search")
 public class Search {
 

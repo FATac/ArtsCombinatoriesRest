@@ -8,15 +8,6 @@ import javax.ws.rs.core.Context;
 
 import org.fundaciotapies.ac.model.Request;
 
-/**
- * Call: http://{host:port}/objects/{class}/{id}/color
- * <br>
- * Get legal color which is assigned to this object <br>
- * Params class: <br>
- * - class: Class name <br>
- * - id: object identifier <br>
- * Returns: HTML color code
- */
 @Path("/resource/{id}/color")
 public class GetObjectLegalColor {
 	

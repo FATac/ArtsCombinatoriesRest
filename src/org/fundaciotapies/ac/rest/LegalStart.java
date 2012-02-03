@@ -16,12 +16,6 @@ import org.fundaciotapies.ac.logic.legal.LegalProcess;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-/**
- * Call: http://{host:port}/legal/start
- * <br>
- * Starts a legal process. It returns the user code that must be provided in every call to LegalNext function.<br>
- * Return: "success" or "error"
- */
 @Path("/legal/start")
 public class LegalStart {
 	

@@ -9,12 +9,6 @@ import javax.ws.rs.QueryParam;
 
 import org.fundaciotapies.ac.model.Request;
 
-/**
- * Call: http://{host:port}/classes/tree?c=
- * <br>
- * Get class structure tree starting from given root class <br>
- * Params c: root class
- */
 @Path("/classes/tree")
 public class GetClassesTree {
 	

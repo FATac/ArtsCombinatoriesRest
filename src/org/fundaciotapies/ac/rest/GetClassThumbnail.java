@@ -15,12 +15,6 @@ import javax.ws.rs.core.Context;
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.view.ViewGenerator;
 
-/**
- * Call: http://{host:port}/classes/{class}/thumbnail
- * <br>
- * Get class icon <br>
- * Params class: Class name
- */
 @Path("/classes/{class}/thumbnail")
 public class GetClassThumbnail {
 	private static Logger log = Logger.getLogger(GetClassThumbnail.class);

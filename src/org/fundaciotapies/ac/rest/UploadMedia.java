@@ -12,16 +12,6 @@ import javax.ws.rs.core.Context;
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.model.Upload;
 
-/**
- * Call: http://{host:port}/{class}/{id}/file/upload
- * <br>
- * Uploads and associates media file to specified object. This media filled can be recovered by calling GetObjectFile function.
- * <br>
- * Params: <br>
- *  - class: class name<br>
- *  - id: object identifier<br>
- *  - fn: File name<br>
- */
 @Path("/media/upload")
 public class UploadMedia {
 	private static Logger log = Logger.getLogger(UploadMedia.class);

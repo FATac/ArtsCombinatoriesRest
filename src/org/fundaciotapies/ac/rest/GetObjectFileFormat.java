@@ -11,14 +11,6 @@ import org.fundaciotapies.ac.model.Request;
 
 import com.google.gson.Gson;
 
-/**
- * Call: http://{host:port}/media/{id}/format
- * <br>
- * Get media file format <br>
- * Params class: <br>
- * - id: object identifier <br>
- * Returns: Format
- */
 @Path("/media/{id}/format")
 public class GetObjectFileFormat {
 	private static Logger log = Logger.getLogger(GetObjectFileFormat.class);

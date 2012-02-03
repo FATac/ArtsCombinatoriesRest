@@ -11,13 +11,6 @@ import org.fundaciotapies.ac.model.Request;
 
 import com.google.gson.Gson;
 
-/**
- * Call: http://{host:port}/classes/list?c=
- * <br>
- * Get a list of all or some classes of the Ontology <br>
- * Param c: Returns subclasses of given class only (optional) <br>
- * Returns JSON list of strings or "error"
- */
 @Path("/classes/list")
 public class GetClassesList {
 

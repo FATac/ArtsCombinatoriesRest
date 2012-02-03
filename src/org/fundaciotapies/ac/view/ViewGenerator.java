@@ -75,6 +75,7 @@ public class ViewGenerator {
 		
 		for (DataMapping dm : section.getData()) {
 			String type = dm.getType();
+			if (dm.getPath()==null) continue;
 			if ("media".equals(type) && hideMedia) {
 				dm.setPath(null);
 				continue;
@@ -115,6 +116,28 @@ public class ViewGenerator {
 					if (dm.getValue()==null) dm.setValue(new ArrayList<String>());
 					dm.getValue().addAll(Arrays.asList(req.resolveModelPath(path, id, false, false, false, true)));
 				}
+				
+				if ("media".equals(type)) {
+					List<String> newValues = new ArrayList<String>();
+					List<String> values = dm.getValue();
+					for (String url : values) {
+						newValues.add(url);
+						int idx = url.lastIndexOf("/");
+						if (idx<0) break;
+						String mediaId = url.substring(idx+1);
+						String format = req.getObjectFileFormat(mediaId);
+						if ("jpg,png,jpeg,svg,gif".contains(format)) {
+							newValues.add("image");
+						} else if ("aif,mp3,ogg,wav".contains(format)) {
+							newValues.add("audio");
+						} else if ("avi,wma,mp4,ogv".contains(format)) {
+							newValues.add("video");
+						} else {
+							newValues.add("object");
+						}
+					}
+					dm.setValue(newValues);
+				}
 			}
 			
 			dm.setPath(null);
@@ -148,8 +171,10 @@ public class ViewGenerator {
 			}
 			
 			if (sectionName==null || "".equals(sectionName) || sectionName.contains("body")) ResourceStatistics.visit(id);
-		} catch (Throwable e) {
-			log.error("Error ", e);
+		} catch (IllegalArgumentException e) {
+			log.warn("Object not found " + id);
+		} catch (Throwable t) {
+			log.error("Error ", t);
 		}
 		
 		return template;
@@ -268,6 +293,8 @@ public class ViewGenerator {
 	
 	public File getClassThumbnail(String className, Boolean resize) {
 		try {
+			if (className.indexOf(':')<0) className = Cfg.ONTOLOGY_NAMESPACES[1]+":"+className;
+			
 			File f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/" + className + (resize?"_resized":"") + ".jpg");
 			
 			if (!f.exists()) {
@@ -401,6 +428,7 @@ public class ViewGenerator {
 					for (TemplateSection section : template.getSections()) {
 						if (hasThumbnailSection && !"thumbnail".equals(section.getName())) continue;
 						for (DataMapping d : section.getData()) {
+							if (d.getPath()==null) continue;
 							for (String path : d.getPath()) {
 								if (d.getType().equals("media")) {
 									medias.addAll(Arrays.asList(req.resolveModelPath(path, id, false, true, false, true)));

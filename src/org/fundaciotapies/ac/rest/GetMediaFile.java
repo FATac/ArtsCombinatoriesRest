@@ -17,14 +17,6 @@ import org.fundaciotapies.ac.model.support.ObjectFile;
 
 import com.google.gson.Gson;
 
-/**
- * Call: http://{host:port}/media/{id}
- * <br>
- * Get media file linked to specific object. Provided object id must be of a Media type <br>
- * Params class: <br>
- * - id: object identifier <br>
- * Returns: Binary file object by streaming
- */
 @Path("/")
 public class GetMediaFile {
 	private static Logger log = Logger.getLogger(GetMediaFile.class);

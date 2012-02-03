@@ -9,14 +9,6 @@ import org.fundaciotapies.ac.model.Upload;
 
 import com.google.gson.Gson;
 
-/**
- * Call: http://{host:port}/objects/{class}/{id}/delete
- * <br>
- * Deletes referenced object<br>
- * Params:<br>
- * - id: Object identifier<br>
- * Returns "success" or "error"
- */
 @Path("/resource/{id}/delete")
 public class DeleteObject {
 

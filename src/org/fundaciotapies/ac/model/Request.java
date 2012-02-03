@@ -1151,7 +1151,7 @@ public class Request {
 		if (id!=null) idClause = " <"+Cfg.RESOURCE_URI_NS+id+"> "; 
 		
 		/*
-		 * Translate the path to a comprehensible sparql query
+		 * Translate the path to sparql query
 		 */
 		String query = " WHERE { ";
 		String[] parts = path.split("=");
@@ -1212,7 +1212,7 @@ public class Request {
 				thisId = IdNode.asResource().getLocalName();
 			}
 			
-			// TODO: fix dinstinct in query 
+			// TODO: fix distinct in query 
 			//       -- this is not a good practice but we were forced to do it since "distinct" queries does not seem to work trough Jena or Virt jdbc
 			if (distinct && i>=2) {
 				String concat = node.toString()+thisId;

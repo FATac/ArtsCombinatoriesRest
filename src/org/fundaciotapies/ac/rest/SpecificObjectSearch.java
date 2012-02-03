@@ -11,16 +11,6 @@ import org.fundaciotapies.ac.model.Request;
 
 import com.google.gson.Gson;
 
-/**
- * Call: http://{host:port}/specific
- * <br>
- * Global search filtering by field-value pair. Results can optionally be filtered by class (and its subclasses)<br>
- * Param:<br>
- * - f: field name<br>
- * - v: value<br>
- * - c: class name<br>
- * Return: JSON structured list of objects (which are field-value pairs list)
- */
 @Path("/specific")
 public class SpecificObjectSearch {
 
