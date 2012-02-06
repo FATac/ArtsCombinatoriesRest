@@ -449,6 +449,8 @@ public class SolrManager {
 		if (searchText==null) searchText = "";
 		String solrQuery1 = "";
 		
+		if (lang==null) lang = Cfg.LANGUAGE_LIST[0];
+		
 		
 		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);

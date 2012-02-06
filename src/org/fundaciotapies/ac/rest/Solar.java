@@ -1,12 +1,10 @@
 package org.fundaciotapies.ac.rest;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.logic.solr.SearchConfigurations;
@@ -21,11 +19,9 @@ public class Solar {
 	
 	@GET
 	@Produces("application/json")
-	public String solarize(@Context HttpServletRequest request, @PathParam("option") String option, @QueryParam("s") String searchText, @QueryParam("f") String filter, @QueryParam("start") String start, @QueryParam("rows") String rows, @QueryParam("conf") String searchConfig, @QueryParam("sort") String sort, @QueryParam("time") String time) {
+	public String solarize(@PathParam("option") String option, @QueryParam("s") String searchText, @QueryParam("f") String filter, @QueryParam("start") String start, @QueryParam("rows") String rows, @QueryParam("conf") String searchConfig, @QueryParam("sort") String sort, @QueryParam("time") String time, @QueryParam("lang") String lang) {
 		try {
 			SolrManager solr = new SolrManager();
-			
-			String lang = new Request().getCurrentLanguage(request);
 			
 			if ("commit".equals(option)) {
 				solr.commit();

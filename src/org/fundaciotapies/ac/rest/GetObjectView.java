@@ -3,15 +3,12 @@ package org.fundaciotapies.ac.rest;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 
-import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.support.Template;
 import org.fundaciotapies.ac.view.ViewGenerator;
 
@@ -22,8 +19,7 @@ public class GetObjectView {
 
 	@GET
 	@Produces("application/json")
-	public String getObjectView(@Context HttpServletRequest request, @PathParam("id") String id, @QueryParam("section") String section, @QueryParam("uid") String uid) {
-		String lang = new Request().getCurrentLanguage(request);
+	public String getObjectView(@PathParam("id") String id, @QueryParam("section") String section, @QueryParam("uid") String uid, @QueryParam("lang") String lang) {
 		String[] ids = id.split(",");
 		if ("".equals(uid)) uid = null;
 		if (ids.length==1) {

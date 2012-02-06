@@ -15,9 +15,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
@@ -121,35 +118,12 @@ public class Request {
 	}
 	
 	public void setCurrentLanguage(String currentLanguage) {
+		if (currentLanguage==null) currentLanguage = Cfg.LANGUAGE_LIST[0];
 		this.currentLanguage = currentLanguage;
 	}
 	
 	public String getCurrentLanguage() {
 		return currentLanguage;
-	}
-	
-	/*
-	 * Read cookies of request to get the current language of the client
-	 */
-	public String getCurrentLanguage(HttpServletRequest request) {
-		String lang = Cfg.LANGUAGE_LIST[0];
-		Cookie[] ckl = request.getCookies();
-		if (ckl!=null) {
-			for (Cookie k : ckl) {
-				if (k.getName()=="Language") {
-					lang = k.getValue();
-					boolean valid = false;
-					for (String l :Cfg.LANGUAGE_LIST) {
-						if (l.equals(lang)) {
-							valid = true;
-							break;
-						}
-					}
-					if (!valid) lang = Cfg.LANGUAGE_LIST[0];
-				}
-			}
-		}
-		return lang;
 	}
 	
 	

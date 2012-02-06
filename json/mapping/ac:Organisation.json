@@ -8,9 +8,8 @@
 			"data":[
 		
 		    	{
-					"name":"Name",
 					"type":"text",
-					"path":["ac:Organisation.ac:name"]
+					"path":["ac:Organisation.ac:Name"]
 				}
 			]
 		},
@@ -18,24 +17,25 @@
 		{
 			"name":"body",
 			"data":[
-			
-			 	{
-					"name":"Description",
+			    
+			    {
+					"name":"Location",
 					"type":"text",
-					"path":["ac:Organisation.ac:Description"]
+					"path":["ac:Organisation.ac:isLocatedAt=*.ac:Name"]
 			    },
 			    
 			    {
-					"name":"Home",
-					"type":"url",
-					"path":["ac:Organisation.ac:Homepage"]
+					"type":"text",
+					"value":[" "]
 			    },
 			    
 			    {
 					"name":"Publications",
-					"type":"linkedObjects",
-					"path":["ac:Organisation.ac:performsRole=*.ac:appliesOn=ac:SpecialObjects.ac:Title"]
+					"type":"objects",
+					"path":["ac:Organisation.ac:performsRole=*.ac:appliesOn=*.ac:Title"]
 			    }
+			    
+			    
 			]  
 		}
 	]
