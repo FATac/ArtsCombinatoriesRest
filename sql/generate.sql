@@ -31,7 +31,7 @@ CREATE TABLE db.dba._thumbnail (
 
 CREATE TABLE db.dba._right (
 	SID INT IDENTITY,
-	objectId VARCHAR(60),
+	objectId VARCHAR(145),
 	rightLevel INT
 )
 
