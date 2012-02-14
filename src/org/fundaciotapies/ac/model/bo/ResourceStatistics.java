@@ -1,17 +1,18 @@
 package org.fundaciotapies.ac.model.bo;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
+
+import org.fundaciotapies.ac.Cfg;
+
+import virtuoso.jdbc3.VirtuosoConnection;
+import virtuoso.jdbc3.VirtuosoConnectionPoolDataSource;
+import virtuoso.jdbc3.VirtuosoPooledConnection;
 
 public class ResourceStatistics implements Serializable {
 	private static final long serialVersionUID = 723650552242888095L;
@@ -22,16 +23,20 @@ public class ResourceStatistics implements Serializable {
 	private Long visitCounter;
 	
 	public static List<String> listRecentChanges(long updatePeriod) throws Exception {
-		Connection conn = null;
+		List<String> result = new ArrayList<String>();
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
-		List<String> result = new ArrayList<String>();
-		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		    
 		    long currentMoment = Calendar.getInstance().getTimeInMillis();
 		      
@@ -55,13 +60,18 @@ public class ResourceStatistics implements Serializable {
 	}
 	
 	public static void creation(String identifier) throws Exception {
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    String sql = "INSERT INTO _resource_statistics (identifier, visitCounter, creationMoment) VALUES (?, ?, ?)";
 		    stmt = conn.prepareStatement(sql);
@@ -82,13 +92,18 @@ public class ResourceStatistics implements Serializable {
 	}
 	
 	public static void deletion(String identifier) throws Exception {
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    String sql = "DELETE FROM _resource_statistics WHERE identifier = ? ";
 		    stmt = conn.prepareStatement(sql);
@@ -107,13 +122,18 @@ public class ResourceStatistics implements Serializable {
 	}
 	
 	public static void visit(String identifier) throws Exception {
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    String sql = "UPDATE _resource_statistics SET visitCounter = visitCounter + 1, lastMoment = ? WHERE identifier = ? ";
 		    stmt = conn.prepareStatement(sql);
@@ -133,16 +153,20 @@ public class ResourceStatistics implements Serializable {
 	}
 	
 	public static List<String[]> list() throws Exception {
-		Connection conn = null;
+		List<String[]> result = new ArrayList<String[]>();
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
-		List<String[]> result = new ArrayList<String[]>();
-		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    stmt = conn.prepareStatement("SELECT * FROM _resource_statistics");
 		      
@@ -171,14 +195,19 @@ public class ResourceStatistics implements Serializable {
 	}
 	
 	public void load(String identifier) throws Exception {
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    stmt = conn.prepareStatement("SELECT * FROM _resource_statistics WHERE identifier = ? ");
 		    stmt.setString(1, identifier);
@@ -205,13 +234,17 @@ public class ResourceStatistics implements Serializable {
 	}
 	
 	public static void clear() throws Exception {
-		Connection conn = null;
-		Statement stmt = null;
-		
+		VirtuosoConnection conn = null;
+		PreparedStatement stmt = null;
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    conn.createStatement().executeUpdate("DELETE FROM _resource_statistics ");
 		} catch (Exception e) {

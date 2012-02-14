@@ -1,15 +1,17 @@
 package org.fundaciotapies.ac.model.bo;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
+
+import org.fundaciotapies.ac.Cfg;
+
+import virtuoso.jdbc3.VirtuosoConnection;
+import virtuoso.jdbc3.VirtuosoConnectionPoolDataSource;
+import virtuoso.jdbc3.VirtuosoPooledConnection;
 
 
 public class Right implements Serializable {
@@ -36,15 +38,19 @@ public class Right implements Serializable {
 	}
 	
 	public void load(Long sid) throws Exception {
-		
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    stmt = conn.prepareStatement("SELECT * FROM _right WHERE sid = ? ");
 		    stmt.setLong(1, sid);
@@ -69,16 +75,20 @@ public class Right implements Serializable {
 	}
 	
 	public void load(String objectId) throws Exception {
-		
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
-		      
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
+		    
 		    stmt = conn.prepareStatement("SELECT * FROM _right WHERE objectId = ? ");
 		    stmt.setString(1, objectId);
 		      
@@ -102,14 +112,18 @@ public class Right implements Serializable {
 	}
 	
 	public void saveUpdate() throws Exception {
-
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    String sql = "UPDATE _right SET objectId = ?, rightLevel = ? WHERE sid = ? ";
 		    if (sid == null) sql = "INSERT INTO _right (objectId, rightLevel) VALUES (?,?)";
@@ -131,13 +145,18 @@ public class Right implements Serializable {
 	}
 	
 	public void delete() throws Exception {
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		    
 		    if (sid==null) {
 		    	if (objectId!=null) {
@@ -163,13 +182,18 @@ public class Right implements Serializable {
 	}
 	
 	public static List<String> list(Integer rightLevel) throws Exception {
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		    
     		String sql = "SELECT * FROM _right";
     		if (rightLevel!=null) sql += " WHERE rightLevel = ? ";

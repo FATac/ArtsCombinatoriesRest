@@ -1,14 +1,15 @@
 package org.fundaciotapies.ac.model.bo;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
+import org.fundaciotapies.ac.Cfg;
+
+import virtuoso.jdbc3.VirtuosoConnection;
+import virtuoso.jdbc3.VirtuosoConnectionPoolDataSource;
+import virtuoso.jdbc3.VirtuosoPooledConnection;
 
 public class User implements Serializable {
 	private static final long serialVersionUID = 1609363309553899275L;
@@ -28,15 +29,19 @@ public class User implements Serializable {
 	}
 	
 	public void load(String login) throws Exception {
-		
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/mysqlDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    stmt = conn.prepareStatement("SELECT id, login FROM users WHERE login = ? ");
 		    stmt.setString(1, login);
@@ -61,9 +66,14 @@ public class User implements Serializable {
 		if (this.sid==null) return;
 		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/mysqlDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    stmt = conn.prepareStatement("SELECT name FROM role_assignments WHERE principal_id = ? ");
 		    stmt.setLong(1, sid);

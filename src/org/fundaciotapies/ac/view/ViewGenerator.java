@@ -414,8 +414,7 @@ public class ViewGenerator {
 			List<String> medias = new ArrayList<String>();
 			List<String> subobjects = new ArrayList<String>();
 			
-			if (!f.exists()) {
-			
+			if (!f.exists() && !Cfg.objectClassThumbnail.contains(id)) {
 				Template template = getObjectTemplate(id);
 				if (template != null) {
 					boolean hasThumbnailSection = false;
@@ -486,6 +485,7 @@ public class ViewGenerator {
 			if (!f.exists() && firstCall) {
 				String className = new Request().getObjectClass(id);
 				f = getClassThumbnail(className, firstCall);
+				Cfg.objectClassThumbnail.add(id);
 			}
 			
 			if (f.exists())	return new FileInputStream(f);

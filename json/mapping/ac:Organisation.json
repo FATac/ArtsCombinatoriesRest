@@ -32,7 +32,7 @@
 			    {
 					"name":"Publications",
 					"type":"objects",
-					"path":["ac:Organisation.ac:performsRole=*.ac:appliesOn=*.ac:Title"]
+					"path":["ac:Organisation.ac:performsRole=*.ac:appliesOn"]
 			    }
 			    
 			    

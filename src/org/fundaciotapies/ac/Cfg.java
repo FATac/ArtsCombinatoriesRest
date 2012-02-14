@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
@@ -71,8 +73,16 @@ public class Cfg {
 		return "";
 	}
 	
+	public static String[] getRdfDatabaseHostPort() {
+		String[] parts = RDFDB_URL.split(":");
+		String port = parts[parts.length-1];
+		String server = parts[parts.length-2].split("//")[1];
+		return new String[]{ server, port };
+	}
+	
 	public static boolean USER_ROLE_SERVICE_AVAILABLE = true;
-	public static Map<String,Integer> userLevelTmp = new HashMap<String, Integer>();  
+	public static Map<String,Integer> userLevelTmp = new HashMap<String, Integer>(); 
+	public static Set<String> objectClassThumbnail = new TreeSet<String>(); 
 	
 	static {
 		

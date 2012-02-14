@@ -1,16 +1,16 @@
 package org.fundaciotapies.ac.model.bo;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
+import org.fundaciotapies.ac.Cfg;
+
+import virtuoso.jdbc3.VirtuosoConnection;
+import virtuoso.jdbc3.VirtuosoConnectionPoolDataSource;
+import virtuoso.jdbc3.VirtuosoPooledConnection;
 
 public class Media implements Serializable {
 	private static final long serialVersionUID = 944291245319558902L;
@@ -34,16 +34,20 @@ public class Media implements Serializable {
 	}
 	
 	public List<String> list() throws Exception {
-		Connection conn = null;
+		List<String> result = new ArrayList<String>();
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
-		List<String> result = new ArrayList<String>();
-		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    stmt = conn.prepareStatement("SELECT path FROM _media ORDER BY path ");
 		      
@@ -63,14 +67,19 @@ public class Media implements Serializable {
 	}
 	
 	public void load(Long sid) throws Exception {
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    stmt = conn.prepareStatement("SELECT * FROM _media WHERE sid = ? ");
 		    stmt.setLong(1, sid);
@@ -96,14 +105,19 @@ public class Media implements Serializable {
 	}
 	
 	public void load(String mediaId) throws Exception {
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    stmt = conn.prepareStatement("SELECT * FROM _media WHERE mediaId = ? ");
 		    stmt.setString(1, mediaId);
@@ -129,13 +143,18 @@ public class Media implements Serializable {
 	}
 	
 	public void saveUpdate() throws Exception {
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    String sql = "UPDATE _media SET path = ?,mediaId=? WHERE sid = ? ";
 		    if (sid ==null) sql = "INSERT INTO _media (path,mediaId) VALUES (?,?)";
@@ -157,13 +176,18 @@ public class Media implements Serializable {
 	}
 	
 	public void delete() throws Exception {
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    if (sid==null) {
 		    	if (mediaId!=null) {
@@ -189,13 +213,18 @@ public class Media implements Serializable {
 	}
 	
 	public static void clear() throws Exception {
-		Connection conn = null;
-		Statement stmt = null;
+		VirtuosoConnection conn = null;
+		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    conn.createStatement().executeUpdate("DELETE FROM _media");
 		} catch (Exception e) {

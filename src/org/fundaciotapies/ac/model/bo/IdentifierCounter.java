@@ -1,14 +1,14 @@
 package org.fundaciotapies.ac.model.bo;
 
 import java.io.Serializable;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
+import org.fundaciotapies.ac.Cfg;
+
+import virtuoso.jdbc3.VirtuosoConnection;
+import virtuoso.jdbc3.VirtuosoConnectionPoolDataSource;
+import virtuoso.jdbc3.VirtuosoPooledConnection;
 
 public class IdentifierCounter implements Serializable {
 	private static final long serialVersionUID = -3923708885085790461L;
@@ -24,15 +24,19 @@ public class IdentifierCounter implements Serializable {
 	}
 	
 	public void load(String identifier) throws Exception {
-		
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
 		try {
-			Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    stmt = conn.prepareStatement("SELECT * FROM _identifier_counter WHERE identifier = ? ");
 		    stmt.setString(1, identifier);
@@ -57,14 +61,18 @@ public class IdentifierCounter implements Serializable {
 	}
 	
 	public void save() throws Exception {
-
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    String sql = "INSERT INTO _identifier_counter (identifier, counter) VALUES (?,?)";
 		    stmt = conn.prepareStatement(sql);
@@ -84,14 +92,18 @@ public class IdentifierCounter implements Serializable {
 	}
 	
 	public void update() throws Exception {
-
-		Connection conn = null;
+		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    String sql = "UPDATE _identifier_counter SET counter = ? WHERE identifier = ? ";
 		    stmt = conn.prepareStatement(sql);
@@ -111,20 +123,23 @@ public class IdentifierCounter implements Serializable {
 	}
 	
 	public static void clear() throws Exception {
-		Connection conn = null;
-		Statement stmt = null;
+		VirtuosoConnection conn = null;
 		
 		try {
-		    Context ctx = new InitialContext();
-		    DataSource ds = (DataSource)ctx.lookup("java:comp/env/jdbc/virtuosoDB");
-		    conn = ds.getConnection();
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
 		      
 		    conn.createStatement().executeUpdate("DELETE FROM _identifier_counter ");
 		} catch (Exception e) {
 			throw e;
 		} finally {
 			try {
-				if (stmt!=null) stmt.close();
 				if (conn!=null) conn.close();
 			} catch (Exception e) { throw e; }
 		}   

@@ -22,16 +22,9 @@ CREATE TABLE db.dba._media (
 	moment TIMESTAMP
 )
 
-CREATE TABLE db.dba._thumbnail (
-	SID INT IDENTITY,
-	objectId VARCHAR(60),
-	path VARCHAR(500),
-	moment TIMESTAMP
-)
-
 CREATE TABLE db.dba._right (
 	SID INT IDENTITY,
-	objectId VARCHAR(145),
+	objectId VARCHAR(150),
 	rightLevel INT
 )
 
