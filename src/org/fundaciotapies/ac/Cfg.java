@@ -57,6 +57,10 @@ public class Cfg {
 	public static String ONTOLOGY_PATH = "/home/ubuntu/artscombinatories/ac.owl";
 	public static String OAI_PATH = "/home/ubuntu/artscombinatories/oai/";
 	
+	// Optional advanced defaults
+	public static String PATH_PROPERTY_PREFIX = "\\.";
+	public static String PATH_OBJECT_REFERENCE_PREFIX = "=";
+	
 	
 	public static String fromNamespaceToPrefix(String namespace) {
 		for(int i=0;i<ONTOLOGY_NAMESPACES.length;i+=2) {
@@ -83,6 +87,7 @@ public class Cfg {
 	public static boolean USER_ROLE_SERVICE_AVAILABLE = true;
 	public static Map<String,Integer> userLevelTmp = new HashMap<String, Integer>(); 
 	public static Set<String> objectClassThumbnail = new TreeSet<String>(); 
+	
 	
 	static {
 		
@@ -138,7 +143,9 @@ public class Cfg {
 			MEDIA_PATH = jsonConfig.path("MEDIA_PATH").getTextValue();
 			ONTOLOGY_PATH = jsonConfig.path("ONTOLOGY_PATH").getTextValue();
 			if (jsonConfig.path("OAI_PATH")!=null) OAI_PATH = jsonConfig.path("OAI_PATH").getTextValue(); else OAI_PATH = null;
-		
+			
+			if (jsonConfig.path("PATH_PROPERTY_PREFIX")!=null) PATH_PROPERTY_PREFIX = jsonConfig.path("PATH_PROPERTY_PREFIX").getTextValue();
+			if (jsonConfig.path("PATH_OBJECT_REFERENCE_PREFIX")!=null) PATH_OBJECT_REFERENCE_PREFIX = jsonConfig.path("PATH_OBJECT_REFERENCE_PREFIX").getTextValue();
 		} catch (Exception e) {
 			log.error("Error culd not load properties", e);
 		}

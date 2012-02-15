@@ -215,7 +215,7 @@ public class SolrManager {
 		for(DataMapping m : mapping.getData()) {
 			if (m.getPath()!=null) {
 				for (String path : m.getPath()) {
-					String className = path.split("\\.")[0].trim();
+					String className = path.split(Cfg.PATH_PROPERTY_PREFIX)[0].trim();
 					if (!"*".equals(className) && !objectTypesIndexed.contains(className))	objectTypesIndexed.add(className);
 				}
 			}

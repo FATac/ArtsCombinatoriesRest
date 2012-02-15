@@ -431,6 +431,8 @@ public class Request {
 		return false;
 	}
 	
+	
+	
 	public List<String[]> listClassProperties(String className) {
 		List<String[]> result = new ArrayList<String[]>();
 
@@ -453,6 +455,8 @@ public class Request {
 				"		  { ?prop rdf:type owl:ObjectProperty } " + 
 				"		  union " +
 				"		  { ?prop rdf:type owl:DatatypeProperty } " + 
+				"		  union " +
+				"		  { ?prop rdf:type rdf:Property } " + 
 				"		  . " +
 				"		  { ?prop rdfs:domain " + className +
 				"		    . ?prop rdf:type ?type " +
@@ -491,10 +495,18 @@ public class Request {
 				}
 				
 				// response includes property type and value range (coma separated)
-				if (qs.get("type")!=null) propType += ","+qs.get("type").asResource().getLocalName();
+				String currentType = qs.get("type").asResource().getLocalName();
 				if (qs.get("range")!=null) {
 					range += ","+Cfg.fromNamespaceToPrefix(qs.get("range").asResource().getNameSpace())+qs.get("range").asResource().getLocalName();
+					if ("Property".equals(currentType)) {
+						if (qs.get("range").toString().startsWith("http://www.w3.org/2000/01/rdf-schema#")) {
+							currentType = "DatatypeProperty";
+						} else {
+							currentType = "ObjectProperty";
+						}
+					}
 				}
+				if (qs.get("type")!=null) propType += ","+currentType;
 				lastPropName = propName;
 			}
 			
@@ -598,6 +610,10 @@ public class Request {
 				it = ontClass.listSubClasses(direct);
 			} else {
 				it = ont.listHierarchyRootClasses();
+				if (!it.hasNext()) {
+					ont = ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM, ModelUtil.getOntology());
+					it = ont.listHierarchyRootClasses();
+				}
 			}
 			
 			// Use recursive calls to navigate through the class tree starting form given root class
@@ -1128,10 +1144,10 @@ public class Request {
 		 * Translate the path to sparql query
 		 */
 		String query = " WHERE { ";
-		String[] parts = path.split("=");
+		String[] parts = path.split(Cfg.PATH_OBJECT_REFERENCE_PREFIX);
 		int i = 0;
 		for(String part : parts) {
-			String[] atom = part.split("\\.");
+			String[] atom = part.split(Cfg.PATH_PROPERTY_PREFIX);
 			if (i==0) {
 				if ("id".equals(atom[1])) {		// "id" is a reserved word
 					return new String[]{ id }; // return the actual Id of the object
