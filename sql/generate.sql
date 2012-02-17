@@ -15,13 +15,6 @@ CREATE TABLE db.dba._resource_statistics (
 	lastMoment BIGINT
 )
 
-CREATE TABLE db.dba._media (
-	SID INT IDENTITY,
-	mediaId VARCHAR(60),
-	path VARCHAR(500),
-	moment TIMESTAMP
-)
-
 CREATE TABLE db.dba._right (
 	SID INT IDENTITY,
 	objectId VARCHAR(150),

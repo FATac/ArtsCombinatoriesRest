@@ -22,36 +22,6 @@ public class GetMediaFile {
 	private static Logger log = Logger.getLogger(GetMediaFile.class);
 	
 	@GET
-	@Path("media/{id}/profile/{profile}")
-	public String getMediaFileProfile(@Context HttpServletResponse response, @PathParam("id") String id, @PathParam("profile") String profile, @QueryParam("u") String uid) {
-		
-		try {
-			ObjectFile objectFile = new Request().getMediaFile(id, profile, uid);
-			if (objectFile==null) {
-				log.warn("There is no media file for: " + id + " profile: " + profile);
-				return "";
-			}
-			response.setContentType(objectFile.getContentType());
-			
-			// Get the response
-		    FileInputStream rd = (FileInputStream)objectFile.getInputStream();
-		    int len;
-		    byte[] buffer = new byte[512];
-		    OutputStream out = response.getOutputStream();
-		    while ((len = rd.read(buffer)) > 0) {
-		    	out.write(buffer, 0, len);
-		    }
-		    
-	        out.close();
-	        objectFile.getInputStream().close();
-		} catch (Exception e) {
-			log.error("Error ",e);
-		}
-		
-		return "";
-	}
-	
-	@GET
 	@Produces("application/json")
 	@Path("media/{id}")
 	public String getMediaFile(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("u") String uid) {
@@ -66,7 +36,7 @@ public class GetMediaFile {
 		}
 		
 		try {
-			ObjectFile objectFile = new Request().getMediaFile(id, null, uid);
+			ObjectFile objectFile = new Request().getMediaFile(id, uid);
 			if (objectFile==null) {
 				log.warn("There is no media file for: " + id);
 				return "";

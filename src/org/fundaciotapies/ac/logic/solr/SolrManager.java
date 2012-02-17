@@ -151,7 +151,7 @@ public class SolrManager {
 			if (doc.get(m.getName())==null) {
 				if (m.getPath()!=null) {
 					for (String path : m.getPath()) {
-						String currentClassName = path.split("\\.")[0].trim();
+						String currentClassName = path.split(Cfg.PATH_PROPERTY_PREFIX)[0].trim();
 						
 						// if current data path refers to this object class
 						// or is *, which refers to all 

@@ -33,7 +33,7 @@ public class Cfg {
 	public static String RDFDB_URL = "jdbc:virtuoso://localhost:1111";
 	public static String RDFDB_USER = "dba";
 	public static String RDFDB_PASS = "dba";
-	public static String REST_URL = "http://ec2-50-17-94-196.compute-1.amazonaws.com:8080/ArtsCombinatoriesRest/";
+	public static String MEDIA_URL = "http://ec2-50-17-94-196.compute-1.amazonaws.com:8080/ArtsCombinatoriesRest/media/";
 	public static String SOLR_URL = "http://localhost:8080/solr/";
 	public static String USER_ROLE_SERVICE_URL = "http://localhost:8084/fatac/@@RetornaUserGroups?uid=";
 	public static String VIDEO_SERVICES_URL = "http://localhost:8080/TapiesWebServices/rest/";
@@ -90,8 +90,6 @@ public class Cfg {
 	
 	
 	static {
-		
-		
 		try {
 			String canonicalPath = new File(".").getCanonicalPath();
 			log.info(">>>>>>>>>>>>>>>> LOADING CONFIGURATION <<<<<<<<<<<<<<< (current dir: " + canonicalPath + ")");
@@ -125,7 +123,7 @@ public class Cfg {
 			RDFDB_URL = jsonConfig.path("RDFDB_URL").getTextValue();
 			RDFDB_USER = jsonConfig.path("RDFDB_USER").getTextValue();
 			RDFDB_PASS = jsonConfig.path("RDFDB_PASS").getTextValue();
-			REST_URL = jsonConfig.path("REST_URL").getTextValue();
+			MEDIA_URL = jsonConfig.path("MEDIA_URL").getTextValue();
 			SOLR_URL = jsonConfig.path("SOLR_URL").getTextValue();
 			VIDEO_SERVICES_URL = jsonConfig.path("VIDEO_SERVICES_URL").getTextValue();
 			USER_ROLE_SERVICE_URL = jsonConfig.path("USER_ROLE_SERVICE_URL").getTextValue();
@@ -139,13 +137,13 @@ public class Cfg {
 			ONTOLOGY_NAMESPACES = tmplist.toArray(new String[0]);
 			
 			CONFIGURATIONS_PATH = jsonConfig.path("CONFIGURATIONS_PATH").getTextValue();
-			if (jsonConfig.path("SOLR_PATH")!=null) SOLR_PATH = jsonConfig.path("SOLR_PATH").getTextValue(); else SOLR_PATH = null;
+			if (jsonConfig.path("SOLR_PATH").getTextValue()!=null) SOLR_PATH = jsonConfig.path("SOLR_PATH").getTextValue(); else SOLR_PATH = null;
 			MEDIA_PATH = jsonConfig.path("MEDIA_PATH").getTextValue();
 			ONTOLOGY_PATH = jsonConfig.path("ONTOLOGY_PATH").getTextValue();
-			if (jsonConfig.path("OAI_PATH")!=null) OAI_PATH = jsonConfig.path("OAI_PATH").getTextValue(); else OAI_PATH = null;
+			if (jsonConfig.path("OAI_PATH").getTextValue()!=null) OAI_PATH = jsonConfig.path("OAI_PATH").getTextValue(); else OAI_PATH = null;
 			
-			if (jsonConfig.path("PATH_PROPERTY_PREFIX")!=null) PATH_PROPERTY_PREFIX = jsonConfig.path("PATH_PROPERTY_PREFIX").getTextValue();
-			if (jsonConfig.path("PATH_OBJECT_REFERENCE_PREFIX")!=null) PATH_OBJECT_REFERENCE_PREFIX = jsonConfig.path("PATH_OBJECT_REFERENCE_PREFIX").getTextValue();
+			if (jsonConfig.path("PATH_PROPERTY_PREFIX").getTextValue()!=null) PATH_PROPERTY_PREFIX = jsonConfig.path("PATH_PROPERTY_PREFIX").getTextValue();
+			if (jsonConfig.path("PATH_OBJECT_REFERENCE_PREFIX").getTextValue()!=null) PATH_OBJECT_REFERENCE_PREFIX = jsonConfig.path("PATH_OBJECT_REFERENCE_PREFIX").getTextValue();
 		} catch (Exception e) {
 			log.error("Error culd not load properties", e);
 		}

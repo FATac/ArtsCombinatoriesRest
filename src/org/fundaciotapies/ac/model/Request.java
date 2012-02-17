@@ -2,6 +2,8 @@ package org.fundaciotapies.ac.model;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
@@ -18,7 +20,6 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
-import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.ResourceStatistics;
 import org.fundaciotapies.ac.model.bo.Right;
 import org.fundaciotapies.ac.model.support.CustomMap;
@@ -308,11 +309,7 @@ public class Request {
 	 */
 	public String getObjectFileFormat(String id) {
 		try {
-			Media media = new Media();
-			media.load(id);
-			String path = media.getPath();
-			if (path==null) return null;
-			String[] parts = path.split("\\.");
+			String[] parts = id.split("\\.");
 			return parts[parts.length-1].toLowerCase();
 		} catch (Exception e) {
 			log.error("Error ", e);
@@ -320,7 +317,7 @@ public class Request {
 		}
 	}
 	
-	public ObjectFile getMediaFile(String id, String profile, String uid) {
+	public ObjectFile getMediaFile(String id, String uid) {
 		try {
 			// Checks whether user can view object or not
 			Right right = new Right();
@@ -329,16 +326,11 @@ public class Request {
 			int userLegalLevel = getUserLegalLevel(uid);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(uid)) {
 				throw new Exception("Access to object ("+id+") denied due to legal restrictions");
-			} else if ("master".equals(profile) && userLegalLevel < 4) {
+			} else if (id.contains("_master.") && userLegalLevel < 4) {
 				throw new Exception("Access to MASTER ("+id+") denied due to legal restrictions");
 			}
 			
-			Media media = new Media();
-			if (profile!=null && !"".equals(profile) && !"0".equals(profile)) media.load(id+"_"+profile); else media.load(id);
-			if (media.getPath()==null) return null;
-			String mediaPath = media.getPath();
-			
-			String ext = mediaPath.substring(mediaPath.length()-3);
+			String ext = id.substring(id.length()-3);
 			
 			// Assign media type
 			ext = ext.toLowerCase();
@@ -361,7 +353,7 @@ public class Request {
 			
 			// Results back in a specific object containing file stream and mime type
 			ObjectFile result = new ObjectFile();
-			result.setInputStream(new FileInputStream(Cfg.MEDIA_PATH + mediaPath));
+			result.setInputStream(new FileInputStream(Cfg.MEDIA_PATH + id));
 			result.setContentType(mime);
 			
 			return result;
@@ -1229,7 +1221,21 @@ public class Request {
 	}
 	
 	public List<String> listMedia() throws Exception {
-		return new Media().list();
+		List<String> result = new ArrayList<String>();
+		File f = new File(Cfg.MEDIA_PATH);
+		File[] list = f.listFiles(new FileFilter() {
+			
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.isFile();
+			}
+		});
+		
+		for (File current : list) {
+			result.add(current.getName());
+		}
+		
+		return result;		
 	}
 	
 }

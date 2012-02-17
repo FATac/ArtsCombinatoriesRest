@@ -30,7 +30,7 @@ public class OAIFilesGenerator {
 			if (doc.get(m.getName())==null) {
 				if (m.getPath()!=null) {
 					for (String path : m.getPath()) {
-						String currentClassName = path.split("\\.")[0].trim();
+						String currentClassName = path.split(Cfg.PATH_PROPERTY_PREFIX)[0].trim();
 						if (className.equals(currentClassName) || "*".equals(currentClassName)) {
 							String[] result = new Request().resolveModelPath(path, id, false, true, false, true);
 							for (String r : result) {
@@ -59,7 +59,7 @@ public class OAIFilesGenerator {
 		for(DataMapping m : mapping.getData()) {
 			if (m.getPath()!=null) {
 				for (String path : m.getPath()) {
-					String className = path.split("\\.")[0].trim();
+					String className = path.split(Cfg.PATH_PROPERTY_PREFIX)[0].trim();
 					if (!"*".equals(className) && !objectTypesIndexed.contains(className))	objectTypesIndexed.add(className);
 				}
 			}

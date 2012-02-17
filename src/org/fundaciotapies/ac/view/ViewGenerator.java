@@ -189,7 +189,7 @@ public class ViewGenerator {
 		conn.setDoInput(true);
 	    conn.setRequestMethod("GET");
 	    
-	    OutputStream os = new FileOutputStream(Cfg.MEDIA_PATH+"tmp"+tmp+".jpg");
+	    OutputStream os = new FileOutputStream(Cfg.MEDIA_PATH+"/tmp/tmp"+tmp+".jpg");
 	    
 	    InputStream is = conn.getInputStream();
 	    byte[] buffer = new byte[1024];

@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
-import org.fundaciotapies.ac.model.bo.Media;
 import org.fundaciotapies.ac.model.bo.IdentifierCounter;
 import org.fundaciotapies.ac.model.bo.ResourceStatistics;
 import org.fundaciotapies.ac.model.bo.Right;
@@ -112,9 +111,6 @@ public class Upload {
 	public String auxId;
 	public String removeMediaFile(String id) {
 		try {
-			Media media = new Media();
-			media.load(id);
-			
 			File f = new File(Cfg.MEDIA_PATH);	
 			auxId = id;
 			
@@ -129,8 +125,6 @@ public class Upload {
 			for (File fileToDelete : fileList) {
 				if (fileToDelete.exists()) fileToDelete.delete();
 			}
-			
-			media.delete();
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";
@@ -164,14 +158,9 @@ public class Upload {
 			
 			fout.close();
 			
-			Media media = new Media();
-			media.setPath(filePath);
-			media.setMediaId(id);
-			media.saveUpdate();
-			
-		 	if (Cfg.MEDIA_AUTOCONVERT) convertMediaFile(id);
+		 	if (Cfg.MEDIA_AUTOCONVERT) convertMediaFile(filePath);
 		 	
-		 	return Cfg.REST_URL+"media/"+id;
+		 	return Cfg.MEDIA_URL+filePath;
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";
@@ -180,55 +169,46 @@ public class Upload {
 	
 	
 	public void convertMediaFile(String id) throws Exception {
-		Media mediaMaster = new Media();
-		mediaMaster.load(id+"_master");
+		id = id.replaceFirst("_master\\.","").replaceFirst("_[\\d]+\\.", "");
 		
-		Media mediaOriginal = mediaMaster;
-		if (mediaOriginal.getSid()==null) {
-			mediaOriginal = new Media();
-			mediaOriginal.load(id);
-			if (mediaOriginal.getSid()==null) throw new Exception("Media file does not exist");
+		String extension = id.substring(id.lastIndexOf('.')+1);
+		String fileName = id.substring(0,id.lastIndexOf('.'));
+		
+		File master = null; 
+		List<String> mlist = new Request().listMedia();
+		for (String m : mlist) {
+			if (m.contains(fileName + "_master.")) {
+				master = new File(Cfg.MEDIA_PATH + m);
+				break;
+			}
 		}
 		
-		String mediaPath = mediaOriginal.getPath();
-		String ext1 = mediaPath.split("\\.")[1];
-		String ext2 = "ogg,oga,mp3,aif,wma,wav".equals(ext1)?"ogg":"ogv";
+		// converts to ogg audio or ogg video
+		String outputExtension = "ogg,oga,mp3,aif,wma,wav".contains(extension)?"oga":"ogv";
 		
 		int profileType=1;
 		int profileNumber=0;
+		
+		// Iterates over media conversion formats, each position is a different profile
 		for (String s : Cfg.MEDIA_CONVERSION_PROFILES) {
-			if (s.contains(ext1)) {
-				if (mediaMaster.getMediaId()==null && profileNumber==0) {
-					mediaMaster = new Media();
-					mediaMaster.setPath(id + "_master." + ext1);
-					mediaMaster.setMediaId(id+"_master");
-					mediaMaster.saveUpdate();
-					
-					File f1 = new File(Cfg.MEDIA_PATH + mediaOriginal.getPath());
-					File f2 = new File(Cfg.MEDIA_PATH + mediaMaster.getPath());
-					f1.renameTo(f2);
+			// if current extension is eligible for conversion using current profile position
+			if (s.contains(extension)) {
+				if (master == null) {
+					master = new File(Cfg.MEDIA_PATH + fileName + "_master." + extension);
+					new File(Cfg.MEDIA_PATH + id).renameTo(master);
 				}
 				
-				String newMediaPath = id + (profileNumber==0?"":"_"+profileNumber)+"."+ext2;
+				// output file must have the same id as the original file with profile number as prefix, with output extension
+				String newMediaPath = id + (profileNumber==0?"":"_"+profileNumber)+"."+outputExtension;
 				
+				// call encoding service
 				try {
-					encodeMediaFile(mediaMaster.getPath(), newMediaPath, profileType);
+					encodeMediaFile(master.getPath(), newMediaPath, profileType);
 				} catch (Exception e) {
 					log.warn("Error calling video conversion services. " + e.toString());
 				}
 				
-				Media newMedia = new Media();
-				if (profileNumber==0) {
-					newMedia.load(id); 
-				} else {
-					newMedia.load(id + "_" + profileNumber);
-					if (newMedia.getSid()==null) newMedia.setMediaId(id + "_" + profileNumber);
-				}
-					
-				newMedia.setPath(newMediaPath);
-				newMedia.saveUpdate();
-				
-				profileNumber++;
+				profileNumber++; // we've just used this profile number, so increment it
 			}
 			profileType++;
 		}
@@ -332,14 +312,6 @@ public class Upload {
 		VirtTransactionHandler vth = null;
 		
 		try {
-			Media media = new Media();
-			media.load(objectId);
-			
-			if (media.getSid()!=null) {
-				File f = new File(media.getPath());
-				if (f.exists()) f.delete();
-			}
-			
 			model = ModelUtil.getModel();
 			
 			script = new ArrayList<String>();
@@ -474,7 +446,6 @@ public class Upload {
 				log.info(">>>> RESETING ALL DATA (MEDIA, MODEL, TABLES) AND UPDATING ONTOLOGIES <<<<");
 				// removes model stored data
 				ModelUtil.resetModel();
-				Media.clear();
 				IdentifierCounter.clear();
 				ResourceStatistics.clear();
 				
