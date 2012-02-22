@@ -2,7 +2,6 @@ package org.fundaciotapies.ac.model;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.Normalizer;
@@ -97,11 +96,11 @@ public class Upload {
 	// use video services to encode media file in given profile
 	public void encodeMediaFile(String sourceFilePath, String destinationFilePath, int profile) throws Exception {
 		TranscoEntity transco = new TranscoEntity();
-		transco.setSrc_path(Cfg.MEDIA_PATH + sourceFilePath);
+		transco.setSrc_path(sourceFilePath);
 		transco.setProfiles(new ArrayList<Profile>());
 		Profile prof = new Profile();
 		prof.setType(profile+"");
-		prof.setDst_path(Cfg.MEDIA_PATH + destinationFilePath);
+		prof.setDst_path(destinationFilePath);
 		transco.getProfiles().add(prof);
 			
 		String res = new Transco().addTransco(transco);
@@ -111,20 +110,8 @@ public class Upload {
 	public String auxId;
 	public String removeMediaFile(String id) {
 		try {
-			File f = new File(Cfg.MEDIA_PATH);	
-			auxId = id;
-			
-			File[] fileList = f.listFiles(new FilenameFilter() {
-				
-				@Override
-				public boolean accept(File dir, String name) {
-					return name.startsWith(auxId+"_") || name.startsWith(auxId+".");
-				}
-			});
-			
-			for (File fileToDelete : fileList) {
-				if (fileToDelete.exists()) fileToDelete.delete();
-			}
+			File f = new File(Cfg.MEDIA_PATH+id);	
+			if (f.exists()) f.delete();
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";
@@ -138,6 +125,7 @@ public class Upload {
 		if ("".equals(fileName.trim())) fileName = "m";
 
 		try {
+			fileName = fileName.replaceAll("___", "_");
 			String id = normalizeId(fileName) + "_" + UUID.randomUUID().toString().replaceAll("-", "").substring(0,15);
 			
 			String[] tmp = filePath.split("\\.");
@@ -158,6 +146,7 @@ public class Upload {
 			
 			fout.close();
 			
+			// converts file once uploaded if autoconvert is set true
 		 	if (Cfg.MEDIA_AUTOCONVERT) convertMediaFile(filePath);
 		 	
 		 	return Cfg.MEDIA_URL+filePath;
@@ -169,15 +158,15 @@ public class Upload {
 	
 	
 	public void convertMediaFile(String id) throws Exception {
-		id = id.replaceFirst("_master\\.","").replaceFirst("_[\\d]+\\.", "");
+		id = id.replace("___master","").replaceAll("___[\\d]+", "");
 		
 		String extension = id.substring(id.lastIndexOf('.')+1);
 		String fileName = id.substring(0,id.lastIndexOf('.'));
 		
 		File master = null; 
-		List<String> mlist = new Request().listMedia();
+		List<String> mlist = new Request().listMedia(fileName,null);
 		for (String m : mlist) {
-			if (m.contains(fileName + "_master.")) {
+			if (m.contains(fileName + "___master.")) {
 				master = new File(Cfg.MEDIA_PATH + m);
 				break;
 			}
@@ -187,19 +176,18 @@ public class Upload {
 		String outputExtension = "ogg,oga,mp3,aif,wma,wav".contains(extension)?"oga":"ogv";
 		
 		int profileType=1;
-		int profileNumber=0;
 		
 		// Iterates over media conversion formats, each position is a different profile
 		for (String s : Cfg.MEDIA_CONVERSION_PROFILES) {
 			// if current extension is eligible for conversion using current profile position
 			if (s.contains(extension)) {
 				if (master == null) {
-					master = new File(Cfg.MEDIA_PATH + fileName + "_master." + extension);
+					master = new File(Cfg.MEDIA_PATH + fileName + "___master." + extension);
 					new File(Cfg.MEDIA_PATH + id).renameTo(master);
 				}
 				
 				// output file must have the same id as the original file with profile number as prefix, with output extension
-				String newMediaPath = id + (profileNumber==0?"":"_"+profileNumber)+"."+outputExtension;
+				String newMediaPath = Cfg.MEDIA_PATH + fileName + "___" + profileType + "." + outputExtension;
 				
 				// call encoding service
 				try {
@@ -207,8 +195,6 @@ public class Upload {
 				} catch (Exception e) {
 					log.warn("Error calling video conversion services. " + e.toString());
 				}
-				
-				profileNumber++; // we've just used this profile number, so increment it
 			}
 			profileType++;
 		}
@@ -306,7 +292,9 @@ public class Upload {
 		return result;
 	}
 	
-	
+	/*
+	 * Delete all triples of a given subject identifier or referencing it 
+	 */
 	public String deleteObject(String objectId) {
 		String result = "error";
 		VirtTransactionHandler vth = null;

@@ -27,6 +27,12 @@ public class Maintenance {
 				if (name.matches("user_[0-9]+.properties")) fx.delete();
 			}
 			
+			f = new File(Cfg.MEDIA_PATH + "tmp");
+			fileList = f.listFiles();
+			for (File fx : fileList) {
+				fx.delete();
+			}
+			
 			if (Cfg.SOLR_PATH!=null) {
 				SolrManager solr = new SolrManager();
 				solr.deleteAll();

@@ -24,11 +24,12 @@ public class GetMediaFile {
 	@GET
 	@Produces("application/json")
 	@Path("media/{id}")
-	public String getMediaFile(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("u") String uid) {
+	public String getMediaFile(@Context HttpServletResponse response, @PathParam("id") String id, @QueryParam("s") String s, @QueryParam("pag") String pag) {
 		
 		try {
 			if ("list".equals(id)) {
-				return getMediaList();
+				if ("".equals(pag) || pag == null) pag = "0";
+				return getMediaList(s, pag);
 			}
 		} catch (Exception e) {
 			log.error("Error ",e);
@@ -36,7 +37,7 @@ public class GetMediaFile {
 		}
 		
 		try {
-			ObjectFile objectFile = new Request().getMediaFile(id, uid);
+			ObjectFile objectFile = new Request().getMediaFile(id, null);
 			if (objectFile==null) {
 				log.warn("There is no media file for: " + id);
 				return "";
@@ -60,8 +61,8 @@ public class GetMediaFile {
 		return "";
 	}
 	
-	private String getMediaList() throws Exception {
-		return new Gson().toJson(new Request().listMedia());
+	private String getMediaList(String s, String pag) throws Exception {
+		return new Gson().toJson(new Request().listMedia(s,pag));
 	}
 }
  

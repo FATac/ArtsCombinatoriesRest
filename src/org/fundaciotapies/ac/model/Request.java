@@ -1,16 +1,15 @@
 package org.fundaciotapies.ac.model;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +38,6 @@ import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
@@ -319,8 +317,8 @@ public class Request {
 	
 	public ObjectFile getMediaFile(String id, String uid) {
 		try {
-			// Checks whether user can view object or not
-			Right right = new Right();
+			// Checks whether user can view object or not -- not used!
+			/*Right right = new Right();
 			right.load(id);
 			
 			int userLegalLevel = getUserLegalLevel(uid);
@@ -328,7 +326,7 @@ public class Request {
 				throw new Exception("Access to object ("+id+") denied due to legal restrictions");
 			} else if (id.contains("_master.") && userLegalLevel < 4) {
 				throw new Exception("Access to MASTER ("+id+") denied due to legal restrictions");
-			}
+			}*/
 			
 			String ext = id.substring(id.length()-3);
 			
@@ -363,7 +361,9 @@ public class Request {
 		}
 	}
 
-	
+	/*
+	 * List all classes of current ontology
+	 */
 	public List<String> listOntologyClasses() {
 		List<String> result = null;
 
@@ -389,6 +389,10 @@ public class Request {
 		return result;
 	}
 	
+	
+	/*
+	 * Checks whether a class is a subclass of another using Virtuosos reasoning
+	 */
 	public boolean isSubclass(String className, String superClassName) {
 
 		try {
@@ -401,10 +405,6 @@ public class Request {
 				prefix += " prefix " + Cfg.ONTOLOGY_NAMESPACES[i+1] + ": <" + Cfg.ONTOLOGY_NAMESPACES[i] + "> "; 
 			}
 			
-			/*
-			 * get all properties and their ranges of a given class and its super classes
-			 * also get properties that have no domain, that is- properties that can be used in any class
-			 */
 			String query = prefix +
 				" select *" +
 				" where { "+className+" rdfs:subClassOf "+superClassName+" } ";
@@ -424,7 +424,10 @@ public class Request {
 	}
 	
 	
-	
+	/*
+	 * Get the properties (and their attributes) that correspond to a given class
+	 * Function used to generate a class form 
+	 */
 	public List<String[]> listClassProperties(String className) {
 		List<String[]> result = new ArrayList<String[]>();
 
@@ -515,55 +518,9 @@ public class Request {
 		return result;
 	}
 	
-	public Set<String> listClassPropertiesSimple2(String className) {
-		Set<String> result = new TreeSet<String>();
-
-		try {
-			if (className == null) return null;
-			
-			String prefix = "";
-			for(int i=0;i<Cfg.ONTOLOGY_NAMESPACES.length;i+=2) {
-				prefix += " prefix " + Cfg.ONTOLOGY_NAMESPACES[i+1] + ": <" + Cfg.ONTOLOGY_NAMESPACES[i] + "> "; 
-			}
-			
-			/*
-			 * get all properties of a given class and its super classes
-			 * also get properties that have no domain, that is- properties that can be used in any class
-			 */
-			String query = prefix +
-				" select ?prop " +
-				" where {" +
-				"   { { ?prop rdf:type owl:ObjectProperty } " +
-				"   union" +
-				"   { ?prop rdf:type owl:DatatypeProperty } } " +
-				"   . " +
-				"   { ?prop rdfs:domain "+ className +" } " +
-				"   union" +
-				"   { ?prop rdf:type ?z . filter not exists { ?prop rdfs:domain ?x } }" +
-				"   union " +
-				"   { "+ className +" rdfs:subClassOf ?super" +
-				"     . ?prop rdfs:domain ?super } " +
-				" } " +
-				" order by ?prop ";
-			
-			// Virtuoso reasoning does not work here!! We use Jena instead 
-			//QueryExecution qe = VirtuosoQueryExecutionFactory.create(query, ModelUtil.getOntology());
-			OntModel ont = ModelUtil.getOntology();
-			QueryExecution qe = QueryExecutionFactory.create(query, ont);
-			ResultSet rs = qe.execSelect();
-			
-			while(rs.hasNext()) {
-				QuerySolution qs = rs.next();
-				String propName = Cfg.fromNamespaceToPrefix(qs.get("prop").asResource().getNameSpace()) +  qs.get("prop").asResource().getLocalName();
-				result.add(propName);
-			}
-		} catch (Throwable e) {
-			log.error("Error ", e);
-		}
-
-		return result;
-	}
-	
+	/*
+	 * Get the properties that correspond to a given class
+	 */
 	public Set<String> listClassPropertiesSimple(String className) {
 		Set<String> result = new TreeSet<String>();
 
@@ -588,6 +545,7 @@ public class Request {
 		return result;
 	}
 	
+	// List all or only direct subclasses of given class
 	public List<String> listSubclasses(String className, Boolean direct) {
 		List<String> result = new ArrayList<String>();
 		String classURI = fromClassNameToURI(className);
@@ -783,7 +741,7 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			String filter = " FILTER (regex(?o,\""+word+"\",\"i\")";
+			String filter = " FILTER ((regex(?o,\""+word+"\",\"i\") || regex(?s,\""+word+"\",\"i\")) ";
 			for (String ns : Cfg.ONTOLOGY_NAMESPACES) if (ns.length()>10) filter += " && !regex(?o, \""+ns+"\",\"i\") ";
 			filter += ")";
 			
@@ -798,6 +756,7 @@ public class Request {
 			}
 			
 			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + qc + filter + " } ", model);
+
 			ResultSet rs = vqe.execSelect();
 			
 			String currentId = null;
@@ -863,88 +822,7 @@ public class Request {
 		
 		return idList; 
 	}
-
-	/* not used */
-	public void saveBackup2() {
-		
-		try {
-			// Connect to rdf server
-			InfModel model = ModelUtil.getModel();
-			
-			// Create search query
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <"+Cfg.RESOURCE_URI_NS+"> WHERE { ?a ?b ?c } ", model.getRawModel());
-			ResultSet rs = vqe.execSelect();
-			
-			// Get IDs that fit specific search
-			while (rs.hasNext()) {
-				QuerySolution r = rs.next();
-				
-				RDFNode na = r.get("a");
-				RDFNode nb = r.get("b");
-				RDFNode nc = r.get("c");
-				
-				Resource res = model.getResource(na.toString());
-				if (res==null) res = model.createResource(na.toString());
-				
-				Property prop = model.getProperty(nb.toString());
-				if (prop==null) prop = model.createProperty(nb.toString());
-				
-				RDFNode node = null;
-				if (nc.isResource()) {
-					node = model.getResource(nc.toString());
-					if (node==null) node = model.createResource(nc.toString());
-					res.addProperty(prop, node);
-				} else if (nc.isLiteral()) {
-					res.addProperty(prop, nc.asLiteral().getString(), nc.asLiteral().getLanguage());
-				}
-			}
-			
-			BufferedWriter buf = new BufferedWriter(new FileWriter("out.owl"));
-			model.write(buf);
-		} catch (Throwable e) {
-			log.error("Error ", e);
-		}
-	}
 	
-	/* not used */
-	public void saveBackup() {
-		
-		InfModel model = ModelUtil.getModel();
-		QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT DISTINCT ?s FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?v ?p } ", model);
-		ResultSet rs = vqe.execSelect();
-		
-		// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
-		while (rs.hasNext()) {
-			QuerySolution r = rs.next();
-			String id = r.get("s").asResource().getLocalName();
-			CustomMap map = getObject(id, "");
-			
-			List<String> propertiesList = new ArrayList<String>();
-			List<String> propertiesValuesList = new ArrayList<String>();
-			Set<Map.Entry<String, Object>> set = map.entrySet();
-			for (Map.Entry<String, Object> ent : set) {
-				String[] values = null;
-				if (ent.getValue() instanceof String) {
-					values = new String[]{ (String)ent.getValue() };
-				} else {
-					values = (String[])ent.getValue();
-				}
-				
-				for (String v : values) {
-					propertiesList.add(ent.getKey());
-					propertiesValuesList.add(v);
-				}
-				
-				String[] properties = new String[propertiesList.size()];
-				String[] propertyValues = new String[propertiesValuesList.size()];
-				
-				propertiesList.toArray(properties);
-				propertiesValuesList.toArray(propertyValues);
-				
-				new Upload().updateObject(id, properties, propertyValues);
-			}
-		}
-	}
 	
 	public String getObjectClass(String id) {
 		// Connect to rdf server
@@ -988,6 +866,7 @@ public class Request {
 		} else return null;
 	}
 	
+	// List all superclasses of given class
 	public List<String> listSuperClasses(String className) {
 		List<String> result = new ArrayList<String>();
 		List<String> tmp = new ArrayList<String>();
@@ -1013,6 +892,7 @@ public class Request {
 		return result;
 	}
 	
+	// List all superclasses names (without prefix) of given class
 	public List<String> listSuperClassesName(String className) {
 		List<String> result = new ArrayList<String>();
 		List<String> tmp = new ArrayList<String>();
@@ -1038,6 +918,7 @@ public class Request {
 		return result;
 	}
 	
+	// Get all objects modified or inserted in the last specified minutes
 	public List<String> listRecentChanges(String minutesago) throws Exception {
 		long millisecondsago = new Long(minutesago)*60000;
 		return ResourceStatistics.listRecentChanges(millisecondsago);
@@ -1045,7 +926,7 @@ public class Request {
 	
 	/*
 	 * Resolves the actual property value of a given subject
-	 * !!!!Removed functions, we use a single non-recursive function instead
+	 * !!!!Removed functions, we use a single non-recursive function instead (see below)
 	 */
 	/*private String[] resolveModelPathPart(String className, String property, String id, boolean includeId, boolean anyLanguage, boolean showLang) {
 		if ("class".equals(property)) return new String[]{ getObjectClassName(id) }; // 'class' is reserved word
@@ -1220,20 +1101,44 @@ public class Request {
 		return res;
 	}
 	
-	public List<String> listMedia() throws Exception {
+	String tmpSearch = null;
+	Integer tmpPag = null;
+	Integer tmpCount = -1;
+	
+	/* Lists all files located in MEDIA_PATH (excluding folders) and filters by search text */
+	public List<String> listMedia(String search, String pag) throws Exception {
 		List<String> result = new ArrayList<String>();
 		File f = new File(Cfg.MEDIA_PATH);
+		tmpSearch = search;
+		tmpPag = null;
+		if (pag!=null) tmpPag = new Integer(pag);
+		tmpCount = -1;
+		
 		File[] list = f.listFiles(new FileFilter() {
 			
 			@Override
 			public boolean accept(File pathname) {
-				return pathname.isFile();
+				if (pathname.isFile()) {
+					if (tmpSearch != null) {
+						if (!pathname.getName().toLowerCase().contains(tmpSearch.toLowerCase())) return false;
+					}
+				} else return false;
+				
+				tmpCount++;
+				if (tmpPag != null) {
+					if (tmpCount<tmpPag*25) return false;
+					if (tmpCount>=((tmpPag+1)*25)) return false;
+				}
+
+				return true;
 			}
 		});
 		
 		for (File current : list) {
 			result.add(current.getName());
 		}
+		
+		Collections.sort(result);
 		
 		return result;		
 	}

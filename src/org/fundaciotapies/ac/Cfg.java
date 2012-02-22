@@ -20,6 +20,7 @@ public class Cfg {
 	public static Integer THUMBNAIL_WIDTH = 250;
 	public static Integer THUMBNAIL_HEIGHT = 180;
 	public static String[] MEDIA_CONVERSION_PROFILES = {"avi mov", "mp3 aif"};
+	public static String[] MEDIA_PROFILES_DESCRIPTION = {"320p", "80bps"};
 	public static Boolean MEDIA_AUTOCONVERT = false;
 	public static String DATE_FORMAT = "dd/MM/yyyy";
 	public static String YEAR_FORMAT = "yyyy";
@@ -107,6 +108,11 @@ public class Cfg {
 			List<String> tmplist = new ArrayList<String>();
 			while(it.hasNext()) tmplist.add(it.next().getTextValue());
 			MEDIA_CONVERSION_PROFILES = tmplist.toArray(new String[0]);
+			
+			it = jsonConfig.path("MEDIA_PROFILES_DESCRIPTION").getElements();
+			tmplist = new ArrayList<String>();
+			while(it.hasNext()) tmplist.add(it.next().getTextValue());
+			MEDIA_PROFILES_DESCRIPTION = tmplist.toArray(new String[0]);
 			
 			MEDIA_AUTOCONVERT = "true".equals(jsonConfig.path("MEDIA_AUTOCONVERT").getTextValue());
 			

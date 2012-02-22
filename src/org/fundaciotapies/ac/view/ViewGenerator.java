@@ -69,6 +69,21 @@ public class ViewGenerator {
 		}
 	}
 	
+	private Integer getProfileFromMediaId(String mediaId) {
+		int idx1 = mediaId.indexOf("___");
+		int idx2 = mediaId.indexOf(".");
+		if (idx1<idx2 && idx1>-1 && idx2>-1) {
+			String p = mediaId.substring(idx1+3, idx2);
+			try {
+				return Integer.parseInt(p);
+			} catch (NumberFormatException e) {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
+	
 	public void getObjectSectionView(TemplateSection section, String id, String lang, boolean hideMedia) {
 		Request req = new Request();
 		req.setCurrentLanguage(lang);
@@ -126,14 +141,20 @@ public class ViewGenerator {
 						if (idx<0) break;
 						String mediaId = url.substring(idx+1);
 						String format = req.getObjectFileFormat(mediaId);
+						String mediaType = "object";
 						if ("jpg,png,jpeg,svg,gif".contains(format)) {
-							newValues.add("image");
-						} else if ("aif,mp3,ogg,wav".contains(format)) {
-							newValues.add("audio");
+							mediaType = "image";
+						} else if ("aif,mp3,ogg,wav,oga".contains(format)) {
+							mediaType = "audio";
 						} else if ("avi,wma,mp4,ogv".contains(format)) {
-							newValues.add("video");
+							mediaType = "video";
+						}
+						
+						Integer profile = getProfileFromMediaId(mediaId);
+						if (profile!=null && Cfg.MEDIA_PROFILES_DESCRIPTION.length >= profile) {
+							newValues.add(mediaType+","+Cfg.MEDIA_PROFILES_DESCRIPTION[profile-1]);
 						} else {
-							newValues.add("object");
+							newValues.add(mediaType);
 						}
 					}
 					dm.setValue(newValues);
