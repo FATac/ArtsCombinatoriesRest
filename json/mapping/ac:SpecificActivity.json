@@ -19,9 +19,14 @@
 			"data":[
 			    
 			    {
-					"name":"Year",
+					"name":"Date",
 					"type":"text",
-					"path":["ac:FrameActivity.ac:StartDate"]
+					"path":["ac:FrameActivity.ac:Date"]
+				},
+				
+				{
+					"type":"text",
+					"value":[" "]
 				},
 			    
 				{
@@ -42,16 +47,21 @@
 				},
 				
 				{
+				    "name":"Collaborator",
+				    "type":"text",
+					"path":["ac:FrameActivity.ac:applicationOf=ac:Collaborator.ac:performedBy=*.ac:Name"]
+				},
+				
+				{
 					"name":"Places",
 					"type":"text",
-					"path":["ac:FrameActivity.ac:tookPlaceAt=ac:Location.ac:Name"]
+					"path":["ac:FrameActivity.ac:tookPlaceAt"]
 				}
-				
 			]
 		},
 		
 		{
-			"name":"content",
+			"name":"body",
 			"data":[
 			    
 				{
@@ -65,7 +75,7 @@
 					"type":"objects",
 					"path":["ac:FrameActivity.ac:hasPublication"]
 				},
-		    
+				
 		    	{
 		            "name":"Representation",
 		            "type":"objects",

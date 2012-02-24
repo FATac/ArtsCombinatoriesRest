@@ -53,7 +53,9 @@
 		    "type":"date.year",
 		    "path":[
 		        "ac:Case-File.ac:references=*.ac:StartDate",
-		        "ac:Case-File.ac:references=*.ac:EndDate"
+		        "ac:Case-File.ac:references=*.ac:EndDate",
+		        "ac:FrameActivity.ac:StartDate",
+		        "ac:SpecificActivity.ac:StartDate"
 		    ],
 		    "category":"yes",
 		    "sortCategory":"yes"

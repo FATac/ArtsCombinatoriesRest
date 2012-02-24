@@ -424,7 +424,12 @@ public class SolrManager {
 				if ("yes".equals(d.getMultilingual()))	{
 					if (d.getName().equals(fp[0].trim())) f = fp[0] + ":\"LANG"+lang+"__" + fp[1]+"\"";
 				} else {
-					if (d.getName().equals(fp[0].trim())) f = fp[0] + ":\"" + fp[1] + "\"";
+					if (d.getName().equals(fp[0].trim())) {
+						if (d.getType()!=null && !d.getType().contains("date."))
+							f = fp[0] + ":\"" + fp[1] + "\"";
+						else
+							f = fp[0] + ":" + fp[1];
+					}
 				}
 			}
 			

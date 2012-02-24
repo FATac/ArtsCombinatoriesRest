@@ -8,7 +8,6 @@
 			"data":[
 		
 		    	{
-					"name":"Name",
 					"type":"text",
 					"path":["ac:Person.ac:Name", "ac:Person.ac:BirthDate"]
 				}
@@ -20,7 +19,6 @@
 			"data":[
 			
 			 	{
-			        "name":"Biography",
 			        "type":"text",
 			        "path":["ac:Person.ac:Bio"]
 			    },

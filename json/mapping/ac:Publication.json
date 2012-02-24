@@ -8,7 +8,6 @@
 			"data":[
 		
 		    	{
-					"name":"Title",
 					"type":"text",
 					"path":["ac:Publication.ac:Title"]
 				}
@@ -52,7 +51,7 @@
 			    {
 			        "name":"Language",
 			        "type":"text",
-			        "path":["ac:Publication.ac:hasLanguage"]
+			        "path":["ac:Publication.ac:hasLanguage=ac:Language.ac:Label"]
 			    },
 			    
 				{
@@ -102,10 +101,11 @@
 			    }
 		    ]
 		},
-		
+
 		{
 		    "name":"thumbnail",
-		    "data": [ ]
+		    "data": []
+		
 		}
 	]
 }

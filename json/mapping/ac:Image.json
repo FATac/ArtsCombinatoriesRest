@@ -8,6 +8,7 @@
 			"data":[
 		
 		    	{
+					"name":"Title",
 					"type":"text",
 					"path":["ac:Media.ac:Title"]
 				}
@@ -17,6 +18,12 @@
 		{
 			"name":"body",
 			"data":[
+
+			    {
+				"name":"ArtWork",
+				"type":"linkedObjects",
+				"path":["ac:Media.ac:represents=*.ac:Title"]
+			    },
 			    
 			    {
 			        "name":"Description",
@@ -24,10 +31,22 @@
 			        "path":["ac:Media.ac:Description"]
 			    },
 			    
-			 	{
+			    {
 			        "name":"Format",
 			        "type":"text",
 			        "path":["ac:Media.ac:format"]
+			    },
+
+			    {
+				"name":"Size",
+				"type":"text",
+				"path":["ac:Media.ac:FileSize"]
+			    },
+
+			    {
+				"name":"Resolution",
+				"type":"text",
+				"path":["ac:Media.ac:Resolution"]
 			    },
 			    
 			    {

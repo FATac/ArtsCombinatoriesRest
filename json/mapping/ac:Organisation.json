@@ -7,9 +7,14 @@
 			"name":"header",
 			"data":[
 		
-		    	{
+			    	{
 					"type":"text",
 					"path":["ac:Organisation.ac:Name"]
+				},
+
+				{
+					"type":"text",
+					"path":["ac:Organisation.ac:Homepage"]
 				}
 			]
 		},
