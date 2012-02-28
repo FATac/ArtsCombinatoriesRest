@@ -465,6 +465,7 @@ public class ViewGenerator {
 					if (medias.size()>0) {
 						for (String m : medias) {
 							long rand = Math.round(Math.random()*10000);
+							if (m.endsWith(".ogv")) m = m.substring(0, m.length()-4) + "_thumbnail.jpg";
 							if (downloadImage(m, rand+"")) {
 								File df = new File(Cfg.MEDIA_PATH+"tmp"+rand+".jpg");
 								
