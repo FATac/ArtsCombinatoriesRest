@@ -54,7 +54,7 @@ public class ViewGenerator {
 			}
 			
 			if (!f.exists()) { 
-				log.warn("Trying to obtain template from no-template object class " + className + "(id " + id + ")");
+				log.warn("Trying to obtain template from no-template object class " + className + "(id " + id + "). Should be in " + Cfg.CONFIGURATIONS_PATH + "mapping/");
 				return null;
 			}
 			
