@@ -67,6 +67,10 @@ public class Cfg {
 		for(int i=0;i<ONTOLOGY_NAMESPACES.length;i+=2) {
 			if (ONTOLOGY_NAMESPACES[i].equals(namespace)) return ONTOLOGY_NAMESPACES[i+1] + ":"; 
 		}
+		
+		if (!RESOURCE_URI_NS.equals(namespace))
+			log.warn("Could not convert namespace '"+namespace+"' to prefix! Check that variable ONTOLOGY_NAMESPACES is correct");
+		
 		return "";
 	}
 	
@@ -75,6 +79,10 @@ public class Cfg {
 		for(int i=0;i<ONTOLOGY_NAMESPACES.length;i+=2) {
 			if (ONTOLOGY_NAMESPACES[i+1].equals(prefix)) return ONTOLOGY_NAMESPACES[i]; 
 		}
+		
+		if (!RESOURCE_PREFIX.equals(prefix))
+			log.warn("Could not convert prefix '"+prefix+"' to namespace! Check that variable ONTOLOGY_NAMESPACES is correct");
+		
 		return "";
 	}
 	

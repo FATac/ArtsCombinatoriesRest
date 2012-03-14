@@ -85,12 +85,12 @@ public class OAIFilesGenerator {
 				if (val instanceof String) {
 					fw.write("<"+mapping.getXmlPrefix()+":"+name+">");
 					fw.write(val+"");
-					fw.write("</"+mapping.getXmlPrefix()+":"+name+">");
+					fw.write("</"+mapping.getXmlPrefix()+":"+name+">\n");
 				} else if (val instanceof String[]) {
 					for(String v : (String[])val) {
 						fw.write("<"+mapping.getXmlPrefix()+":"+name+">");
 						fw.write(v+"");
-						fw.write("</"+mapping.getXmlPrefix()+":"+name+">");
+						fw.write("</"+mapping.getXmlPrefix()+":"+name+">\n");
 					}
 				}
 			}
