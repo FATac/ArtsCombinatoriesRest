@@ -50,7 +50,7 @@ public class Upload {
 	    String result = pattern.matcher(temp).replaceAll("").replaceAll("\\<.*?>","").replaceAll("[^A-Za-z0-9_\\s]", "").replaceAll("[\\s+\\n+\\t+]", "_");
 	    if (result!=null && !"".equals(result)) {
 	    	// number-starting strings cannot be identifiers so add a starting character
-	    	if ("0123456789".contains(result.charAt(0)+"")) result = "_" + result;
+	    	if ("0123456789".contains(result.charAt(0)+"")) result = "n_" + result;
 	    } else {
 	    	// if no identifier is left after normalization, use a predefined string
 	    	result = "Unidentified";
@@ -133,6 +133,13 @@ public class Upload {
 			if (tmp!=null && tmp.length>0) ext = tmp[tmp.length-1];
 			
 			filePath = id + "." + ext;
+			if (!ext.equals("")) {
+				filePath = ext + "/" + id + "." + ext;
+				if (!new File(Cfg.MEDIA_PATH+ext).exists()) {
+					new File(Cfg.MEDIA_PATH+ext).mkdir();
+				}
+			}
+			
 			File f = new File(Cfg.MEDIA_PATH+filePath);
 			
 			OutputStream fout = new FileOutputStream(f);
@@ -160,13 +167,17 @@ public class Upload {
 	public void convertMediaFile(String id) throws Exception {
 		id = id.replace("___master","").replaceAll("___[\\d]+", "");
 		
+		String folder = "";
+		int indexFolder = id.indexOf('/'); 
+		if (indexFolder>-1) folder = id.substring(0, indexFolder) + "/";
+		
 		String extension = id.substring(id.lastIndexOf('.')+1);
-		String fileName = id.substring(0,id.lastIndexOf('.'));
+		String fileName = id.substring(indexFolder+1,id.lastIndexOf('.'));
 		
 		File master = null; 
 		List<String> mlist = new Request().listMedia(fileName,null);
 		for (String m : mlist) {
-			if (m.contains(fileName + "___master.")) {
+			if (m.contains(folder + fileName + "___master.")) {
 				master = new File(Cfg.MEDIA_PATH + m);
 				break;
 			}
@@ -182,12 +193,14 @@ public class Upload {
 			// if current extension is eligible for conversion using current profile position
 			if (s.contains(extension)) {
 				if (master == null) {
-					master = new File(Cfg.MEDIA_PATH + fileName + "___master." + extension);
+					master = new File(Cfg.MEDIA_PATH + folder + fileName + "___master." + extension);
 					new File(Cfg.MEDIA_PATH + id).renameTo(master);
 				}
 				
 				// output file must have the same id as the original file with profile number as prefix, with output extension
-				String newMediaPath = Cfg.MEDIA_PATH + fileName + "___" + profileType + "." + outputExtension;
+				if (!new File(Cfg.MEDIA_PATH + outputExtension).exists()) new File(Cfg.MEDIA_PATH + outputExtension).mkdir();
+				
+				String newMediaPath = Cfg.MEDIA_PATH + outputExtension + "/" + fileName + "___" + profileType + "." + outputExtension;
 				
 				// call encoding service
 				try {

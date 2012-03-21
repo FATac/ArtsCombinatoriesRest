@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1114,7 +1113,19 @@ public class Request {
 		if (pag!=null) tmpPag = new Integer(pag);
 		tmpCount = -1;
 		
-		File[] list = f.listFiles(new FileFilter() {
+		File[] dirList = f.listFiles(new FileFilter() {
+			
+			@Override
+			public boolean accept(File pathname) {
+				if (pathname.isDirectory() && !pathname.getName().equals("tmp") && !pathname.getName().equals("thumbnails")) {
+					return true;
+				}
+				// TODO Auto-generated method stub
+				return false;
+			}
+		});
+		
+		FileFilter fileFilter = new FileFilter() {
 			
 			@Override
 			public boolean accept(File pathname) {
@@ -1132,13 +1143,19 @@ public class Request {
 
 				return true;
 			}
-		});
+		};
 		
-		for (File current : list) {
-			result.add(current.getName());
+		for (File dir : dirList) {
+			File[] list = dir.listFiles(fileFilter);
+			for (File current : list) {
+				result.add(current.getCanonicalPath().replaceAll(Cfg.MEDIA_PATH, ""));
+			}
 		}
 		
-		Collections.sort(result);
+		File[] list = new File(Cfg.MEDIA_PATH).listFiles(fileFilter);
+		for (File current : list) {
+			result.add(current.getCanonicalPath().replaceAll(Cfg.MEDIA_PATH, ""));
+		}
 		
 		return result;		
 	}

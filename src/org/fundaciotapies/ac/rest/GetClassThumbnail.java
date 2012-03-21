@@ -10,6 +10,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
@@ -21,11 +22,11 @@ public class GetClassThumbnail {
 
 	@GET
 	@Produces("application/json")
-	public String getInsertObjectForm(@Context HttpServletResponse response, @PathParam("class") String className) {
+	public String getInsertObjectForm(@Context HttpServletResponse response, @PathParam("class") String className, @QueryParam("style") String style) {
 		byte[] content = null;
 		
 		try {
-			InputStream in = new FileInputStream(new ViewGenerator().getClassThumbnail(className));
+			InputStream in = new FileInputStream(new ViewGenerator().getClassThumbnail(className, style));
 			response.setContentType("image/jpg");
 			
 			DataInputStream dis = new DataInputStream(in);

@@ -28,7 +28,7 @@ public class GetObjectThumbnail {
 			if (in==null) {
 				return "";
 			}
-			response.setContentType("image/jpg");
+			response.setContentType("image/jpeg");
 			
 			DataInputStream dis = new DataInputStream(in);
 	        content = new byte[dis.available()];

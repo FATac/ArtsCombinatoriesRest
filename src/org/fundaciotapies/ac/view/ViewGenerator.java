@@ -308,30 +308,33 @@ public class ViewGenerator {
 		ImageIO.write(resizedImage, "jpg", f);
 	}
 
-	public File getClassThumbnail(String className) {
-		return getClassThumbnail(className, false);
+	public File getClassThumbnail(String className, String style) {
+		return getClassThumbnail(className, false, style);
 	}
 	
-	public File getClassThumbnail(String className, Boolean resize) {
+	public File getClassThumbnail(String className, Boolean resize, String style) {
+		String sStyle = "";
+		if (style != null) sStyle = "." + style;
+		
 		try {
 			if (className.indexOf(':')<0) className = Cfg.ONTOLOGY_NAMESPACES[1]+":"+className;
 			
-			File f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/" + className + (resize?"_resized":"") + ".jpg");
+			File f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/" + className + sStyle + (resize?"_resized":"") + ".jpg");
 			
 			if (!f.exists()) {
 				List<String> superClasses = new Request().listSuperClasses(className);
 				for (String superClassName : superClasses) {
-					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/"+superClassName + (resize?"_resized":"") + ".jpg");
+					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/"+superClassName + sStyle + (resize?"_resized":"") + ".jpg");
 					if (f.exists()) break;
 				}
 			}
 			
 			if (!f.exists()) {
 				if (resize) {
-					File tmp = getClassThumbnail(className);
+					File tmp = getClassThumbnail(className, style);
 					BufferedImage img = ImageIO.read(tmp);
-					resizeImage(img, null, null, null, "classes/"+className+"_resized", true);
-					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/" + className + "_resized.jpg");
+					resizeImage(img, null, null, null, "classes/" + className + sStyle + "_resized", true);
+					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/" + className + sStyle + "_resized.jpg");
 				} else {
 					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/default.jpg");
 				}
@@ -506,7 +509,7 @@ public class ViewGenerator {
 
 			if (!f.exists() && firstCall) {
 				String className = new Request().getObjectClass(id);
-				f = getClassThumbnail(className, firstCall);
+				f = getClassThumbnail(className, firstCall, null);
 				Cfg.objectClassThumbnail.add(id);
 			}
 			
