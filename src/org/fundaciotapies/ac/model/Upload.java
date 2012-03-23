@@ -452,9 +452,15 @@ public class Upload {
 				
 				// removes all media files 
 				File f = new File(Cfg.MEDIA_PATH);
-				for(String x : f.list()) {
-					File fx = new File(Cfg.MEDIA_PATH+x);
+				for(File fx : f.listFiles()) {
 					if (fx.isFile()) fx.delete();
+					if (fx.isDirectory() && !fx.getName().equals("thumbnails")) {
+						for (File subfx : fx.listFiles()) {
+							if (subfx.isFile()) {
+								subfx.delete();
+							}
+						}
+					}
 				}
 				
 				Cfg.userLevelTmp = new HashMap<String, Integer>();
