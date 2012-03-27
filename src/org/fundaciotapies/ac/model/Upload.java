@@ -130,7 +130,7 @@ public class Upload {
 			
 			String[] tmp = filePath.split("\\.");
 			String ext = "";
-			if (tmp!=null && tmp.length>0) ext = tmp[tmp.length-1];
+			if (tmp!=null && tmp.length>0) ext = tmp[tmp.length-1].toLowerCase();
 			
 			filePath = id + "." + ext;
 			if (!ext.equals("")) {

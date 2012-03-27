@@ -336,7 +336,8 @@ public class ViewGenerator {
 					resizeImage(img, null, null, null, "classes/" + className + sStyle + "_resized", true);
 					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/" + className + sStyle + "_resized.jpg");
 				} else {
-					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/default.jpg");
+					f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/default"+sStyle+".jpg");
+					if (!f.exists()) f = new File(Cfg.MEDIA_PATH + "thumbnails/classes/default.jpg");
 				}
 			}
 			

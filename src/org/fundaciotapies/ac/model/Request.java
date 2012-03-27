@@ -1148,13 +1148,13 @@ public class Request {
 		for (File dir : dirList) {
 			File[] list = dir.listFiles(fileFilter);
 			for (File current : list) {
-				result.add(current.getCanonicalPath().replaceAll(Cfg.MEDIA_PATH, ""));
+				result.add(current.getPath().replaceAll(Cfg.MEDIA_PATH, ""));
 			}
 		}
 		
 		File[] list = new File(Cfg.MEDIA_PATH).listFiles(fileFilter);
 		for (File current : list) {
-			result.add(current.getCanonicalPath().replaceAll(Cfg.MEDIA_PATH, ""));
+			result.add(current.getPath().replaceAll(Cfg.MEDIA_PATH, ""));
 		}
 		
 		return result;		
