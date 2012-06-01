@@ -425,10 +425,12 @@ public class SolrManager {
 					if (d.getName().equals(fp[0].trim())) f = fp[0] + ":\"LANG"+lang+"__" + fp[1]+"\"";
 				} else {
 					if (d.getName().equals(fp[0].trim())) {
-						if (d.getType()!=null && !d.getType().contains("date."))
+						if (d.getType()!=null && !d.getType().contains("date.") && !fp[1].contains("*")) {
 							f = fp[0] + ":\"" + fp[1] + "\"";
-						else
+						}
+						else {
 							f = fp[0] + ":" + fp[1];
+						}
 					}
 				}
 			}
@@ -447,10 +449,44 @@ public class SolrManager {
 		return resp;
 	}
 
+	/***
+	 * Filters the fields names for the solr search allowing only some ones
+	 * @param str
+	 * @return
+	 */
+	private String sanitizeFields(String str) {
+
+		String[] validFields = {"id", "AlphabeticalOrder", "Events"};
+		String[] tokens = str.split(",");
+		StringBuffer out = new StringBuffer();
+		String sep = "";
+		for (int i = 0; i < tokens.length; i++) {
+			for (int j = 0; j < validFields.length; j++){
+				if (tokens[i].trim().equalsIgnoreCase(validFields[j])){
+					out.append(sep);
+					out.append(tokens[i]);					
+					sep = ",";
+				}
+			}
+		}		
+		return out.toString();
+	}
+	
 	/*
 	 * Performs a Solr search
 	 */
-	public String search(String searchText, String filter, String start, String rows, String lang, String searchConfig, String sort) throws Exception {
+	public String search(String searchText, String filter, String start, String rows, String lang, String searchConfig, String sort, String fields) throws Exception {
+		// Clean fields only allowed Id, alphabetical_order..
+		if (fields == null){
+			fields = "";
+		} else {
+			fields  = sanitizeFields(fields);
+		}
+		// Default value is id, because select the fields is a new functionality. 
+		if ("".equals(fields)) {
+			fields = "id";
+		}
+		//Search text
 		if (searchText==null) searchText = "";
 		String solrQuery1 = "";
 		
@@ -501,7 +537,8 @@ public class SolrManager {
 		solrQuery1 += getQueryFilter(searchValues, lang);
 		boolean hasFilter = !"".equals(solrQuery1);
 		
-		String solrQuery2 = "&fl=id&facet=true&wt=json";
+		String solrQuery2 = "&fl=" + URLEncoder.encode(fields, "utf-8") + "&facet=true&wt=json";
+
 		
 		if (start!=null) solrQuery2 += "&start="+start;
 		if (rows!=null) solrQuery2 += "&rows="+rows;
