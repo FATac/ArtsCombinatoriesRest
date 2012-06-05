@@ -26,7 +26,7 @@ public class UploadObject {
 	@PUT
 	@Produces("text/plain")
 	@Consumes("application/json")
-	public String uploadObject(@Context HttpServletRequest httpRequest, String request, @QueryParam("u") String uid) {
+	public String uploadObject(@Context HttpServletRequest httpRequest, String request, @QueryParam("u") String uid, @QueryParam("level") String level) {
 		String result = "error";
 		if (request==null || "".equals(request.trim())) return result;
 		
@@ -65,7 +65,7 @@ public class UploadObject {
 			propertiesList.toArray(properties);
 			propertyValuesList.toArray(propertyValues);
 			
-			result = new Upload().uploadObject(className, about, properties, propertyValues);
+			result = new Upload().uploadObject(className, about, properties, propertyValues, level);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return result;

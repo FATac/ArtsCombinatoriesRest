@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -16,6 +17,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
+import org.fundaciotapies.ac.logic.legal.LegalProcess;
 import org.fundaciotapies.ac.model.bo.IdentifierCounter;
 import org.fundaciotapies.ac.model.bo.ResourceStatistics;
 import org.fundaciotapies.ac.model.bo.Right;
@@ -213,7 +215,7 @@ public class Upload {
 		}
 	}
 	
-	public String uploadObject(String className, String about, String[] properties, String[] propertyValues) {
+	public String uploadObject(String className, String about, String[] properties, String[] propertyValues, String color) {
 		String result = "error";
 		VirtTransactionHandler vth = null;
 		if (className==null) return "error";
@@ -297,6 +299,11 @@ public class Upload {
 			} catch (Exception e) {
 				log.warn("Could not create statistics for object " + id, e);
 			}
+
+			if (color != null) {
+				new LegalProcess().setObjectsRight(Arrays.asList(new String[]{id}), color, null);
+			}
+
 		} catch (Exception e) {
 			log.error("Error ", e);
 			if (vth!=null) vth.abort();
