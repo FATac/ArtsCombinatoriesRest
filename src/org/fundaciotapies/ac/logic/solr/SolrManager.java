@@ -115,12 +115,17 @@ public class SolrManager {
 						return new SimpleDateFormat(Cfg.YEAR_FORMAT).format(d);
 					}
 				} catch (ParseException e) {
-					if (type.equals("date.month")) {
-						new SimpleDateFormat(Cfg.MONTH_FORMAT).parse(value);
-					} else if (type.equals("date.day")) {
-						new SimpleDateFormat(Cfg.DAY_FORMAT).parse(value);
-					} else if (type.equals("date.year")) {
-						new SimpleDateFormat(Cfg.YEAR_FORMAT).parse(value);
+					try {
+						if (type.equals("date.month")) {
+							new SimpleDateFormat(Cfg.MONTH_FORMAT).parse(value);
+						} else if (type.equals("date.day")) {
+							new SimpleDateFormat(Cfg.DAY_FORMAT).parse(value);
+						} else if (type.equals("date.year")) {
+							new SimpleDateFormat(Cfg.YEAR_FORMAT).parse(value);
+						}
+					} catch (ParseException e2) {
+						log.warn("Value '"+value+"' not valid for data type: " + type + ". Please check format in Configuration.");
+						return null;
 					}
 				}
 			}	

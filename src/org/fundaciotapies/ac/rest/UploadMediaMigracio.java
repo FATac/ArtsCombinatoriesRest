@@ -12,7 +12,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
-import org.fundaciotapies.ac.model.UploadLocal;
+import org.fundaciotapies.ac.model.Upload;
 
 @Path("/media/uploadMigracio")
 public class UploadMediaMigracio {
@@ -27,7 +27,7 @@ public class UploadMediaMigracio {
 		    FileInputStream in = new FileInputStream(file);
 		    String[] parts = fn.split("\\/");
 			String fileNameOnly = parts[parts.length-1];
-			return new UploadLocal().addMediaFile(in, fileNameOnly);
+			return new Upload().addMediaFile(in, fileNameOnly);
 		} catch (Exception e) {
 			log.error("Error ", e);
 			return "error";
