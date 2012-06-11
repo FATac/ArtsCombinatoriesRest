@@ -754,7 +754,7 @@ public class Request {
 				filter = filter.substring(0, filter.length()-6);
 			}
 			
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + qc + filter + " } ", model);
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + qc + filter + " } LIMIT 5000 ", model);
 
 			ResultSet rs = vqe.execSelect();
 			
