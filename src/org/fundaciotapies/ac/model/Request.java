@@ -1001,6 +1001,41 @@ public class Request {
 		return values;
 	}*/
 	
+	public String getObjectFromMedia(String mediaFileName) {
+		String result = "";
+		
+		try {
+			// Connect to rdf server
+			InfModel model = ModelUtil.getModel();
+			
+			String qc = null;
+			
+			if (qc==null) qc = "";
+			
+			mediaFileName = Cfg.MEDIA_URL + mediaFileName;
+			
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p \""+mediaFileName+"\" } LIMIT 5000 ", model);
+
+			ResultSet rs = vqe.execSelect();
+			
+			String currentId = null;
+			
+			// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
+			while (rs.hasNext()) {
+				QuerySolution r = rs.next();
+				
+				currentId = r.get("s").asResource().getLocalName();
+				
+				result = "," + currentId; 
+			}
+
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
+		
+		return result;
+	}
+	
 	/*
 	 * Resolves the actual value of a given path
 	 */
@@ -1148,13 +1183,15 @@ public class Request {
 		for (File dir : dirList) {
 			File[] list = dir.listFiles(fileFilter);
 			for (File current : list) {
-				result.add(current.getPath().replaceAll(Cfg.MEDIA_PATH, ""));
+				String mediaFileName = current.getPath().replaceAll(Cfg.MEDIA_PATH, "");
+				result.add(mediaFileName+getObjectFromMedia(mediaFileName));
 			}
 		}
 		
 		File[] list = new File(Cfg.MEDIA_PATH).listFiles(fileFilter);
 		for (File current : list) {
-			result.add(current.getPath().replaceAll(Cfg.MEDIA_PATH, ""));
+			String mediaFileName = current.getPath().replaceAll(Cfg.MEDIA_PATH, "");
+			result.add(mediaFileName+getObjectFromMedia(mediaFileName));
 		}
 		
 		return result;		

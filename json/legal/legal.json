@@ -257,8 +257,8 @@
         	
         	"rules":
         	[
-        		{"exp":"Risc_obra_continguda='Inexistent' || Risc_obra_continguda='Baix' ", "result":{"block":"bFinal"}},
-        		{"exp":"true", "result":{"color":"red"}}
+        		{"exp":"Risc_obra_continguda='Alt'", "result":{"color":"red"}},
+        		{"exp":"true", "result":{"block":"bFinal"}}
         	]        
         },
        
@@ -272,7 +272,6 @@
         	"rules":
         	[
         		{"exp":"Conte_persones=true && Situacio_persona='reconeixible' && Persona_en_lloc_public=true && La_persona_ha_autoritzat_la_publicacio=false", "result":{"color":"orange"}},
-        		{"exp":"Risc_de_publicacio_de_la_marca='Baix' && Autoritzacio_de_la_marca=false", "result":{"color":"orange"}},
         		{"exp":"La_persona_ha_autoritzat_la_publicacio=false && Persona_en_lloc_public=false", "result":{"color":"orange"}},
 				{"exp":"Risc_de_publicacio_de_la_marca='Mig' && Autoritzacio_de_la_marca=false && Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda='Mig'", "result":{"color":"orange"}},
 				{"exp":"Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda='Alt'", "result":{"color":"orange"}},

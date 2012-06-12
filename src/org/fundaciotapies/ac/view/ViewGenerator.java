@@ -93,6 +93,8 @@ public class ViewGenerator {
 			if (dm.getPath()==null) continue;
 			if ("media".equals(type) && hideMedia) {
 				dm.setPath(null);
+				String[] value = { Cfg.MEDIA_URL + "forbidden.jpg" , "image" };
+				dm.setValue(Arrays.asList(value));
 				continue;
 			}
 			
@@ -431,7 +433,7 @@ public class ViewGenerator {
 			
 			int userLegalLevel = new Request().getUserLegalLevel(uid);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(uid)) {
-				return null;
+				f = new File(Cfg.MEDIA_PATH + "forbidden_thumbnail.jpg");
 			} else {
 				f = new File(Cfg.MEDIA_PATH + "thumbnails/" + id + ".jpg");
 			}

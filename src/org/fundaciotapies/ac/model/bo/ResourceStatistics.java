@@ -40,9 +40,10 @@ public class ResourceStatistics implements Serializable {
 		    
 		    long currentMoment = Calendar.getInstance().getTimeInMillis();
 		      
-		    stmt = conn.prepareStatement("SELECT identifier FROM _resource_statistics WHERE creationMoment > ? OR lastMoment > ? ");
+		    stmt = conn.prepareStatement("SELECT identifier FROM _resource_statistics WHERE creationMoment > ? OR lastMoment > ? OR deletion > ? ");
 		    stmt.setLong(1, currentMoment - updatePeriod);
 		    stmt.setLong(2, currentMoment - updatePeriod);
+		    stmt.setLong(3, currentMoment - updatePeriod);
 		      
 		    rs = stmt.executeQuery();
 		    while(rs.next()) result.add(rs.getString("identifier"));
@@ -105,10 +106,11 @@ public class ResourceStatistics implements Serializable {
 		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
 		    conn = pooledConnection.getVirtuosoConnection();
 		      
-		    String sql = "DELETE FROM _resource_statistics WHERE identifier = ? ";
+		    String sql = "UPDATE _resource_statistics SET deletion = ? WHERE identifier = ? ";
 		    stmt = conn.prepareStatement(sql);
 		    	  
-		    stmt.setString(1, identifier);
+		    stmt.setLong(1, Calendar.getInstance().getTimeInMillis());
+		    stmt.setString(2, identifier);
 		      
 		    stmt.executeUpdate();
 		} catch (Exception e) {

@@ -34,7 +34,6 @@ public class Solar {
 				if (time==null || "".equals(time)) time = "60";
 				solr.index(new Request().listRecentChanges(time));
 			} else if ("reload".equals(option)) {
-				solr.deleteAll();
 				solr.index();
 			} else if ("reloadLast".equals(option)) {
 				solr.deleteAll();

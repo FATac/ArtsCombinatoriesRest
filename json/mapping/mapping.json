@@ -23,7 +23,8 @@
 				"ac:Case-File.ac:references=*.ac:Title",
 				"ac:Organisation.ac:Name",
 				"ac:Media.ac:Title",
-		        "ac:Collection.ac:Title"
+		        "ac:Collection.ac:Title",
+		        "ac:Publication.ac:Title"
 			],
 			"multilingual":"yes"
 			

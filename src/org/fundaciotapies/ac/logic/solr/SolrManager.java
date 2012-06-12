@@ -40,6 +40,7 @@ public class SolrManager {
 	private static Logger log = Logger.getLogger(SolrManager.class);
 	
 	public Map<String, CustomMap> documents = null;
+	public List<String> deletedDocuments = null;
 	public List<String[]> statistics = null;
 		
 	/*
@@ -137,10 +138,16 @@ public class SolrManager {
 		return value;
 	}
 	
+	List<String> alreadyIndexedObjectAsClass = new ArrayList<String>();
+	
 	/*
 	 * Create a single object indexing
 	 */
 	private void createDocumentEntry(String id, String className, Mapping mapping) throws Exception {
+		if (alreadyIndexedObjectAsClass.contains(id+"--"+className)) return;
+		
+		alreadyIndexedObjectAsClass.add(id+"--"+className);
+		
 		CustomMap doc = documents.get(id);
 		if (doc==null) doc = new CustomMap();
 		Request request = new Request();
@@ -209,6 +216,7 @@ public class SolrManager {
 	 */
 	public void index(List<String> ids) throws Exception {
 		documents = new HashMap<String, CustomMap>();
+		deletedDocuments = new ArrayList<String>();
 		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		fin.close();
@@ -238,13 +246,18 @@ public class SolrManager {
 		} else {
 			for (String id : ids) {
 				String className = request.getObjectClass(id);
-				List<String> allClassNames = request.listSuperClasses(className);
-				allClassNames.add(className);
-				for (String cn : allClassNames) {
-					if (objectTypesIndexed.contains(cn)) {
-						createDocumentEntry(id, className, mapping);
-						break;
+				if (className!=null) {
+					List<String> allClassNames = request.listSuperClasses(className);
+					allClassNames.add(className);
+					for (String cn : allClassNames) {
+						if (objectTypesIndexed.contains(cn)) {
+							createDocumentEntry(id, className, mapping);
+							break;
+						}
 					}
+				} else {
+					// if className is null means that object was deleted, so we add the deleted id
+					deletedDocuments.add(id);
 				}
 			}
 		}
@@ -273,15 +286,25 @@ public class SolrManager {
 		}
 		xml += "</add>";
 		
+		for (String deletedId : deletedDocuments) {
+			xml += "\n<delete><id>"+deletedId+"</id></delete>";
+		}
+		
 		// saving data.xml is for information purposes ony
 		// so it is not critical if it fails 
 		try {
-			PrintWriter fout = new PrintWriter(Cfg.SOLR_PATH + "data/data.xml");
+			String outFileName = "data.xml";
+			if (ids!=null) outFileName = "lastUpdate.xml";
+			PrintWriter fout = new PrintWriter(Cfg.SOLR_PATH + "data/" + outFileName);
 			fout.print(xml);
 			fout.close();
 		} catch (Exception e) {
 			log.warn("Error saving indexation data.xml", e);
 		}
+		
+		
+		// Before adding the new index, delete the previous one
+		deleteAll();
 		
 		// Connect to Solr, service Update
 		URL url = new URL(Cfg.SOLR_URL + "update");
@@ -289,7 +312,7 @@ public class SolrManager {
 	    conn.setRequestProperty("Content-Type", "application/xml");
 	    conn.setRequestMethod("POST");
 
-	    // Feed hungry Solr with all index
+	    // Feed hungry Solr with all the index
 	    conn.setDoOutput(true);
 	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
 	    wr.write(xml);
@@ -461,7 +484,7 @@ public class SolrManager {
 	 */
 	private String sanitizeFields(String str) {
 
-		String[] validFields = {"id", "AlphabeticalOrder", "Events"};
+		String[] validFields = {"id", "AlphabeticalOrder", "Events", "Title", "class"};
 		String[] tokens = str.split(",");
 		StringBuffer out = new StringBuffer();
 		String sep = "";
@@ -485,7 +508,7 @@ public class SolrManager {
 		if (fields == null){
 			fields = "";
 		} else {
-			fields  = sanitizeFields(fields);
+			//fields  = sanitizeFields(fields);
 		}
 		// Default value is id, because select the fields is a new functionality. 
 		if ("".equals(fields)) {

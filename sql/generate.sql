@@ -12,7 +12,8 @@ CREATE TABLE db.dba._resource_statistics (
 	identifier VARCHAR(150),
 	visitCounter BIGINT,
 	creationMoment BIGINT,
-	lastMoment BIGINT
+	lastMoment BIGINT,
+	deletion BIGINT
 )
 
 CREATE TABLE db.dba._right (
