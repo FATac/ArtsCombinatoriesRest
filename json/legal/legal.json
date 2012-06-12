@@ -143,7 +143,8 @@
         	
         	"rules":
         	[
-        		{"exp":"Publicacio=false", "result":{"color":"red"}}
+        		{"exp":"Publicacio=false", "result":{"color":"red"}},
+        		{"exp":"true", "result":{"block":"bContingut"}}
         	]
         },
         
@@ -216,7 +217,7 @@
         	[
         		{"name":"Nom_de_la_marca", "type":"string"},
         		{"name":"Propietari_de_la_marca", "type":"string"},
-        		{"name":"Autoritzacio_de_la_marca", "type":"string", "values":["Sí","No","Desconegut"]},
+        		{"name":"Autoritzacio_de_la_marca", "type":"boolean"},
         		{"name":"Referencia_autoritzacio_marca", "type":"string"},
         		{"name":"Risc_de_publicacio_de_la_marca", "type":"string", "values":["Inexistent","Baix","Mig","Alt"]}
         	],
@@ -257,7 +258,6 @@
         	
         	"rules":
         	[
-        		{"exp":"Risc_obra_continguda='Alt'", "result":{"color":"red"}},
         		{"exp":"true", "result":{"block":"bFinal"}}
         	]        
         },
@@ -271,13 +271,18 @@
         	
         	"rules":
         	[
-        		{"exp":"Conte_persones=true && Situacio_persona='reconeixible' && Persona_en_lloc_public=true && La_persona_ha_autoritzat_la_publicacio=false", "result":{"color":"orange"}},
-        		{"exp":"La_persona_ha_autoritzat_la_publicacio=false && Persona_en_lloc_public=false", "result":{"color":"orange"}},
-				{"exp":"Risc_de_publicacio_de_la_marca='Mig' && Autoritzacio_de_la_marca=false && Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda='Mig'", "result":{"color":"orange"}},
-				{"exp":"Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda='Alt'", "result":{"color":"orange"}},
-				
-				{"exp":"Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda='Mig'", "result":{"color":"yellow"}},
-				{"exp":"Risc_de_publicacio_de_la_marca='Mig' && Autoritzacio_de_la_marca=false", "result":{"color":"yellow"}},
+        		{"exp":"Conte_persones=true && Situacio_persona='reconeixible' && Persona_en_lloc_public=false && La_persona_ha_autoritzat_la_publicacio=false && Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda!='Baix' ", "result":{"color":"red"}},
+        		{"exp":"Conte_persones=true && Situacio_persona='reconeixible' && Persona_en_lloc_public=false && La_persona_ha_autoritzat_la_publicacio=false && Conte_marques=true && Autoritzacio_de_la_marca=false && Risc_de_publicacio_de_la_marca='Mig' ", "result":{"color":"red"}},
+        		{"exp":"Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda='Alt' && Conte_marques=true && Autoritzacio_de_la_marca=false && Risc_de_publicacio_de_la_marca='Mig' ", "result":{"color":"red"}},
+        		
+        		{"exp":"Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda='Alt'", "result":{"color":"orange"}},
+        		{"exp":"Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda='Mig' && Conte_marques=true && Autoritzacio_de_la_marca=false && Risc_de_publicacio_de_la_marca='Mig' ", "result":{"color":"orange"}},
+        		{"exp":"Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda='Mig' && Conte_persones=true && Situacio_persona='reconeixible' && Persona_en_lloc_public=false && La_persona_ha_autoritzat_la_publicacio=false ", "result":{"color":"orange"}},
+        		{"exp":"Conte_marques=true && Autoritzacio_de_la_marca=false && Risc_de_publicacio_de_la_marca='Mig' && Conte_persones=true && Situacio_persona='reconeixible' && Persona_en_lloc_public=false && La_persona_ha_autoritzat_la_publicacio=false ", "result":{"color":"orange"}},
+        		
+        		{"exp":"Conte_altres_obres_o_documents=true && Te_permis=false && Risc_obra_continguda='Mig'", "result":{"color":"yellow"}},
+        		{"exp":"Autoritzacio_de_la_marca=false && Risc_de_publicacio_de_la_marca='Mig'", "result":{"color":"yellow"}},
+        		{"exp":"Conte_persones=true && Situacio_persona='reconeixible' && Persona_en_lloc_public=false && La_persona_ha_autoritzat_la_publicacio=false", "result":{"color":"yellow"}},
 				
 				{"exp":"true", "result":{"color":"green"}}
         	]        
