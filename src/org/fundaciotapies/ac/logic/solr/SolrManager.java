@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.Normalizer;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
@@ -40,7 +42,6 @@ public class SolrManager {
 	private static Logger log = Logger.getLogger(SolrManager.class);
 	
 	public Map<String, CustomMap> documents = null;
-	public List<String> deletedDocuments = null;
 	public List<String[]> statistics = null;
 		
 	/*
@@ -209,14 +210,16 @@ public class SolrManager {
 		index(null);
 	}
 	
+	private Map<String, List<String>> classSuperClassesList = null;
+	
 	/*
 	 * Main indexing function
 	 * loops through all indexing data fields defined in mapping.json, determines which class of objects are to be indexed
 	 * creates document group and generates resulting xml, which is finally saved and posted to Solr service "update"
 	 */
-	public void index(List<String> ids) throws Exception {
+	public void index(List<String> idsToUpdate) throws Exception {
+		classSuperClassesList = new HashMap<String, List<String>>();
 		documents = new HashMap<String, CustomMap>();
-		deletedDocuments = new ArrayList<String>();
 		BufferedReader fin = new BufferedReader(new FileReader(Cfg.CONFIGURATIONS_PATH + "mapping/mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		fin.close();
@@ -234,9 +237,11 @@ public class SolrManager {
 			}
 		}
 		
+		String xmlDeleteDocuments = null;
+		
 		// loads statistics that will be used to create every document indexes
 		statistics = ResourceStatistics.list();
-		if (ids==null) {
+		if (idsToUpdate==null) {
 			for(String className : objectTypesIndexed) {
 				// for each class eligible for indexing, get all its objects
 				List<String> list = request.listObjectsId(className);
@@ -244,10 +249,17 @@ public class SolrManager {
 				for(String id : list) createDocumentEntry(id, className, mapping);
 			}
 		} else {
-			for (String id : ids) {
+			
+			for (String id : idsToUpdate) {
 				String className = request.getObjectClass(id);
 				if (className!=null) {
-					List<String> allClassNames = request.listSuperClasses(className);
+					List<String> allClassNames = classSuperClassesList.get(className);
+					
+					if (allClassNames==null) {
+						allClassNames = request.listSuperClasses(className);
+						classSuperClassesList.put(className, allClassNames);
+					}
+					
 					allClassNames.add(className);
 					for (String cn : allClassNames) {
 						if (objectTypesIndexed.contains(cn)) {
@@ -256,14 +268,18 @@ public class SolrManager {
 						}
 					}
 				} else {
-					// if className is null means that object was deleted, so we add the deleted id
-					deletedDocuments.add(id);
+					// if className is null means that object was deleted, so we add the delete id
+					if (xmlDeleteDocuments == null) xmlDeleteDocuments = "";
+					xmlDeleteDocuments += "<delete><id>"+id+"</id></delete>\n";
 				}
 			}
 		}
 		
 		// render xml index that will feed Solr
-		String xml = "<add>\n";
+		String xml = "";
+		if (idsToUpdate!=null) xml = "<update>\n";
+		
+		xml += "<add>\n";
 		for(Map.Entry<String, CustomMap> ent1 : documents.entrySet()) {
 			String id = ent1.getKey();
 			CustomMap doc = ent1.getValue();
@@ -284,17 +300,16 @@ public class SolrManager {
 			}
 			xml += "	</doc>\n";
 		}
-		xml += "</add>";
 		
-		for (String deletedId : deletedDocuments) {
-			xml += "\n<delete><id>"+deletedId+"</id></delete>";
-		}
+		xml += "</add>\n";
+		
+		if (idsToUpdate!=null) xml += xmlDeleteDocuments + "</update>";
 		
 		// saving data.xml is for information purposes ony
 		// so it is not critical if it fails 
 		try {
 			String outFileName = "data.xml";
-			if (ids!=null) outFileName = "lastUpdate.xml";
+			if (idsToUpdate!=null) outFileName = "lastUpdate.xml";
 			PrintWriter fout = new PrintWriter(Cfg.SOLR_PATH + "data/" + outFileName);
 			fout.print(xml);
 			fout.close();
@@ -302,9 +317,8 @@ public class SolrManager {
 			log.warn("Error saving indexation data.xml", e);
 		}
 		
-		
 		// Before adding the new index, delete the previous one
-		deleteAll();
+		if (idsToUpdate==null) deleteAll();
 		
 		// Connect to Solr, service Update
 		URL url = new URL(Cfg.SOLR_URL + "update");
@@ -482,6 +496,7 @@ public class SolrManager {
 	 * @param str
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	private String sanitizeFields(String str) {
 
 		String[] validFields = {"id", "AlphabeticalOrder", "Events", "Title", "class"};
@@ -516,6 +531,14 @@ public class SolrManager {
 		}
 		//Search text
 		if (searchText==null) searchText = "";
+		//else if (!"".equals(searchText)) searchText = "(" + searchText + ")";
+		
+		String temp = Normalizer.normalize(searchText.trim(), Normalizer.Form.NFD);
+	    Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+"); // remove diacritical marks (accents, etc.)
+	    
+	    // remove anything that is not a letter, nubmer or space form, and transform all space forms to '_' 
+	    searchText = pattern.matcher(temp).replaceAll("");
+	    
 		String solrQuery1 = "";
 		
 		if (lang==null) lang = Cfg.LANGUAGE_LIST[0];
@@ -577,8 +600,8 @@ public class SolrManager {
 			if ("yes".equals(m.getSearch()) && !"".equals(searchText)) {
 				if (m.getType().contains("date.") && !searchText.matches("[0-9]+")) {
 					// if it is a date type, it is converted to an int field
-					// solr fails searching text in numeric fields so we avoid this case
-					// do nothing
+					// solr fails searching text in numeric fields so we avoid this case.
+					// Do nothing
 				} else {
 					if (firstTime) {
 						if (hasFilter) solrQuery1 += " AND ("; 
@@ -619,7 +642,6 @@ public class SolrManager {
 	    	sb.append(str);
 	    	sb.append("\n");
 	    }
-	    
 	    
 	    // remove language code prefix from results
 	    return sb.toString().replaceAll("LANG"+lang+"__", "");

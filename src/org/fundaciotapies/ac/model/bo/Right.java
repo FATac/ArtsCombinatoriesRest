@@ -19,7 +19,7 @@ public class Right implements Serializable {
 	
 	private Long sid = null;
 	private String objectId = null;
-	private Integer rightLevel = 1;
+	private Integer rightLevel = 4;
 
 	public String getObjectId() {
 		return objectId;

@@ -182,6 +182,10 @@ public class LegalProcess {
 			for (LegalBlockRules r : b.getRules()) {
 				Boolean res = evalExpression(r.getExp(), prop);
 				if (res!=null && res) {
+					if (r.getResult().getLicense()!=null) {
+						prop.setProperty("___license", r.getResult().getLicense());
+					}
+					
 					if (r.getResult().getBlock()!=null) {
 						LegalBlock b2 = def.getBlock(r.getResult().getBlock());
 						if (b2==null) {
@@ -197,7 +201,7 @@ public class LegalProcess {
 					} else {
 						saveLegalData(prop);
 						String color = r.getResult().getColor();
-						String license = r.getResult().getLicense();
+						String license = prop.getProperty("___license");
 						String objectIds = prop.getProperty("___objects");
 						setObjectsRight(Arrays.asList(objectIds.split(",")), color, license);
 						

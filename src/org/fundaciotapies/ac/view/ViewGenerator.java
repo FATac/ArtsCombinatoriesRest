@@ -92,9 +92,15 @@ public class ViewGenerator {
 			String type = dm.getType();
 			if (dm.getPath()==null) continue;
 			if ("media".equals(type) && hideMedia) {
+				dm.setType("text");
+				dm.setName(null);
 				dm.setPath(null);
-				String[] value = { Cfg.MEDIA_URL + "forbidden.jpg" , "image" };
-				dm.setValue(Arrays.asList(value));
+				String msgForbidden = "(Per motius legals no es pot mostrar aquest contingut)";
+				if ("es".equals(lang)) msgForbidden = "(Por motivos legales no se puede mostrar este contenido)";
+				if ("en".equals(lang)) msgForbidden = "(Due to legal reasons this content cannot be shown)";
+				dm.setValue(Arrays.asList(new String[]{msgForbidden}));
+				//String[] value = { Cfg.MEDIA_URL + "forbidden.jpg" , "image" };
+				//dm.setValue(Arrays.asList(value));
 				continue;
 			}
 			
