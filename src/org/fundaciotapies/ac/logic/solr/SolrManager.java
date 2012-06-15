@@ -119,10 +119,13 @@ public class SolrManager {
 				} catch (ParseException e) {
 					try {
 						if (type.equals("date.month")) {
+							if (Cfg.MONTH_FORMAT.length() != value.length()) throw new ParseException(value, 0);
 							new SimpleDateFormat(Cfg.MONTH_FORMAT).parse(value);
 						} else if (type.equals("date.day")) {
+							if (Cfg.DAY_FORMAT.length() != value.length()) throw new ParseException(value, 0);
 							new SimpleDateFormat(Cfg.DAY_FORMAT).parse(value);
 						} else if (type.equals("date.year")) {
+							if (Cfg.YEAR_FORMAT.length() != value.length()) throw new ParseException(value, 0);
 							new SimpleDateFormat(Cfg.YEAR_FORMAT).parse(value);
 						}
 					} catch (ParseException e2) {
@@ -303,7 +306,7 @@ public class SolrManager {
 		
 		xml += "</add>\n";
 		
-		if (idsToUpdate!=null) xml += xmlDeleteDocuments + "</update>";
+		if (idsToUpdate!=null) xml += (xmlDeleteDocuments!=null?xmlDeleteDocuments:"") + "</update>";
 		
 		// saving data.xml is for information purposes ony
 		// so it is not critical if it fails 
@@ -518,7 +521,7 @@ public class SolrManager {
 	/*
 	 * Performs a Solr search
 	 */
-	public String search(String searchText, String filter, String start, String rows, String lang, String searchConfig, String sort, String fields) throws Exception {
+	public String search(String searchText, String filter, String start, String rows, String lang, String searchConfig, String sort, String fields, String categories) throws Exception {
 		// Clean fields only allowed Id, alphabetical_order..
 		if (fields == null){
 			fields = "";
@@ -618,7 +621,7 @@ public class SolrManager {
 			}
 			
 			// use solr facets to build categories of fields marked as so 
-			if ("yes".equals(m.getCategory())) {
+			if ("yes".equals(m.getCategory()) && ((categories != null && categories.contains(m.getName()+",")) || categories == null)) {
 				solrQuery2 += "&facet.field="+m.getName();
 				if ("yes".equals(m.getMultilingual())) solrQuery2 += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";		// if field is multilingual consider only current language  
 				if ("yes".equals(m.getSortCategory())) solrQuery2 += "&f."+m.getName()+".facet.sort=index";

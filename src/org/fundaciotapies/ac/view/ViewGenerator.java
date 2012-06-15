@@ -497,16 +497,19 @@ public class ViewGenerator {
 						}
 					}
 					
-					if (count<4) {
-						if (subobjects.size()>0) {
-							for (String o : subobjects) {
-								InputStream in = getObjectThumbnail(o, "", false);
-								if (in!=null) {
-									il.add(loadImage(in, 1));
-									count++;
+					// TODO: serveis per a solucionar el bucle infinit
+					if (firstCall) {
+						if (count<4) {
+							if (subobjects.size()>0) {
+								for (String o : subobjects) {
+									InputStream in = getObjectThumbnail(o, "", false);
+									if (in!=null) {
+										il.add(loadImage(in, 1));
+										count++;
+									}
+									
+									if (count>=4) break;
 								}
-								
-								if (count>=4) break;
 							}
 						}
 					}

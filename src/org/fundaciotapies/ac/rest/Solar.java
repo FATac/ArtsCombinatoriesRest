@@ -1,5 +1,7 @@
 package org.fundaciotapies.ac.rest;
 
+import java.util.Arrays;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -19,7 +21,7 @@ public class Solar {
 	
 	@GET
 	@Produces("application/json")
-	public String solarize(@PathParam("option") String option, @QueryParam("s") String searchText, @QueryParam("f") String filter, @QueryParam("start") String start, @QueryParam("rows") String rows, @QueryParam("conf") String searchConfig, @QueryParam("sort") String sort, @QueryParam("time") String time, @QueryParam("lang") String lang, @QueryParam("fields") String fields) {
+	public String solarize(@PathParam("option") String option, @QueryParam("s") String searchText, @QueryParam("f") String filter, @QueryParam("start") String start, @QueryParam("rows") String rows, @QueryParam("conf") String searchConfig, @QueryParam("sort") String sort, @QueryParam("time") String time, @QueryParam("lang") String lang, @QueryParam("fields") String fields, @QueryParam("categories") String categories, @QueryParam("ids") String idsToUpdate) {
 		try {
 			SolrManager solr = new SolrManager();
 			
@@ -31,15 +33,18 @@ public class Solar {
 				solr.generateSchema();
 				return new Gson().toJson("success: restart web application server.");
 			} else if ("update".equals(option)) {
-				if (time==null || "".equals(time)) time = "60";
-				solr.index(new Request().listRecentChanges(time));
+				if (time!=null && !"".equals(time)) 
+					solr.index(new Request().listRecentChanges(time));
+				else if (idsToUpdate!=null && !"".equals(idsToUpdate)) {
+					solr.index(Arrays.asList(idsToUpdate.split(",")));
+				}
 			} else if ("reload".equals(option)) {
 				solr.index();
 			} else if ("reloadLast".equals(option)) {
 				solr.deleteAll();
 				solr.indexLast();
 			} else if ("search".equals(option)) {
-				return solr.search(searchText, filter, start, rows, lang, searchConfig, sort, fields);
+				return solr.search(searchText, filter, start, rows, lang, searchConfig, sort, fields, categories);
 			} else if ("autocomplete".equals(option)) {
 				return solr.autocomplete(searchText, start, rows, lang, searchConfig);
 			} else if ("configurations".equals(option)) {

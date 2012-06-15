@@ -919,11 +919,12 @@ public class Request {
 	
 	// Get all objects modified or inserted in the last specified minutes
 	public List<String> listRecentChanges(String minutesago) throws Exception {
-		///List<String> allChangedIds = listObjectsId("ac:Case-File");
+		List<String> allChangedIds = listObjectsId("ac:Case-File");
 		
 		long millisecondsago = new Long(minutesago)*60000;
-		//allChangedIds.addAll(ResourceStatistics.listRecentChanges(millisecondsago));
-		return ResourceStatistics.listRecentChanges(millisecondsago);
+		allChangedIds.addAll(ResourceStatistics.listRecentChanges(millisecondsago));
+		return allChangedIds;
+		//return ResourceStatistics.listRecentChanges(millisecondsago);
 	}
 	
 	/*

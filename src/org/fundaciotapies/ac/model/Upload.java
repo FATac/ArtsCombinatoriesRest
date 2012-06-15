@@ -239,6 +239,8 @@ public class Upload {
 			
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			
+			List<String> relatedObjects = new ArrayList<String>();
+			
 			//List<String> lcp = new ArrayList<String>(new Request().listClassPropertiesSimple(className));
 			while(i<properties.length) {
 				boolean isObjectProperty = false;
@@ -255,9 +257,10 @@ public class Upload {
 				}
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
-					if (isObjectProperty) 
+					if (isObjectProperty) {
 						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+fullId+"> "+properties[i].trim()+" <"+Cfg.RESOURCE_URI_NS+propertyValues[i].trim()+"> }");
-					else {
+						relatedObjects.add(propertyValues[i].trim());
+					} else {
 						String lang = null;
 						
 						for (String l : Cfg.LANGUAGE_LIST) {
@@ -294,10 +297,19 @@ public class Upload {
 			
 			result = id;
 			
+			// Update statistics for timespan indexing 
 			try {
 				if (id!=null) ResourceStatistics.creation(id);
 			} catch (Exception e) {
 				log.warn("Could not create statistics for object " + id, e);
+			}
+			
+			for (String rId : relatedObjects) {
+				try {
+					if (id!=null) ResourceStatistics.visit(rId);
+				} catch (Exception e) {
+					log.warn("Could not create statistics for object " + rId, e);
+				}
 			}
 
 			if (color != null) {
@@ -373,6 +385,7 @@ public class Upload {
 
 			// list all ontology object properties (relations)
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
+			List<String> relatedObjects = new ArrayList<String>();
 			while(i<properties.length) {
 				if ("rdf:type".equals(properties[i]) || !properties[i].contains(":")) { i++; continue; }
 				boolean isObjectProperty = false;
@@ -396,6 +409,7 @@ public class Upload {
 					if (isObjectProperty) {
 						// if current property is a relation, predicate-object is a URI
 						script.add("INSERT INTO GRAPH <" + Cfg.RESOURCE_URI_NS + "> { <"+Cfg.RESOURCE_URI_NS+uniqueId+"> "+properties[i]+" <"+Cfg.RESOURCE_URI_NS+propertyValues[i].trim()+"> }");
+						relatedObjects.add(propertyValues[i].trim());
 					} else { // otherwise, predicate-object is a literal/number/date value
 						// extract language from value, if exists
 						String lang = null;
@@ -428,6 +442,21 @@ public class Upload {
 			vth.begin();
 			vth.executeInTransaction(c);
 			vth.commit();
+			
+			// Update statistics for timespan indexing 
+			try {
+				if (uniqueId!=null) ResourceStatistics.creation(uniqueId);
+			} catch (Exception e) {
+				log.warn("Could not create statistics for object " + uniqueId, e);
+			}
+			
+			for (String rId : relatedObjects) {
+				try {
+					if (rId!=null) ResourceStatistics.visit(rId);
+				} catch (Exception e) {
+					log.warn("Could not create statistics for object " + rId, e);
+				}
+			}
 			
 			result = "success";
 		} catch (Exception e) {
