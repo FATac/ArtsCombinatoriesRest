@@ -740,7 +740,17 @@ public class Request {
 			if (qc==null) qc = "";
 
 			// Create search query
-			String filter = " FILTER ((regex(?o,\""+word+"\",\"i\") || regex(?s,\""+word+"\",\"i\")) ";
+			
+			String filter = "";
+			String[] words = word.split("\\s");
+			if (word.startsWith("\"")) words = new String[]{ word.replaceAll("\"", "") };
+			for(int  i=0; i<words.length; i++) {
+				if (i>0) filter += " && ";
+				filter += "(regex(?o,\""+words[i]+"\",\"i\") || regex(?s,\""+words[i]+"\",\"i\")) ";
+			}
+			
+			filter = " FILTER (" + filter;
+			
 			for (String ns : Cfg.ONTOLOGY_NAMESPACES) if (ns.length()>10) filter += " && !regex(?o, \""+ns+"\",\"i\") ";
 			filter += ")";
 			

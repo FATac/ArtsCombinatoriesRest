@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -27,10 +25,14 @@ import org.fundaciotapies.ac.rest.client.TranscoEntity;
 
 import virtuoso.jena.driver.VirtGraph;
 import virtuoso.jena.driver.VirtTransactionHandler;
+import virtuoso.jena.driver.VirtuosoQueryExecutionFactory;
 import virtuoso.jena.driver.VirtuosoUpdateFactory;
 
 import com.hp.hpl.jena.ontology.ObjectProperty;
 import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.shared.Command;
 
@@ -53,6 +55,7 @@ public class Upload {
 	    if (result!=null && !"".equals(result)) {
 	    	// number-starting strings cannot be identifiers so add a starting character
 	    	if ("0123456789".contains(result.charAt(0)+"")) result = "n_" + result;
+	    	if (result.startsWith("_")) result = "u" + result; // avoid identifiers starting by underscore for plone compatibility
 	    } else {
 	    	// if no identifier is left after normalization, use a predefined string
 	    	result = "Unidentified";
@@ -372,8 +375,8 @@ public class Upload {
 		String result = "error";
 		VirtTransactionHandler vth = null;
 		
-		Set<String> alreadyDeleted = new TreeSet<String>();
-		
+		//Set<String> alreadyDeleted = new TreeSet<String>();
+				
 		try {
 			model = ModelUtil.getModel();
 			
@@ -382,7 +385,8 @@ public class Upload {
 			int i = 0;
 			
 			script = new ArrayList<String>();
-
+			script.add("DELETE FROM <" + Cfg.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a ?b ?c FILTER (?a = <" + Cfg.RESOURCE_URI_NS+uniqueId + "> ) . ?a ?b ?c FILTER NOT EXISTS { ?a rdf:type ?c } . ?a ?b ?c }");
+			
 			// list all ontology object properties (relations)
 			List<ObjectProperty> lop = ont.listObjectProperties().toList();
 			List<String> relatedObjects = new ArrayList<String>();
@@ -399,11 +403,11 @@ public class Upload {
 					}
 				}
 				
-				if (!"".equals(propertyValues[i]) && !alreadyDeleted.contains(properties[i])) {
+				//if (!"".equals(propertyValues[i]) && !alreadyDeleted.contains(properties[i])) {
 					// first delete properties that are being modified 
-					script.add("DELETE FROM <" + Cfg.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a "+properties[i]+" ?c FILTER (?a = <" + Cfg.RESOURCE_URI_NS+uniqueId + "> ) . ?a ?b ?c }");
-					alreadyDeleted.add(properties[i]); // ensure that properties are only deleted once per update
-				}
+				//	script.add("DELETE FROM <" + Cfg.RESOURCE_URI_NS + "> { ?a ?b ?c } WHERE { ?a "+properties[i]+" ?c FILTER (?a = <" + Cfg.RESOURCE_URI_NS+uniqueId + "> ) . ?a ?b ?c }");
+			//		alreadyDeleted.add(properties[i]); // ensure that properties are only deleted once per update
+				//}
 				
 				if (!"".equals(propertyValues[i]) && propertyValues[i]!=null) {
 					if (isObjectProperty) {
@@ -506,5 +510,56 @@ public class Upload {
 			throw e;
 		}
 		
+	}
+
+	public void fixIds(String x) {
+		
+		VirtTransactionHandler vth = null;
+		
+		try {
+			// Connect to rdf server
+			model = ModelUtil.getModel();
+
+			// Create search query
+			String filter = " . FILTER regex(?"+x+",\"ArtsCombinatoriesRest/resource/_\") ";
+			
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT DISTINCT ?"+x+" FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + filter + " } ", model);
+			ResultSet rs = vqe.execSelect();
+			
+			script = new ArrayList<String>();
+			
+			while (rs.hasNext()) {
+				QuerySolution r = rs.next();
+				
+				String currentUri = r.get(x).asResource().toString();
+				String fixedUri = currentUri.replace("ArtsCombinatoriesRest/resource/_", "ArtsCombinatoriesRest/resource/u_"); 
+				
+				if (x.equals("s"))
+					script.add("MODIFY <" + Cfg.RESOURCE_URI_NS + "> DELETE { <" + currentUri + "> ?p ?o } INSERT { <" + fixedUri + "> ?p ?o } WHERE { <" + currentUri + "> ?p ?o } ");
+				else
+					script.add("MODIFY <" + Cfg.RESOURCE_URI_NS + "> DELETE { ?s ?p <" + currentUri + "> } INSERT { ?s ?p <" + fixedUri + "> } WHERE { ?s ?p <" + currentUri + "> } ");
+					
+			}
+			
+			for (String s : script) System.out.println(s);
+			
+			/*
+
+			Command c = new Command() {
+				@Override
+				public Object execute() {
+					for (String s : script)
+						VirtuosoUpdateFactory.create(s, ((VirtGraph)(model.getGraph()))).exec();
+					return null;
+				}
+			};
+			
+			vth = new VirtTransactionHandler((VirtGraph)model.getGraph());
+			vth.begin();
+			vth.executeInTransaction(c);
+			vth.commit(); */
+		} catch (Throwable e) {
+			log.error("Error ", e);
+		}
 	}
 }
