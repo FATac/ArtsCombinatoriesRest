@@ -1,6 +1,7 @@
 package org.fundaciotapies.ac;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,7 +23,7 @@ public class Cfg {
 	public static String[] MEDIA_CONVERSION_PROFILES = {"avi mov", "mp3 aif"};
 	public static String[] MEDIA_PROFILES_DESCRIPTION = {"320p", "80bps"};
 	public static Boolean MEDIA_AUTOCONVERT = false;
-	public static String DATE_FORMAT = "dd/MM/yyyy";
+	public static String DATE_FORMAT = "dd-MM-yyyy";
 	public static String YEAR_FORMAT = "yyyy";
 	public static String MONTH_FORMAT = "MM";
 	public static String DAY_FORMAT = "dd";
@@ -101,6 +102,8 @@ public class Cfg {
 	
 	static {
 		try {
+			log.info("Default Charset: " + Charset.defaultCharset().displayName());
+			
 			String canonicalPath = new File(".").getCanonicalPath();
 			log.info(">>>>>>>>>>>>>>>> LOADING CONFIGURATION <<<<<<<<<<<<<<< (current dir: " + canonicalPath + ")");
 			
@@ -159,6 +162,12 @@ public class Cfg {
 			
 			if (jsonConfig.path("PATH_PROPERTY_PREFIX").getTextValue()!=null) PATH_PROPERTY_PREFIX = jsonConfig.path("PATH_PROPERTY_PREFIX").getTextValue();
 			if (jsonConfig.path("PATH_OBJECT_REFERENCE_PREFIX").getTextValue()!=null) PATH_OBJECT_REFERENCE_PREFIX = jsonConfig.path("PATH_OBJECT_REFERENCE_PREFIX").getTextValue();
+		
+			if (jsonConfig.path("DATE_FORMAT").getTextValue()!=null) DATE_FORMAT = jsonConfig.path("DATE_FORMAT").getTextValue();
+			if (jsonConfig.path("YEAR_FORMAT").getTextValue()!=null) YEAR_FORMAT = jsonConfig.path("YEAR_FORMAT").getTextValue();
+			if (jsonConfig.path("MONTH_FORMAT").getTextValue()!=null) MONTH_FORMAT = jsonConfig.path("MONTH_FORMAT").getTextValue();
+			if (jsonConfig.path("DAY_FORMAT").getTextValue()!=null) DAY_FORMAT = jsonConfig.path("DAY_FORMAT").getTextValue();
+			
 		} catch (Exception e) {
 			log.error("Error culd not load properties", e);
 		}

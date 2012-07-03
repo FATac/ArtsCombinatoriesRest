@@ -514,7 +514,6 @@ public class Upload {
 
 	public void fixIds(String x) {
 		
-		VirtTransactionHandler vth = null;
 		
 		try {
 			// Connect to rdf server

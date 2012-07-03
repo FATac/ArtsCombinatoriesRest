@@ -8,12 +8,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 
 import org.apache.log4j.Logger;
@@ -738,6 +740,13 @@ public class Request {
 			String qc = null;
 			
 			if (qc==null) qc = "";
+			
+			// normalize search string
+			String temp = Normalizer.normalize(word.trim(), Normalizer.Form.NFD);
+		    Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+"); // remove diacritical marks (accents, etc.)
+		    
+		    // remove anything that is not a letter, nubmer or space form, and transform all space forms to '_' 
+		    word = pattern.matcher(temp).replaceAll("");
 
 			// Create search query
 			

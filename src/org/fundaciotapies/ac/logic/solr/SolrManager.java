@@ -104,7 +104,8 @@ public class SolrManager {
 		try {
 			if (type.equals("date")) {
 				SimpleDateFormat df = new SimpleDateFormat(Cfg.DATE_FORMAT);
-				return df.parse(value).getTime()+"";
+				SimpleDateFormat df2 = new SimpleDateFormat("yyyyMMdd");
+				return df2.format(df.parse(value));
 			} else {
 				SimpleDateFormat df = new SimpleDateFormat(Cfg.DATE_FORMAT);
 				try {
@@ -171,7 +172,13 @@ public class SolrManager {
 						
 						// if current data path refers to this object class
 						// or is *, which refers to all 
-						if ("*".equals(currentClassName) || request.isSubclass(className, currentClassName)) {
+						List<String> allClassNames = classSuperClassesList.get(className);
+						if (allClassNames==null) { // save superclasses list on memory to avoid overloading virtusoso
+							allClassNames = request.listSuperClasses(className);
+							allClassNames.add(className);
+							classSuperClassesList.put(className, allClassNames);
+						}
+						if ("*".equals(currentClassName) || allClassNames.contains(currentClassName)) {
 							// get path value/s and put it in document indexing info.
 							String[] result = new Request().resolveModelPath(path, id, false, true, isMultilingual, true);
 							for (String r : result) {
@@ -326,18 +333,19 @@ public class SolrManager {
 		// Connect to Solr, service Update
 		URL url = new URL(Cfg.SOLR_URL + "update");
 	    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-	    conn.setRequestProperty("Content-Type", "application/xml");
+	    conn.setRequestProperty("Content-Type", "application/xml;charset=utf-8");
 	    conn.setRequestMethod("POST");
 
 	    // Feed hungry Solr with all the index
 	    conn.setDoOutput(true);
-	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+	    OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream(),"UTF8");
+	    //System.out.println(wr.getEncoding());
 	    wr.write(xml);
 	    wr.flush();
 	    wr.close();
 
 	    // Get the response
-	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+	    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream(),"UTF8"));
 	    String str;
 	    StringBuffer sb = new StringBuffer();
 	    while ((str = rd.readLine()) != null) {
@@ -528,6 +536,12 @@ public class SolrManager {
 		} else {
 			//fields  = sanitizeFields(fields);
 		}
+		if (filter!=null) {
+			filter = filter.trim();
+			if (filter.startsWith("(")) filter = filter.substring(1);
+			if (filter.endsWith(")")) filter = filter.substring(0,filter.length()-1);
+		}
+		
 		// Default value is id, because select the fields is a new functionality. 
 		if ("".equals(fields)) {
 			fields = "id";
@@ -573,7 +587,7 @@ public class SolrManager {
 						}
 					}
 					if (searchConf.getSort()!=null) {
-						if (sort!=null && !"".equals(sort)) sort = searchConf.getSort() + "," + sort;
+						if (sort!=null && !"".equals(sort)) sort = sort + "," + searchConf.getSort();
 						else sort = searchConf.getSort();
 					}
 					break;
@@ -583,7 +597,7 @@ public class SolrManager {
 		
 		if (searchValues==null) searchValues = new ArrayList<String>();
 		
-		if (filter!=null) {
+		if (filter!=null && !"".equals(filter)) {
 			String tmp[] = filter.split(",");
 			for (String f : tmp) searchValues.add(f.trim());
 		}
@@ -621,7 +635,7 @@ public class SolrManager {
 			}
 			
 			// use solr facets to build categories of fields marked as so 
-			if ("yes".equals(m.getCategory()) && ((categories != null && categories.contains(m.getName()+",")) || categories == null)) {
+			if ("yes".equals(m.getCategory()) && ((categories != null && (categories.contains(m.getName()+",") || categories.contains(","+m.getName()) || categories.equals(m.getName()))) || categories == null)) {
 				solrQuery2 += "&facet.field="+m.getName();
 				if ("yes".equals(m.getMultilingual())) solrQuery2 += "&f."+m.getName()+".facet.prefix=LANG"+lang+"__";		// if field is multilingual consider only current language  
 				if ("yes".equals(m.getSortCategory())) solrQuery2 += "&f."+m.getName()+".facet.sort=index";
