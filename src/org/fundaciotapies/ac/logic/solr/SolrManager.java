@@ -203,11 +203,16 @@ public class SolrManager {
 		// add statistics information using default fields: views, creation and lastView 
 		if (statistics != null) {
 			for (String[] stat : statistics) {
-				if (id.equals(stat[0])) {
-					doc.put("views", Long.parseLong(stat[1]));
-					doc.put("creation", Long.parseLong(stat[2]));
-					if (stat[3]!=null) doc.put("lastView", Long.parseLong(stat[3]));
-					break;
+				try {
+					if (id.equals(stat[0])) {
+						doc.put("views", Long.parseLong(stat[1]));
+						doc.put("creation", Long.parseLong(stat[2]));
+						if (stat[3]!=null) doc.put("lastView", Long.parseLong(stat[3]));
+						break;
+					}
+				} catch (Exception e) {
+					System.out.println(">>>>>>>>> " + stat[1] + " " + id );
+					throw e;
 				}
 			}
 		}

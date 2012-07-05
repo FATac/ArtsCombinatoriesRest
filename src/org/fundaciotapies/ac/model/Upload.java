@@ -449,14 +449,14 @@ public class Upload {
 			
 			// Update statistics for timespan indexing 
 			try {
-				if (uniqueId!=null) ResourceStatistics.creation(uniqueId);
+				if (uniqueId!=null) ResourceStatistics.update(uniqueId);
 			} catch (Exception e) {
 				log.warn("Could not create statistics for object " + uniqueId, e);
 			}
 			
 			for (String rId : relatedObjects) {
 				try {
-					if (rId!=null) ResourceStatistics.visit(rId);
+					if (rId!=null) ResourceStatistics.update(rId);
 				} catch (Exception e) {
 					log.warn("Could not create statistics for object " + rId, e);
 				}

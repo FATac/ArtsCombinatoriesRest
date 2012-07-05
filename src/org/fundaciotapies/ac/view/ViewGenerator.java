@@ -92,7 +92,7 @@ public class ViewGenerator {
 			String type = dm.getType();
 			if (dm.getPath()==null) continue;
 			if ("media".equals(type) && hideMedia) {
-				dm.setType("text");
+				dm.setType("forbidden");
 				dm.setName(null);
 				dm.setPath(null);
 				String msgForbidden = "(Per motius legals no es pot mostrar aquest contingut)";
@@ -439,7 +439,8 @@ public class ViewGenerator {
 			
 			int userLegalLevel = new Request().getUserLegalLevel(uid);
 			if (right.getRightLevel() !=null && right.getRightLevel() > userLegalLevel && !"".equals(uid)) {
-				f = new File(Cfg.MEDIA_PATH + "forbidden_thumbnail.jpg");
+				f = new File(Cfg.MEDIA_PATH + "forbidden_thumbnail.png");
+				if (!f.exists()) f = new File(Cfg.MEDIA_PATH + "forbidden_thumbnail.jpg");
 			} else {
 				f = new File(Cfg.MEDIA_PATH + "thumbnails/" + id + ".jpg");
 			}

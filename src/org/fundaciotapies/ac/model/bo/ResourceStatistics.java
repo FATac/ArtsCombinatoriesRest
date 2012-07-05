@@ -92,6 +92,37 @@ public class ResourceStatistics implements Serializable {
 		}   
 	}
 	
+	public static void update(String identifier) throws Exception {
+		VirtuosoConnection conn = null;
+		PreparedStatement stmt = null;
+		
+		try {
+		    VirtuosoConnectionPoolDataSource ds = new VirtuosoConnectionPoolDataSource();
+		    String[] serverPort = Cfg.getRdfDatabaseHostPort(); 
+		    ds.setServerName(serverPort[0]);
+		    ds.setPortNumber(Integer.parseInt(serverPort[1]));
+		    ds.setUser(Cfg.RDFDB_USER);
+		    ds.setPassword(Cfg.RDFDB_PASS);
+		    VirtuosoPooledConnection pooledConnection = (VirtuosoPooledConnection) ds.getPooledConnection();
+		    conn = pooledConnection.getVirtuosoConnection();
+		      
+		    String sql = "UPDATE _resource_statistics SET creationMoment = ? WHERE identifier = ? ";
+		    stmt = conn.prepareStatement(sql);
+		    	  
+		    stmt.setLong(1, Calendar.getInstance().getTimeInMillis());
+		    stmt.setString(2, identifier);
+		      
+		    stmt.executeUpdate();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			try {
+				if (stmt!=null) stmt.close();
+				if (conn!=null) conn.close();
+			} catch (Exception e) { throw e; }
+		}   
+	}
+	
 	public static void deletion(String identifier) throws Exception {
 		VirtuosoConnection conn = null;
 		PreparedStatement stmt = null;
