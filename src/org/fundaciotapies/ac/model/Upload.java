@@ -514,15 +514,11 @@ public class Upload {
 
 	public void fixIds(String x) {
 		
-		
 		try {
 			// Connect to rdf server
 			model = ModelUtil.getModel();
-
-			// Create search query
-			String filter = " . FILTER regex(?"+x+",\"ArtsCombinatoriesRest/resource/_\") ";
 			
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT DISTINCT ?"+x+" FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + filter + " } ", model);
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT ?id <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?id rdf:type "+x+" } ", model);
 			ResultSet rs = vqe.execSelect();
 			
 			script = new ArrayList<String>();
@@ -530,33 +526,14 @@ public class Upload {
 			while (rs.hasNext()) {
 				QuerySolution r = rs.next();
 				
-				String currentUri = r.get(x).asResource().toString();
-				String fixedUri = currentUri.replace("ArtsCombinatoriesRest/resource/_", "ArtsCombinatoriesRest/resource/u_"); 
+				String currentUri = r.get("id").asResource().getLocalName();
 				
-				if (x.equals("s"))
-					script.add("MODIFY <" + Cfg.RESOURCE_URI_NS + "> DELETE { <" + currentUri + "> ?p ?o } INSERT { <" + fixedUri + "> ?p ?o } WHERE { <" + currentUri + "> ?p ?o } ");
-				else
-					script.add("MODIFY <" + Cfg.RESOURCE_URI_NS + "> DELETE { ?s ?p <" + currentUri + "> } INSERT { ?s ?p <" + fixedUri + "> } WHERE { ?s ?p <" + currentUri + "> } ");
-					
+				Right g = new Right();
+				g.setObjectId(currentUri);
+				g.setRightLevel(4);
+				g.saveUpdate();
 			}
 			
-			for (String s : script) System.out.println(s);
-			
-			/*
-
-			Command c = new Command() {
-				@Override
-				public Object execute() {
-					for (String s : script)
-						VirtuosoUpdateFactory.create(s, ((VirtGraph)(model.getGraph()))).exec();
-					return null;
-				}
-			};
-			
-			vth = new VirtTransactionHandler((VirtGraph)model.getGraph());
-			vth.begin();
-			vth.executeInTransaction(c);
-			vth.commit(); */
 		} catch (Throwable e) {
 			log.error("Error ", e);
 		}

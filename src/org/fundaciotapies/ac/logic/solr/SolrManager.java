@@ -68,7 +68,7 @@ public class SolrManager {
 		for(DataMapping m : mapping.getData()) {
 			if ("class,id,views,lastView,creation".contains(m.getName())) continue;
 			String type = "string";
-			if ("date.year".equals(m.getType())) type = "int";								// TODO: add more types
+			if (m.getType().startsWith("date")) type = "int";								// TODO: add more types
 			if ("text".equals(m.getType())) type = "text_general";
 			if ("yes".equals(m.getSort()))	// sort fields must be single-value to allow sorting
 				sb.append("	<field name=\""+m.getName()+"\" type=\""+type+"\" indexed=\"true\" stored=\"true\" multiValued=\"false\" /> \n");
@@ -103,9 +103,18 @@ public class SolrManager {
 	private String extractDatePart(String value, String type) {
 		try {
 			if (type.equals("date")) {
-				SimpleDateFormat df = new SimpleDateFormat(Cfg.DATE_FORMAT);
-				SimpleDateFormat df2 = new SimpleDateFormat("yyyyMMdd");
-				return df2.format(df.parse(value));
+				if (value.length() == Cfg.DATE_FORMAT.length()) {
+					SimpleDateFormat df = new SimpleDateFormat(Cfg.DATE_FORMAT);
+					SimpleDateFormat df2 = new SimpleDateFormat("yyyyMMdd");
+					return df2.format(df.parse(value));
+				} else if (value.length() == Cfg.YEAR_FORMAT.length()) {
+					SimpleDateFormat df = new SimpleDateFormat(Cfg.YEAR_FORMAT);
+					df.parse(value);
+					return value;
+				} else {
+					log.warn("Value '"+value+"' not valid for data type: " + type + ". Please check format in Configuration.");
+					return null;
+				}
 			} else {
 				SimpleDateFormat df = new SimpleDateFormat(Cfg.DATE_FORMAT);
 				try {
@@ -184,6 +193,7 @@ public class SolrManager {
 							for (String r : result) {
 								if (m.getType().startsWith("date") && r!=null) r = extractDatePart(r, m.getType());
 								if (r!=null) {
+									if ("yes".equals(m.getCategory())) r = r.replace('"', ' ').replace(',', ' ').replace(':', ' ');
 									doc.put(m.getName(), r);
 									if ("yes".equals(m.getSort())) break; // if it is a sort field, we want no more than 1 value
 								}

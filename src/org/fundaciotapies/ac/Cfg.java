@@ -65,7 +65,7 @@ public class Cfg {
 	
 	
 	public static String fromNamespaceToPrefix(String namespace) {
-		if ("http://www.w3.org/2001/XMLSchema#".equals(namespace)) return "";
+		if ("http://www.w3.org/2001/XMLSchema#".equals(namespace) || namespace == null) return "";
 		for(int i=0;i<ONTOLOGY_NAMESPACES.length;i+=2) {
 			if (ONTOLOGY_NAMESPACES[i].equals(namespace)) return ONTOLOGY_NAMESPACES[i+1] + ":"; 
 		}

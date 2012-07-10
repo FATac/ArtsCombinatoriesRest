@@ -70,7 +70,7 @@ public class Request {
 	 * User level is determined by USER_LEVEL property of Configuration
 	 */
 	public int getUserLegalLevel(String userId) {
-		
+				
 		if (userId==null) return 1;
 		if (!Cfg.USER_ROLE_SERVICE_AVAILABLE) return 1;
 		
@@ -729,7 +729,7 @@ public class Request {
 	}
 	
 	/* Full model search */
-	public Map<String, CustomMap> search(String word, String className, String color, String userId) {
+	public Map<String, CustomMap> search(String word, String className, String color, String page, String userId) {
 		if ("".equals(color)) color = null;
 		Map<String, CustomMap> result = new TreeMap<String, CustomMap>();
 		
@@ -771,9 +771,14 @@ public class Request {
 				}
 				
 				filter = filter.substring(0, filter.length()-6);
+			}			  
+			 
+			String pagination = "";
+			if (page!=null && !"".equals(page)) {
+				int tmpPage = Integer.parseInt(page);
+				pagination = " limit 1000 offset " + tmpPage*1000  ;
 			}
-			
-			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + qc + filter + " } LIMIT 5000 ", model);
+			QueryExecution vqe = VirtuosoQueryExecutionFactory.create("SELECT * FROM <" + Cfg.RESOURCE_URI_NS + "> WHERE { ?s ?p ?o " + qc + filter + " } " + pagination, model);
 
 			ResultSet rs = vqe.execSelect();
 			
@@ -783,6 +788,8 @@ public class Request {
 			
 			// Get results (triples) and structure them in a 3 dimension map (object name - property name - property value)
 			while (rs.hasNext()) {
+
+
 				QuerySolution r = rs.next();
 				
 				currentId = r.get("s").asResource().getLocalName();
