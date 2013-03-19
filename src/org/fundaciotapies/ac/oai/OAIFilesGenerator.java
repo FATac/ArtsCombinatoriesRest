@@ -45,6 +45,7 @@ public class OAIFilesGenerator {
 		documents.put(id, doc);
 	}
 	
+	
 	public void generate() throws Exception {
 		documents = new HashMap<String, CustomMap>();
 		
