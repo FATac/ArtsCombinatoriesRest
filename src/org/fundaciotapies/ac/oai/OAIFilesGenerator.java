@@ -84,12 +84,12 @@ public class OAIFilesGenerator {
 				Object val = ent2.getValue();
 				if (val instanceof String) {
 					fw.write("<"+mapping.getXmlPrefix()+":"+name+">");
-					fw.write(val+"");
+					fw.write("<![CDATA["+val+"]]>");
 					fw.write("</"+mapping.getXmlPrefix()+":"+name+">\n");
 				} else if (val instanceof String[]) {
 					for(String v : (String[])val) {
 						fw.write("<"+mapping.getXmlPrefix()+":"+name+">");
-						fw.write(v+"");
+						fw.write("<![CDATA["+v+"]]>");
 						fw.write("</"+mapping.getXmlPrefix()+":"+name+">\n");
 					}
 				}
