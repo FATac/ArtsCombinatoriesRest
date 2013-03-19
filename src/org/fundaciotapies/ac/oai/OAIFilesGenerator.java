@@ -70,6 +70,7 @@ public class OAIFilesGenerator {
 			for(String id : list) createDocumentEntry(id, className, mapping);
 		}
 		
+		
 		for(Map.Entry<String, CustomMap> ent1 : documents.entrySet()) {
 			String id = ent1.getKey();
 			CustomMap doc = ent1.getValue();
