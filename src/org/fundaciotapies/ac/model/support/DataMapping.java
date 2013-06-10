@@ -16,6 +16,7 @@ public class DataMapping {
 	private List<String> filter;
 	private String sortCategory;
 	private List<String> sortFields;
+	private Integer order;
 	
 	public String getName() {
 		return name;
@@ -89,4 +90,11 @@ public class DataMapping {
 	public List<String> getSortFields() {
 		return sortFields;
 	}
+	public Integer getOrder() {
+		return order;
+	}
+	public void setOrder(Integer order) {
+		this.order = order;
+	}
+	
 }

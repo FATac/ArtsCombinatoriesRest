@@ -22,19 +22,23 @@ public class OAIFilesGenerator {
 	
 	public Map<String, CustomMap> documents = null;
 	
-	public void createDocumentEntry(String id, String className, Mapping mapping) {
-		CustomMap doc = documents.get(id);
-		if (doc==null) doc = new CustomMap();
+	private void createDocumentEntry(String id, String className, Mapping mapping) {
+		CustomMap document = documents.get(id);
+		if (document==null){
+			document = new CustomMap();
+		}
 		
-		for(DataMapping m : mapping.getData()) {
-			if (doc.get(m.getName())==null) {
-				if (m.getPath()!=null) {
-					for (String path : m.getPath()) {
+		for(DataMapping dataMapping : mapping.getData()) {
+			if (document.get(dataMapping.getName())==null) {
+				if (dataMapping.getPath()!=null) {
+					for (String path : dataMapping.getPath()) {
 						String currentClassName = path.split(Cfg.PATH_PROPERTY_PREFIX)[0].trim();
 						if (className.equals(currentClassName) || "*".equals(currentClassName)) {
 							String[] result = new Request().resolveModelPath(path, id, false, true, false, true);
-							for (String r : result) {
-								if (r!=null) doc.put(m.getName(), r);
+							for (String resultString : result) {
+								if (resultString!=null){
+									document.put(dataMapping.getName(), resultString);
+								}
 							}
 						}
 					}
@@ -42,7 +46,7 @@ public class OAIFilesGenerator {
 			}
 		}
 		
-		documents.put(id, doc);
+		documents.put(id, document);
 	}
 	
 	
@@ -61,35 +65,39 @@ public class OAIFilesGenerator {
 			if (m.getPath()!=null) {
 				for (String path : m.getPath()) {
 					String className = path.split(Cfg.PATH_PROPERTY_PREFIX)[0].trim();
-					if (!"*".equals(className) && !objectTypesIndexed.contains(className))	objectTypesIndexed.add(className);
+					if (!"*".equals(className) && !objectTypesIndexed.contains(className)){
+						objectTypesIndexed.add(className);
+					}
 				}
 			}
 		}
 		
 		for(String className : objectTypesIndexed) {
 			List<String> list = request.listObjectsId(className);
-			for(String id : list) createDocumentEntry(id, className, mapping);
+			for(String id : list){
+				createDocumentEntry(id, className, mapping);
+			}
 		}
 		
 		
-		for(Map.Entry<String, CustomMap> ent1 : documents.entrySet()) {
-			String id = ent1.getKey();
-			CustomMap doc = ent1.getValue();
+		for(Map.Entry<String, CustomMap> entry : documents.entrySet()) {
+			String id = entry.getKey();
+			CustomMap document = entry.getValue();
 			
 			File f = new File(Cfg.OAI_PATH + id + ".xml");
 			FileWriter fw = new FileWriter(f);
 			fw.write("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
 			fw.write(mapping.getXmlHeader()+"\n");
 			
-			for(Map.Entry<String, Object> ent2 : doc.entrySet()) {
-				String name = ent2.getKey();
-				Object val = ent2.getValue();
-				if (val instanceof String) {
+			for(Map.Entry<String, Object> otherEntry : document.entrySet()) {
+				String name = otherEntry.getKey();
+				Object value = otherEntry.getValue();
+				if (value instanceof String) {
 					fw.write("<"+mapping.getXmlPrefix()+":"+name+">");
-					fw.write("<![CDATA["+val+"]]>");
+					fw.write("<![CDATA["+value+"]]>");
 					fw.write("</"+mapping.getXmlPrefix()+":"+name+">\n");
-				} else if (val instanceof String[]) {
-					for(String v : (String[])val) {
+				} else if (value instanceof String[]) {
+					for(String v : (String[])value) {
 						fw.write("<"+mapping.getXmlPrefix()+":"+name+">");
 						fw.write("<![CDATA["+v+"]]>");
 						fw.write("</"+mapping.getXmlPrefix()+":"+name+">\n");
