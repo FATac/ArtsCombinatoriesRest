@@ -1,0 +1,41 @@
+{
+    "__comment_0":"Mixed config",
+
+        "THUMBNAIL_WIDTH":210,
+        "THUMBNAIL_HEIGHT":210,
+        "MEDIA_PROFILES_DESCRIPTION":["320p","640p","1280p","128kbps"],
+        "MEDIA_CONVERSION_PROFILES":["avi mov mpeg ogv", "avi mov mpeg ogv", "avi mov mpeg ogv", "wma mp3 aif"],
+        "MEDIA_AUTOCONVERT":"true",
+        "LANGUAGE_LIST":["ca", "en", "es", "fr", "it", "de"],
+        "USER_LEVEL":["*", "Reviewer", "Reviewer", "Manager"],
+	"DATE_FORMAT":"dd-MM-yyyy",
+
+        "__comment_1":"Services base URLs and connection strings",
+
+        "RDFDB_URL":"jdbc:virtuoso://montfalgars.upc.edu:1111",
+        "RDFDB_USER":"dba",
+        "RDFDB_PASS":"npoLidT8",
+        "MEDIA_URL":"http://montfalgars.upc.edu:3000/",
+        "SOLR_URL":"http://montfalgars.upc.edu:8080/solr/",
+        "VIDEO_SERVICES_URL":"http://montfalgars.upc.edu:8080/TapiesWebServices/rest/",
+        "USER_ROLE_SERVICE_URL":"http://montmajor.upc.edu:8084/fatac/@@retornaUserRoles?uid=",
+
+        "__comment_2":"Ontology namespaces (After any change, all existing triples must be fixed)",
+
+        "RESOURCE_URI_NS":"http://montfalgars.upc.edu:8080/ArtsCombinatoriesRest/resource/",
+        "RESOURCE_PREFIX":"ac_res",
+        "ONTOLOGY_NAMESPACES":[
+                "http://localhost:8080/ArtsCombinatoriesRest/ontology/ac#", "ac",
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#", "rdf",
+                "http://www.w3.org/2000/01/rdf-schema#", "rdfs",
+                "http://www.w3.org/2002/07/owl#", "owl"
+        ],
+
+        "__comment_3":"File system paths",
+
+        "CONFIGURATIONS_PATH":"/var/plone/artscombinatories/config/",
+        "SOLR_PATH":"/var/plone/fatac.buildout/servers/tomcat/apache-tomcat-7.0.23/solr/",
+        "MEDIA_PATH":"/var/plone/artscombinatories/media/",
+        "ONTOLOGY_PATH":"/var/plone/artscombinatories/ac.owl",
+        "OAI_PATH":"/var/plone/fatac.buildout/servers/tomcat/apache-tomcat-7.0.23/webapps/oaicat/WEB-INF/META/"
+}

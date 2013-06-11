@@ -108,7 +108,7 @@ public class Cfg {
 			log.info(">>>>>>>>>>>>>>>> LOADING CONFIGURATION <<<<<<<<<<<<<<< (current dir: " + canonicalPath + ")");
 			
 			File f = new File("config.json");
-			if (!f.exists()) throw new Exception("Could not find confing.json in current path: " + canonicalPath);
+			if (!f.exists()) throw new Exception("Could not find config.json in current path: " + canonicalPath);
 			
 			ObjectMapper m = new ObjectMapper();
 			JsonNode jsonConfig = m.readValue(new File("config.json"), JsonNode.class);

@@ -17,6 +17,7 @@ public class DataMapping {
 	private String sortCategory;
 	private List<String> sortFields;
 	private Integer order;
+	private String description;
 	
 	public String getName() {
 		return name;
@@ -96,5 +97,12 @@ public class DataMapping {
 	public void setOrder(Integer order) {
 		this.order = order;
 	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	
 	
 }
