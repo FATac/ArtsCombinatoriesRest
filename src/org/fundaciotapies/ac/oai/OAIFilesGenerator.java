@@ -8,31 +8,45 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.Request;
-import org.fundaciotapies.ac.model.support.CustomMap;
 import org.fundaciotapies.ac.model.support.DataMapping;
 import org.fundaciotapies.ac.model.support.Mapping;
+import org.fundaciotapies.ac.model.support.OrderedName;
+import org.fundaciotapies.ac.model.support.OrderedNameComparator;
+import org.fundaciotapies.ac.model.support.StringListHashMap;
+
+import static org.fundaciotapies.ac.model.support.StringListHashMap.convertToArrayList;
 
 import com.google.gson.Gson;
 
 public class OAIFilesGenerator {
 
-	private Map<String, CustomMap> createDocumentEntry(String id,
-			String className, Mapping mapping, Map<String, CustomMap> documents) {
-		CustomMap document = documents.get(id);
+	/**
+	 * Creates a new document with all the descriptions and path values
+	 * 
+	 * @param id
+	 * @param className
+	 * @param mapping
+	 * @param documents
+	 * @return
+	 */
+	private Map<String, StringListHashMap<OrderedName>> createDocumentEntry(String id,
+			String className, Mapping mapping, Map<String, StringListHashMap<OrderedName>> documents) {
+		StringListHashMap<OrderedName> document = documents.get(id);
 		if (document == null) {
-			document = new CustomMap();
+			document = new StringListHashMap<OrderedName>();
 		}
-		
-		int temporalCounter = 0;
 
 		for (DataMapping dataMapping : mapping.getData()) {
 			if (document.get(dataMapping.getName()) == null) {
@@ -51,17 +65,38 @@ public class OAIFilesGenerator {
 					addAllPathsToDocument(id, className, document, dataMapping);
 				} 
 			}
-			if (temporalCounter++ >= 50){
-				break;
-			}
 		}
 
 		documents.put(id, document);
 		return documents;
 	}
 
+	/**
+	 * Formats a description with the path info
+	 * 
+	 * @param id
+	 * @param className
+	 * @param document
+	 * @param dataMapping
+	 */
 	private void addFormattedDescriptionWithPath(String id, String className,
-			CustomMap document, DataMapping dataMapping) {
+			StringListHashMap<OrderedName> document, DataMapping dataMapping) {
+		List<String> allResults = obtainPathValues(id, className, dataMapping);
+		String descriptionFormatted = MessageFormat.format(dataMapping.getDescription(), allResults.toArray());
+		System.out.println("DEPA=> " + dataMapping.getName() + ": " + descriptionFormatted);
+		putInDocument(document, dataMapping, descriptionFormatted);
+	}
+
+	/**
+	 * Obtains the path values from Virtuoso
+	 * 
+	 * @param id
+	 * @param className
+	 * @param dataMapping
+	 * @return
+	 */
+	private List<String> obtainPathValues(String id, String className,
+			DataMapping dataMapping) {
 		List<String> allResults = new ArrayList<String>();
 		for (String path : dataMapping.getPath()) {
 			String currentClassName = path
@@ -73,42 +108,66 @@ public class OAIFilesGenerator {
 				allResults.addAll(Arrays.asList(result));
 			}
 		}
-		String descriptionFormatted = MessageFormat.format(dataMapping.getDescription(), allResults.toArray());
-		System.out.println("DEPA=> " + dataMapping.getName() + ": " + descriptionFormatted);
-		document.put(dataMapping.getName(), descriptionFormatted);
+		return allResults;
 	}
 
-	private void addDescriptionToDocument(CustomMap document,
+	/**
+	 * Adds a new String to the document
+	 * 
+	 * @param document
+	 * @param dataMapping
+	 * @param mapValue
+	 */
+	private void putInDocument(StringListHashMap<OrderedName> document,
+			DataMapping dataMapping, String mapValue) {
+		document.put(new OrderedName(dataMapping.getName(), dataMapping.getOrder()), convertToArrayList(mapValue));
+	}
+
+	/**
+	 * Used when the mode is description
+	 * 
+	 * @param document
+	 * @param dataMapping
+	 */
+	private void addDescriptionToDocument(StringListHashMap<OrderedName> document,
 			DataMapping dataMapping) {
 		System.out.println("DESC=> " + dataMapping.getName() + ": " + dataMapping.getDescription());
-		document.put(dataMapping.getName(),
-				dataMapping.getDescription());
+		putInDocument(document, dataMapping, dataMapping.getDescription());
 	}
 
+	/**
+	 * Adds all non-null paths to the document.
+	 * 
+	 * If all are null, do not add them.
+	 * 
+	 * @param id
+	 * @param className
+	 * @param document
+	 * @param dataMapping
+	 */
 	private void addAllPathsToDocument(String id, String className,
-			CustomMap document, DataMapping dataMapping) {
-		for (String path : dataMapping.getPath()) {
-			String currentClassName = path
-					.split(Cfg.PATH_PROPERTY_PREFIX)[0].trim();
-			if (isCurrentClassNameOrWildcard(className,
-					currentClassName)) {
-				String[] result = new Request().resolveModelPath(
-						path, id, false, true, false, true);
-				addResultsToDocument(document, dataMapping,
-						result);
-			}
+			StringListHashMap<OrderedName> document, DataMapping dataMapping) {
+		List<String> allResults = obtainPathValues(id, className, dataMapping);
+		ArrayList<String> notNullResults = new ArrayList<String>();
+		CollectionUtils.select(allResults, notNullPredicate(), notNullResults);
+		if (!notNullResults.isEmpty()){
+			System.out.println("PATH=> " + dataMapping.getName() + ": " + notNullResults);
+			document.put(new OrderedName(dataMapping.getName(), dataMapping.getOrder()), notNullResults);
 		}
 	}
 
-	private void addResultsToDocument(CustomMap document,
-			DataMapping dataMapping, String[] result) {
-		for (String resultString : result) {
-			if (resultString != null) {
-				System.out.println("PATH=> " + dataMapping.getName() + ": " + resultString);
-				document.put(dataMapping.getName(),
-						resultString);
+	/**
+	 * Selects elements which aren't null
+	 * @return
+	 */
+	private Predicate notNullPredicate() {
+		return new Predicate() {
+			
+			@Override
+			public boolean evaluate(Object elementInList) {
+				return elementInList != null;
 			}
-		}
+		};
 	}
 
 	private boolean isCurrentClassNameOrWildcard(String className,
@@ -125,8 +184,13 @@ public class OAIFilesGenerator {
 		return dataMapping.getDescription() != null;
 	}
 
+	/**
+	 * Generate the XML files for the given mapping
+	 * 
+	 * @throws Exception
+	 */
 	public void generate() throws Exception {
-		Map<String, CustomMap> documents = new HashMap<String, CustomMap>();
+		Map<String, StringListHashMap<OrderedName>> documents = new HashMap<String, StringListHashMap<OrderedName>>();
 
 		Request request = new Request();
 		BufferedReader fin = new BufferedReader(new FileReader(
@@ -173,43 +237,55 @@ public class OAIFilesGenerator {
 				&& !objectTypesIndexed.contains(className);
 	}
 
-	private void writeXmlFile(Map<String, CustomMap> documents, Mapping mapping)
+	/**
+	 * Writes the XML file
+	 * 
+	 * @param documents
+	 * @param mapping
+	 * @throws IOException
+	 */
+	private void writeXmlFile(Map<String, StringListHashMap<OrderedName>> documents, Mapping mapping)
 			throws IOException {
-		for (Map.Entry<String, CustomMap> entry : documents.entrySet()) {
+		int temporalCounter = 0;
+		for (Map.Entry<String, StringListHashMap<OrderedName>> entry : documents.entrySet()) {
 			String id = entry.getKey();
-			CustomMap document = entry.getValue();
+			StringListHashMap<OrderedName> document = entry.getValue();
 
 			File f = new File(
 			// Cfg.OAI_PATH
 					"/opt/tapies/oai" + id + ".xml");
 			FileWriter fw = new FileWriter(f);
 			writeXmlHeader(fw, mapping);
+			
+			List<OrderedName> entries = new ArrayList<OrderedName>(document.keySet());
+			System.out.println("unsorted: " + entries);
+			Collections.sort(entries, new OrderedNameComparator());
+			System.out.println("sorted: " + entries);
 
-			for (Map.Entry<String, Object> otherEntry : document.entrySet()) {
-				String name = otherEntry.getKey();
-				Object value = otherEntry.getValue();
-				writeXmlValueTag(mapping, fw, name, value);
+			for (OrderedName documentKey: entries) {
+				ArrayList<String> values = document.get(documentKey);
+				writeXmlValueTag(mapping, fw, documentKey.getName(), values);
 			}
 
 			writeXmlFooter(fw, mapping);
 			fw.close();
+			
+			if (temporalCounter++ >= 50){
+				break;
+			}
 		}
 	}
 
 	private void writeXmlValueTag(Mapping mapping, FileWriter fw, String name,
-			Object value) throws IOException {
+			List<String> values) throws IOException {
 		String xmlTag;
 		if (StringUtils.isNotBlank(mapping.getXmlPrefix())) {
 			xmlTag = mapping.getXmlPrefix() + ":" + name;
 		} else {
 			xmlTag = name;
 		}
-		if (value instanceof String) {
-			writeXmlLine(fw, (String) value, xmlTag);
-		} else if (value instanceof String[]) {
-			for (String v : (String[]) value) {
-				writeXmlLine(fw, v, xmlTag);
-			}
+		for (String value : values) {
+			writeXmlLine(fw, value, xmlTag);
 		}
 	}
 
