@@ -246,7 +246,6 @@ public class OAIFilesGenerator {
 	 */
 	private void writeXmlFile(Map<String, StringListHashMap<OrderedName>> documents, Mapping mapping)
 			throws IOException {
-		int temporalCounter = 0;
 		for (Map.Entry<String, StringListHashMap<OrderedName>> entry : documents.entrySet()) {
 			String id = entry.getKey();
 			StringListHashMap<OrderedName> document = entry.getValue();
@@ -269,10 +268,6 @@ public class OAIFilesGenerator {
 
 			writeXmlFooter(fw, mapping);
 			fw.close();
-			
-			if (temporalCounter++ >= 50){
-				break;
-			}
 		}
 	}
 

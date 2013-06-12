@@ -13,14 +13,14 @@ import org.junit.runners.JUnit4;
 public class TestOrderedName {
 
 	/**
-	 * Checks if two OrderedName are equal, irrespective of their order
+	 * Checks if two OrderedName are equal
 	 * @throws Exception
 	 */
 	@Test
 	public void testTwoOrderedNamesAreEqual() throws Exception{
 		OrderedName name = new OrderedName("name", 3);
 		
-		OrderedName otherName = new OrderedName("name", 5);
+		OrderedName otherName = new OrderedName("name", 3);
 		
 		assertThat(name, is(equalTo(otherName)));
 		assertThat(name.hashCode(), is(equalTo(otherName.hashCode())));
@@ -31,10 +31,24 @@ public class TestOrderedName {
 	 * @throws Exception
 	 */
 	@Test
-	public void testTwoOrderedNamesAreDifferent() throws Exception{
+	public void testTwoOrderedNamesAreDifferentByName() throws Exception{
 		OrderedName name = new OrderedName("name", 3);
 		
-		OrderedName otherName = new OrderedName("differentName", 5);
+		OrderedName otherName = new OrderedName("differentName", 3);
+		
+		assertThat(name, is(not(equalTo(otherName))));
+		assertThat(name.hashCode(), is(not(equalTo(otherName.hashCode()))));
+	}
+	
+	/**
+	 * Two OrderedName should be different if the order differs
+	 * @throws Exception
+	 */
+	@Test
+	public void testTwoOrderedNamesAreDifferentByOrder() throws Exception{
+		OrderedName name = new OrderedName("name", 3);
+		
+		OrderedName otherName = new OrderedName("name", 5);
 		
 		assertThat(name, is(not(equalTo(otherName))));
 		assertThat(name.hashCode(), is(not(equalTo(otherName.hashCode()))));
