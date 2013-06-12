@@ -2,3 +2,7 @@ build/*
 /build
 /logs
 /target
+.classpath
+.project
+.pydevproject
+/.settings
