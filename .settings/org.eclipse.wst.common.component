@@ -3,6 +3,7 @@
     <wb-module deploy-name="ArtsCombinatoriesRest">
         <wb-resource deploy-path="/" source-path="/WebContent"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/test"/>
         <property name="context-root" value="ArtsCombinatoriesRest"/>
         <property name="java-output-path" value="/ArtsCombinatoriesRest/build/classes"/>
     </wb-module>

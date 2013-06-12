@@ -231,8 +231,4 @@ public class OAIFilesGenerator {
 		fw.write("</" + xmlTag + ">\n");
 	}
 
-	public static void main(String[] args) throws Exception {
-		new OAIFilesGenerator().generate();
-	}
-
 }
