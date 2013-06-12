@@ -83,7 +83,6 @@ public class OAIFilesGenerator {
 			StringListHashMap<OrderedName> document, DataMapping dataMapping) {
 		List<String> allResults = obtainPathValues(id, className, dataMapping);
 		String descriptionFormatted = MessageFormat.format(dataMapping.getDescription(), allResults.toArray());
-		System.out.println("DEPA=> " + dataMapping.getName() + ": " + descriptionFormatted);
 		putInDocument(document, dataMapping, descriptionFormatted);
 	}
 
@@ -131,7 +130,6 @@ public class OAIFilesGenerator {
 	 */
 	private void addDescriptionToDocument(StringListHashMap<OrderedName> document,
 			DataMapping dataMapping) {
-		System.out.println("DESC=> " + dataMapping.getName() + ": " + dataMapping.getDescription());
 		putInDocument(document, dataMapping, dataMapping.getDescription());
 	}
 
@@ -151,7 +149,6 @@ public class OAIFilesGenerator {
 		ArrayList<String> notNullResults = new ArrayList<String>();
 		CollectionUtils.select(allResults, notNullPredicate(), notNullResults);
 		if (!notNullResults.isEmpty()){
-			System.out.println("PATH=> " + dataMapping.getName() + ": " + notNullResults);
 			document.put(new OrderedName(dataMapping.getName(), dataMapping.getOrder()), notNullResults);
 		}
 	}
@@ -194,8 +191,7 @@ public class OAIFilesGenerator {
 
 		Request request = new Request();
 		BufferedReader fin = new BufferedReader(new FileReader(
-		// Cfg.CONFIGURATIONS_PATH
-				"/opt/tapies/config/" + "mapping/oai-mapping.json"));
+		 Cfg.CONFIGURATIONS_PATH  + "mapping/oai-mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		fin.close();
 
@@ -204,7 +200,6 @@ public class OAIFilesGenerator {
 		for (DataMapping m : mapping.getData()) {
 			if (pathExistsOnMapping(m)) {
 				for (String path : m.getPath()) {
-					System.out.println(path);
 					String className = path.split(Cfg.PATH_PROPERTY_PREFIX)[0]
 							.trim();
 					if (classNameIsNotIndexed(objectTypesIndexed, className)) {
@@ -214,9 +209,7 @@ public class OAIFilesGenerator {
 			}
 		}
 
-		System.out.println("bucle indexed");
 		for (String className : objectTypesIndexed) {
-			System.out.println(className);
 			List<String> list = request.listObjectsId(className);
 			for (String id : list) {
 				documents = createDocumentEntry(id, className, mapping,
@@ -251,15 +244,12 @@ public class OAIFilesGenerator {
 			StringListHashMap<OrderedName> document = entry.getValue();
 
 			File f = new File(
-			// Cfg.OAI_PATH
-					"/opt/tapies/oai" + id + ".xml");
+			 Cfg.OAI_PATH + id + ".xml");
 			FileWriter fw = new FileWriter(f);
 			writeXmlHeader(fw, mapping);
 			
 			List<OrderedName> entries = new ArrayList<OrderedName>(document.keySet());
-			System.out.println("unsorted: " + entries);
 			Collections.sort(entries, new OrderedNameComparator());
-			System.out.println("sorted: " + entries);
 
 			for (OrderedName documentKey: entries) {
 				ArrayList<String> values = document.get(documentKey);
