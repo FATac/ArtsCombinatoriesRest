@@ -1,5 +1,7 @@
 package org.fundaciotapies.ac.oai;
 
+import static org.fundaciotapies.ac.model.support.StringListHashMap.convertToArrayList;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -18,6 +20,7 @@ import java.util.TreeSet;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.fundaciotapies.ac.Cfg;
 import org.fundaciotapies.ac.model.Request;
 import org.fundaciotapies.ac.model.support.DataMapping;
@@ -26,11 +29,11 @@ import org.fundaciotapies.ac.model.support.OrderedName;
 import org.fundaciotapies.ac.model.support.OrderedNameComparator;
 import org.fundaciotapies.ac.model.support.StringListHashMap;
 
-import static org.fundaciotapies.ac.model.support.StringListHashMap.convertToArrayList;
-
 import com.google.gson.Gson;
 
 public class OAIFilesGenerator {
+	
+	private static final Logger log = Logger.getLogger(OAIFilesGenerator.class);
 
 	/**
 	 * Creates a new document with all the descriptions and path values
@@ -44,6 +47,7 @@ public class OAIFilesGenerator {
 	private Map<String, StringListHashMap<OrderedName>> createDocumentEntry(String id,
 			String className, Mapping mapping, Map<String, StringListHashMap<OrderedName>> documents) {
 		StringListHashMap<OrderedName> document = documents.get(id);
+		log.debug("[" + id + "]: Creant document");
 		if (document == null) {
 			document = new StringListHashMap<OrderedName>();
 		}
@@ -68,6 +72,7 @@ public class OAIFilesGenerator {
 		}
 
 		documents.put(id, document);
+		log.debug("[" + id + "]: Document creat");
 		return documents;
 	}
 
@@ -100,11 +105,14 @@ public class OAIFilesGenerator {
 		for (String path : dataMapping.getPath()) {
 			String currentClassName = path
 					.split(Cfg.PATH_PROPERTY_PREFIX)[0].trim();
+			log.debug("path: " + path);
 			if (isCurrentClassNameOrWildcard(className,
 					currentClassName)) {
 				String[] result = new Request().resolveModelPath(
 						path, id, false, true, false, true);
-				allResults.addAll(Arrays.asList(result));
+				List<String> resultList = Arrays.asList(result);
+				log.debug("result: " + resultList);
+				allResults.addAll(resultList);
 			}
 		}
 		return allResults;
@@ -119,6 +127,7 @@ public class OAIFilesGenerator {
 	 */
 	private void putInDocument(StringListHashMap<OrderedName> document,
 			DataMapping dataMapping, String mapValue) {
+		log.debug(" + " + dataMapping.getName() + ": " + mapValue);
 		document.put(new OrderedName(dataMapping.getName(), dataMapping.getOrder()), convertToArrayList(mapValue));
 	}
 
@@ -146,6 +155,7 @@ public class OAIFilesGenerator {
 	private void addAllPathsToDocument(String id, String className,
 			StringListHashMap<OrderedName> document, DataMapping dataMapping) {
 		List<String> allResults = obtainPathValues(id, className, dataMapping);
+		log.debug(" + " + dataMapping.getName() + ": " + allResults);
 		ArrayList<String> notNullResults = new ArrayList<String>();
 		CollectionUtils.select(allResults, notNullPredicate(), notNullResults);
 		if (!notNullResults.isEmpty()){
@@ -191,12 +201,15 @@ public class OAIFilesGenerator {
 
 		Request request = new Request();
 		BufferedReader fin = new BufferedReader(new FileReader(
-		 Cfg.CONFIGURATIONS_PATH  + "mapping/oai-mapping.json"));
+		 Cfg.CONFIGURATIONS_PATH
+//		 "/opt/tapies/config/"
+		 + "mapping/oai-mapping.json"));
 		Mapping mapping = new Gson().fromJson(fin, Mapping.class);
 		fin.close();
 
 		Set<String> objectTypesIndexed = new TreeSet<String>();
 
+		log.info("Inici mapeig");
 		for (DataMapping m : mapping.getData()) {
 			if (pathExistsOnMapping(m)) {
 				for (String path : m.getPath()) {
@@ -209,15 +222,22 @@ public class OAIFilesGenerator {
 			}
 		}
 
+		log.info("Inici creació documents");
 		for (String className : objectTypesIndexed) {
 			List<String> list = request.listObjectsId(className);
+			int tempNumXXX = 0;
 			for (String id : list) {
 				documents = createDocumentEntry(id, className, mapping,
 						documents);
+				if (tempNumXXX++ >= 500){
+					break;
+				}
 			}
 		}
 
+		log.info("Inici construcció XML");
 		writeXmlFile(documents, mapping);
+		log.info("Fi procés");
 	}
 
 	private boolean pathExistsOnMapping(DataMapping m) {
@@ -244,7 +264,9 @@ public class OAIFilesGenerator {
 			StringListHashMap<OrderedName> document = entry.getValue();
 
 			File f = new File(
-			 Cfg.OAI_PATH + id + ".xml");
+			 Cfg.OAI_PATH
+//			 "/opt/tapies/oai/"
+			 + id + ".xml");
 			FileWriter fw = new FileWriter(f);
 			writeXmlHeader(fw, mapping);
 			
