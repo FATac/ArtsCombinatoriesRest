@@ -225,13 +225,9 @@ public class OAIFilesGenerator {
 		log.info("Inici creació documents");
 		for (String className : objectTypesIndexed) {
 			List<String> list = request.listObjectsId(className);
-			int tempNumXXX = 0;
 			for (String id : list) {
 				documents = createDocumentEntry(id, className, mapping,
 						documents);
-				if (tempNumXXX++ >= 500){
-					break;
-				}
 			}
 		}
 
