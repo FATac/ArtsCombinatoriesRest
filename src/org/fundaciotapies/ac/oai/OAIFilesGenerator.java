@@ -196,7 +196,17 @@ public class OAIFilesGenerator {
 	 * 
 	 * @throws Exception
 	 */
-	public void generate() throws Exception {
+	public void generate() throws Exception{
+		generate(null);
+	}
+	
+	/**
+	 * Generate the XML files for the given mapping
+	 * 
+	 * @param expression regular expression to filter fields
+	 * @throws Exception
+	 */
+	public void generate(String expression) throws Exception {
 		Map<String, StringListHashMap<OrderedName>> documents = new HashMap<String, StringListHashMap<OrderedName>>();
 
 		Request request = new Request();
@@ -226,14 +236,20 @@ public class OAIFilesGenerator {
 		for (String className : objectTypesIndexed) {
 			List<String> list = request.listObjectsId(className);
 			for (String id : list) {
-				documents = createDocumentEntry(id, className, mapping,
-						documents);
+				if (idMatchesExpression(id, expression)){
+					documents = createDocumentEntry(id, className, mapping,
+							documents);
+				}
 			}
 		}
 
 		log.info("Inici construcció XML");
 		writeXmlFile(documents, mapping);
 		log.info("Fi procés");
+	}
+
+	private boolean idMatchesExpression(String id, String expression) {
+		return expression == null || id.matches(expression);
 	}
 
 	private boolean pathExistsOnMapping(DataMapping m) {
